@@ -44,7 +44,7 @@ function get_current_time (){
   return 9.235;
 }
 
-function get_thumbails ( path, start, end ) {
+function get_thumbnails ( path, start, end ) {
   var thumbs = [ { time:2.36, file:"/thumb1.png" }, { time:7.36, file:"/thumb2.png" }, { time:5.36, file:"/thumb3.png" }];
   return thumbs;
 }
@@ -84,4 +84,5 @@ exports.get_available_players     = get_available_players;
 exports.play                      = play;
 exports.preview                   = preview;
 exports.get_current_time          = get_current_time;
+exports.get_thumbnails            = get_thumbnails
 exports.get_sync_reference        = get_sync_reference;
