@@ -1,10 +1,10 @@
 angular.module('mainCtrl', ['ngMaterial'])
 
-.controller('MainController', function($scope) {
+.controller('MainController', function($rootScope, $scope) {
   var vm = this;
 
-  var electron = require('electron');
-  var testRes = electron.remote.require('./utils').myTest;
-  console.log(testRes());
+  $rootScope.electron = require('electron');
+  $rootScope.utils = $rootScope.electron.remote.require('./utils');
+  $rootScope.db = new PouchDB('localData');
 
 });
