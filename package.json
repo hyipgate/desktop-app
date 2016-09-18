@@ -1,0 +1,11 @@
+{
+  "name": "desktop-app",
+  "version": "0.0.1",
+  "description": "To be included",
+  "main": "main.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "electron-prebuilt": "^1.4.0"
+  }
+}

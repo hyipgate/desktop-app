@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <meta lang="en">
+  <title>Family Cinema</title>
+
+  <meta name="viewport" content="initial-scale=1" />
+  
+  <!-- load dependencies via CDN -->
+  <link rel="stylesheet" href="../bower_components/angular-material/angular-material.min.css">
+  <link rel="stylesheet" href="assets/css/roboto.css">
+  <link href="assets/css/material-icons.css" rel="stylesheet">
+
+  <!-- JS -->
+  <script src="../bower_components/angular/angular.js"></script>
+  <script src="../bower_components/angular-route/angular-route.js"></script>
+
+  <script src="../bower_components/angular-animate/angular-animate.js"></script>
+  <script src="../bower_components/angular-aria/angular-aria.js"></script>
+  <script src="../bower_components/angular-cookies/angular-cookies.js"></script>
+  <script src="../bower_components/angular-material/angular-material.js"></script>
+
+  <script src="../bower_components/angular-messages/angular-messages.min.js"></script>
+
+  <!-- controllers -->
+  <script type="text/javascript" src="controllers/mainController.js"></script>
+
+  <!-- services -->
+  <script type="text/javascript" src="services/mainService.js"></script>
+
+  <!-- main Angular app files -->
+  <script type="text/javascript" src="app.routes.js"></script>
+  <script type="text/javascript" src="app.js"></script>
+
+  <!-- CSS  -->
+  <!-- load bootstrap from CDN and custom CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+
+</head>
+<body ng-app="familyCinema" ng-controller="MainController as main" ng-cloak layout="column">
+    <!-- ANGULAR VIEWS -->
+    <div ng-view>
+        <!--Here comes the view -->
+    </div>
+</body>
+</html>
