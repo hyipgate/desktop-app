@@ -24,6 +24,15 @@ function get_available_players () {
 }
 
 function play ( path, player, filters, output ) {
+  var fffilter = create_ffmpeg_filter( filters )
+
+  if( player == "ffplay" ){
+
+  } else if ( player == "file" ) {
+
+  } else {
+
+  };
   return 0;
 }
 
@@ -43,6 +52,24 @@ function get_thumbails ( path, start, end ) {
 function get_sync_reference ( path, start, end ) {
   var ref = ["a23365","2e8d6e","2856da","5e89d5"];
   return ref;
+}
+
+
+
+
+function create_ffmpeg_filter ( times ) {
+  /* http://stackoverflow.com/q/39122287/3766869 by Mulvya
+    ffplay
+      -vf "select='lte(t\,4)+gte(t\,16)',setpts=N/FRAME_RATE/TB"
+      -af "aselect='lte(t\,4)+gte(t\,16)',asetpts=N/SR/TB"
+      -i INPUT*/
+  var filter = [];
+  for (var i = 0; i < times.length; i++) {
+    filter.push("lte(t\,"+times[i].start+")"+"gte(t\,"+times[i].end+")")
+  }
+  return filter.join("*")
+  
+
 }
 
 
