@@ -6,6 +6,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "electron-prebuilt": "^1.4.0"
+    "@ffmpeg-installer/ffmpeg": "^1.0.1",
+    "electron-prebuilt": "^1.4.0",
+    "fluent-ffmpeg": "^2.1.0"
   }
 }

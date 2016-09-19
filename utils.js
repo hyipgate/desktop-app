@@ -4,6 +4,14 @@
 var list = {"IDs":["tt5237706","tt5237714","tt5255582","tt5255590","tt5257872","tt5257920","tt5257962","tt5258034","tt5258124","tt5258146"],"Titles":["Eighteen Years Lost","Turning the Tables","Plight of the Accused","Indefensible","The Last Person to See Teresa Alive","Testing the Evidence","Framing Defense","The Great Burden","Lack of Humility","Fighting for Their Lives"],"Directors":[null,null,null,null,null,null,null,null,null,null],"Season":[1,1,1,1,1,1,1,1,1,1],"Episode":["1","2","3","4","5","6","7","8","9","10"],"Released":["2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18"],"ImdbRating":["8.4","8.7","8.9","9.2","9.1","8.6","8.6","8.7","9.3","8.8"],"ImdbCode":"tt5189670"}
 var film = {"ImdbCode":"tt0944943","Title":"#DUPE#","Director":"Kjell-\u00c5ke Andersson","PGCode":null,"ImdbRating":"5.9","Released":"05 Nov 2007","Actors":"Krister Henriksson, Johanna S\u00e4llstr\u00f6m, Ola Rapace, Ellen Mattsson","Writers":null,"Plot":"Tracking a sadistic killer, detective Kurt Wallander follows a string of incidents -- attacks on domestic animals, ritualistic murders of humans -- with help from his daughter, Linda, a new member of the Ystad police force.","Runtime":"89 min","Genre":"Crime, Drama, Mystery","Awards":null,"Poster":"http:\/\/ia.media-imdb.com\/images\/M\/MV5BMTc0MTc0MTQxMF5BMl5BanBnXkFtZTcwMjI0MjA0MQ@@._V1_SX300.jpg","Scenes":[],"SeriesID":"tt0907702","Message":"New version"}
 
+
+console.log("hey mate")
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffmpeg = require('fluent-ffmpeg');
+const spawn = require("child_process").spawn;
+ffmpeg.setFfmpegPath(ffmpegPath);
+
+
 function get_id_from_file ( path ){
   return list;
 }
@@ -23,14 +31,26 @@ function get_available_players () {
   return players;
 }
 
-function play ( path, player, filters, output ) {
-  var fffilter = create_ffmpeg_filter( filters )
+function play ( input, player, filters, output ) {
+// Fake inputs TODO: remove this ;)
+  var input  = "/home/miguel/videoLab/0/Homeland.S03E01.mkv"
+  var output = "/home/miguel/videoLab/test.mp4"
+  var player = "file"
+  var filters= [{start:3.21,end:10.42},{start:13.21,end:20.42},{start:23.21,end:40.42}]
 
+// Create skip filters
+  var vf = create_ffmpeg_filter( "vf", filters )
+  var af = create_ffmpeg_filter( "af", filters )
+ 
+// Perform requested actions  
   if( player == "ffplay" ){
-
+    spawn("ffplay",["-i",input,"-vf",vf,"-af",af],{stdio:"ignore"});
   } else if ( player == "file" ) {
-
+    spawn("ffmpeg",["-i",input,"-vf",vf,"-af",af,output],{stdio:"ignore"});
+    //console.log( ffmpeg( input ).output( output ).run() )
   } else {
+
+    //ffmpeg -re -i $file -q:v 3 -q:a 3 -f mpegts udp://127.0.0.1:2000
 
   };
   return 0;
@@ -57,7 +77,7 @@ function get_sync_reference ( path, start, end ) {
 
 
 
-function create_ffmpeg_filter ( times ) {
+function create_ffmpeg_filter ( stream, times ) {
   /* http://stackoverflow.com/q/39122287/3766869 by Mulvya
     ffplay
       -vf "select='lte(t\,4)+gte(t\,16)',setpts=N/FRAME_RATE/TB"
@@ -65,11 +85,13 @@ function create_ffmpeg_filter ( times ) {
       -i INPUT*/
   var filter = [];
   for (var i = 0; i < times.length; i++) {
-    filter.push("lte(t\,"+times[i].start+")"+"gte(t\,"+times[i].end+")")
+    filter.push("lte(t\,"+times[i].start+")"+"+gte(t\,"+times[i].end+")")
   }
-  return filter.join("*")
-  
-
+  if ( stream == "vf") {
+    return ("fps,select='"+filter.join("*")+"',setpts=N/FRAME_RATE/TB")
+  } else {
+    return ("aselect='"+filter.join("*")+"',asetpts=N/SR/TB")
+  };
 }
 
 
@@ -86,3 +108,6 @@ exports.preview                   = preview;
 exports.get_current_time          = get_current_time;
 exports.get_thumbnails            = get_thumbnails
 exports.get_sync_reference        = get_sync_reference;
+
+
+console.log("hey mate finish loading")
