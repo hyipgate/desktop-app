@@ -2,13 +2,14 @@
 
 
 var list = {"IDs":["tt5237706","tt5237714","tt5255582","tt5255590","tt5257872","tt5257920","tt5257962","tt5258034","tt5258124","tt5258146"],"Titles":["Eighteen Years Lost","Turning the Tables","Plight of the Accused","Indefensible","The Last Person to See Teresa Alive","Testing the Evidence","Framing Defense","The Great Burden","Lack of Humility","Fighting for Their Lives"],"Directors":[null,null,null,null,null,null,null,null,null,null],"Season":[1,1,1,1,1,1,1,1,1,1],"Episode":["1","2","3","4","5","6","7","8","9","10"],"Released":["2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18","2015-12-18"],"ImdbRating":["8.4","8.7","8.9","9.2","9.1","8.6","8.6","8.7","9.3","8.8"],"ImdbCode":"tt5189670"}
-var film = {"ImdbCode":"tt0944943","Title":"#DUPE#","Director":"Kjell-\u00c5ke Andersson","PGCode":null,"ImdbRating":"5.9","Released":"05 Nov 2007","Actors":"Krister Henriksson, Johanna S\u00e4llstr\u00f6m, Ola Rapace, Ellen Mattsson","Writers":null,"Plot":"Tracking a sadistic killer, detective Kurt Wallander follows a string of incidents -- attacks on domestic animals, ritualistic murders of humans -- with help from his daughter, Linda, a new member of the Ystad police force.","Runtime":"89 min","Genre":"Crime, Drama, Mystery","Awards":null,"Poster":"http:\/\/ia.media-imdb.com\/images\/M\/MV5BMTc0MTc0MTQxMF5BMl5BanBnXkFtZTcwMjI0MjA0MQ@@._V1_SX300.jpg","Scenes":[],"SeriesID":"tt0907702","Message":"New version"}
+var film = {"ImdbCode":"tt0944943","Title":"#DUPE#","Director":"Kjell-\u00c5ke Andersson","PGCode":null,"ImdbRating":"5.9","Released":"05 Nov 2007","Actors":"Krister Henriksson, Johanna S\u00e4llstr\u00f6m, Ola Rapace, Ellen Mattsson","Writers":null,"Plot":"Tracking a sadistic killer, detective Kurt Wallander follows a string of incidents -- attacks on domestic animals, ritualistic murders of humans -- with help from his daughter, Linda, a new member of the Ystad police force.","Runtime":"89 min","Genre":"Crime, Drama, Mystery","Awards":null,"Poster":"http:\/\/ia.media-imdb.com\/images\/M\/MV5BMTc0MTc0MTQxMF5BMl5BanBnXkFtZTcwMjI0MjA0MQ@@._V1_SX300.jpg","Scenes":[],"SeriesID":"tt0907702"}
 
 
 console.log("hey mate")
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffmpeg = require('fluent-ffmpeg');
 const spawn = require("child_process").spawn;
+const tmp = require('tmp');
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 
@@ -64,8 +65,30 @@ function get_current_time (){
   return 9.235;
 }
 
-function get_thumbnails ( path, start, end ) {
-  var thumbs = [ { time:2.36, file:"/thumb1.png" }, { time:7.36, file:"/thumb2.png" }, { time:5.36, file:"/thumb3.png" }];
+function get_thumbnails ( input, start, end, fps, usage ) {
+  // Fake input
+
+  var start = 53.21
+  var end   = 55.42
+  var input = "/home/miguel/videoLab/0/Homeland.S03E01.mkv"
+  var usage = " "
+ 
+ //ffmpeg -i $video_folder/video.mkv -pix_fmt gray -s $size -vf "select=1" -vsync vfr $frames_folder/thumb%04d.bmp
+// Set default fps
+  var fps = fps? fps : 25
+  var nframes = Math.round( (end-start)*fps )
+// Get tmp folder
+  var tmpFolder = tmp.dirSync().name;
+// Extract thumbails
+  if( usage && usage == "sync"){
+    spawn("ffmpeg",["-ss",start,"-i",input,"-vf","fps="+fps,"-pix_fmt","gray","-s","16x9","-vframes",nframes,tmpFolder+"/thumb%04d.bmp"])
+  } else {
+    spawn("ffmpeg",["-ss",start,"-i",input,"-vf","fps="+fps,"-s","160x90","-vframes",nframes,tmpFolder+"/thumb%04d.bmp"])
+  }
+  var thumbs = [];
+  for (var i = 0; i < nframes; i++) {
+    thumbs.push( { time : start+i/fps , file : tmpFolder+"/thumb"+pad(i,4)+".bmp" } )
+  };
   return thumbs;
 }
 
@@ -89,11 +112,20 @@ function create_ffmpeg_filter ( stream, times ) {
   }
   if ( stream == "vf") {
     return ("fps,select='"+filter.join("*")+"',setpts=N/FRAME_RATE/TB")
-  } else {
+  } else if ( stream == "af") {
     return ("aselect='"+filter.join("*")+"',asetpts=N/SR/TB")
+  } else {
+    return filter.join("*")
   };
 }
 
+
+function pad(n, width, z) {
+  //http://stackoverflow.com/a/10073788/3766869
+  z = z || '0';
+  n = n + '';
+  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
 
 
 
