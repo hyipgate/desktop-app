@@ -1,0 +1,17 @@
+/*
+	Select a movie styles
+*/
+
+.select{
+	background-color: #4CAF50;
+	text-align: center;
+}
+
+.select md-icon{
+	width: 40vmin;
+	height: 40vmin;
+}
+
+.select .material-icons{
+	font-size: 40vmin;
+}
