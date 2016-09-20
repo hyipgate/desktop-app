@@ -6,6 +6,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "electron-prebuilt": "^1.4.0"
+    "electron-prebuilt": "^1.4.0",
+    "express": "^4.14.0"
   }
 }
