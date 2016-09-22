@@ -8,7 +8,13 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.0.1",
     "electron-prebuilt": "^1.4.0",
+    "file-bytes": "^2.0.3",
     "fluent-ffmpeg": "^2.1.0",
-    "tmp": "0.0.29"
+    "fs": "0.0.1-security",
+    "hamming-distance": "^1.0.0",
+    "opensubtitles": "0.0.4",
+    "sharp-blockhash": "0.0.1",
+    "tmp": "0.0.29",
+    "vlc-command": "^1.1.1"
   }
 }
