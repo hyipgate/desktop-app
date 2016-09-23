@@ -6,7 +6,6 @@ var film = {"ImdbCode":"tt0944943","Title":"#DUPE#","Director":"Kjell-\u00c5ke A
 
 // Load required libraries
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-//const ffmpeg = require('fluent-ffmpeg');
 const spawn = require("child_process").spawn;
 const tmp = require('tmp');
 //const FileReader = require('filereader')
@@ -14,25 +13,36 @@ const tmp = require('tmp');
 //const shash = require('sharp-blockhash');
 const hammingDistance = require('hamming-distance');
 const openSubtitles = require('opensubtitles')
-const filesize = require('file-bytes')
+const get_filesize = require('file-bytes')
 const vlcCommand = require('vlc-command')
+const httpRequest = require('request');
 
 //ffmpeg.setFfmpegPath(ffmpegPath);
 
-function get_id_from_file ( file ){
-  var input  = "/home/miguel/Downloads/breakdance.avi"
-  var oSub = new openSubtitles()
-  oSub.computeHash( input, function ( err, hash ) {
-    if (err) return;
-    console.log(hash)
+
+
+// Compute opensubtitles compliant hash and filesize
+//https://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
+function parse_input_file ( file ){
+  var file  = "/home/miguel/videoLab/0/Homeland.S03E01.mkv"
+  return get_filesize( file ).then( function ( filesize ) {
+    return new Promise( function (resolve, reject) {
+      var oSub = new openSubtitles()
+      oSub.computeHash( file, function ( err, hash ) {
+        var title = title_from_filename( file )
+        resolve({hash:hash,filesize:filesize+"",title:title})
+      })
+    })
   })
-  console.log( filesize.sync(input) )
-  return list;
 }
 
 
-function get_content_by_id ( id ) {
-  return film;
+
+
+// Ask server for movie information
+function search_film( hash, bytesize, title, imdbid)
+{
+  return get( "http://fcinema.org/api", { action:"search", filename:title, imdb_code:imdbid, hash:hash, bytesize:bytesize }, true )
 }
 
 
@@ -176,9 +186,41 @@ function pad(n, width, z) {
 
 
 
+// Get title from file name
+function title_from_filename( str )
+{
+  var title = str.toString().replace(/\\/g,'/').split("/").pop();
+  title = title.replace(/mp4|avi|\[.*\]|\(.*\).*|1080p.*|xvid.*|mkv.*|720p.*|web-dl.*|dvdscr.*|dvdrip.*|brrip.*|bdrip.*|hdrip.*|x264.*|bluray.*|hdtv.*|yify.*|eztv.*|480p.*/gi,'');
+  title = title.replace(/\.|_/g,' ').replace(/ +/g,' ').replace(/ +$/,'');
+  return title
+}
+
+
+
+
+// GET method as a promise
+function get( url, params, json ) {
+  var str = [];
+  for(var key in params) if(params[key]) str.push( key + "=" + params[key] );
+  if( str.length != 0 )url = url+"?"+str.join("&")
+
+  return new Promise(function(resolve, reject) {
+    httpRequest( url, function(error, response, body) {
+      if( error ){
+        reject( "Network Error" )
+      } else if ( json ) {
+        resolve( JSON.parse( body ) )
+      } else{
+        resolve( body )
+      }
+    });
+  });
+}
+
+
 // Expose functions
-exports.get_id_from_file          = get_id_from_file;
-exports.get_content_by_id         = get_content_by_id;
+exports.get_id_from_file          = parse_input_file;
+exports.get_content_by_id         = search_film;
 exports.get_offset_with_reference = get_offset_with_reference;
 exports.get_available_players     = get_available_players;
 exports.play                      = play;
