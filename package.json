@@ -11,11 +11,13 @@
     "file-bytes": "^2.0.3",
     "fluent-ffmpeg": "^2.1.0",
     "fs": "0.0.1-security",
+    "get-pixels": "^3.3.0",
     "hamming-distance": "^1.0.0",
     "opensubtitles": "0.0.4",
     "request": "^2.75.0",
     "sharp-blockhash": "0.0.1",
     "tmp": "0.0.29",
-    "vlc-command": "^1.1.1"
+    "vlc-command": "^1.1.1",
+    "which": "^1.2.11"
   }
 }

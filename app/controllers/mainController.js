@@ -49,6 +49,7 @@ angular.module('mainCtrl', ['ngMaterial'])
 
   vm.get_sync_reference = function(){
     var data = $rootScope.utils.get_sync_reference('path', 'start', 'end');
+    data.then( function( ref ) { console.log(JSON.stringify(ref)) } )  
     console.log(data);
   }
 
