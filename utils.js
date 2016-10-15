@@ -89,6 +89,7 @@ function get_point_offset ( input, time, span, reference ) {
 
 // Perform crosscorrelation operation to find a our clip inside a ref clip
 function crosscorrelate( ref, our, span ){
+	console.time("xcorr");
   console.log("crosscorrelate called with: span=",span,"; ref.length=",ref.length,"; our.length=",our.length)
 // Set parameters    
   var accuracy   = 1/24; // group offsets closer than 'accuracy'
@@ -135,6 +136,7 @@ function crosscorrelate( ref, our, span ){
   }
 
 // return
+	console.timeEnd("xcorr")
   return { min:bef_offset_error*accuracy, center:t_min*accuracy, max:aft_offset_error*accuracy }
 }
 
@@ -163,7 +165,7 @@ function play ( input, player, filters, output ) {
 // Fake inputs TODO: remove this ;)
   var input  = "/home/miguel/videoLab/0/Homeland.S03E01.mkv"
   var output = "/home/miguel/videoLab/test.mp4"
-  var player = "smplayer"
+  var player = "ffplay"
   var filters= [{start:3.21,end:10.42},{start:13.21,end:20.42},{start:23.21,end:40.42}]
 
 // Create skip filters
@@ -180,9 +182,10 @@ function play ( input, player, filters, output ) {
   }
 // Stream to player
   else {
+    output = "udp://@127.0.0.1:2000"
     var path = which.sync( player ) // todo make async
-    spawn( path )
-    //spawn("ffmpeg",["-re","-i",input,"-vf",vf,"-af",af,output],{stdio:"ignore"});
+    spawn( path,[output] )
+    spawn("ffmpeg",["-re","-i",input,"-vf",vf,"-af",af,"-q:v",3,"-q:a",3,"-f","mpegts",output],{stdio:"ignore"});
     //ffmpeg -re -i $file -q:v 3 -q:a 3 -f mpegts udp://127.0.0.1:2000
   };
   return 0;
@@ -205,7 +208,10 @@ function get_current_time (){
 }
 
 function get_thumbnails ( input, start, end, fps, usage ) {
+// Make sure times are reasonable
+  start = start < 0 ? 0 : start
   console.log("get_thumbnails called with ",input, start, end, fps, usage )
+
   // Fake input
   /*var start = 53.21
   var end   = 85.42
@@ -243,11 +249,13 @@ function get_thumbnails ( input, start, end, fps, usage ) {
 
 // Generate thumbails and return their hash
 function get_sync_reference ( input, start, end ) {
+	console.time("get_sync_reference");
   console.log("get_sync_reference called with ", input, start, end )
   /*var start = 60.21
   var end   = 64.21
   var input = "/home/miguel/videoLab/0/Homeland.S03E01.mkv"*/
   return get_thumbnails( input, start, end, 24, "sync" ).then( function ( thumbs ) {
+    console.time("get_sync_reference");
     return Promise.all(
       thumbs.map( create_thumbnail_hash )
     )
