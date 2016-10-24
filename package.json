@@ -16,7 +16,6 @@
     "hamming-distance": "^1.0.0",
     "opensubtitles": "0.0.4",
     "request": "^2.75.0",
-    "sharp-blockhash": "0.0.1",
     "tmp": "0.0.29",
     "vlc-command": "^1.1.1",
     "which": "^1.2.11"
