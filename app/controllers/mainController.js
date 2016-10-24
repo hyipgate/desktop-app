@@ -1,6 +1,6 @@
 angular.module('mainCtrl', ['ngMaterial'])
 
-.controller('MainController', function($rootScope, $scope, service) {
+.controller('MainController', function($rootScope, $scope, service, $location, $window) {
   var vm = this;
 
   $rootScope.electron = require('electron');
@@ -11,13 +11,15 @@ angular.module('mainCtrl', ['ngMaterial'])
     var file = event.target.files;
     var film;
     if(file){
-      console.log(file[0].path);
       film = vm.get_id_from_file(file[0].path);
       if(film.IDs){
         console.log('Lista');
       }else{
         service.saveSelectedFilm(film);
-        console.log('peli');
+        $location.path('/film');
+        console.log($rootScope.electron.remote.getCurrentWindow());
+        $rootScope.electron.remote.getCurrentWindow().setSize(1079,655,true);
+        if (!$rootScope.$$phase) $rootScope.$apply();
       }
     }else{
       console.log('ERROR');
@@ -37,11 +39,6 @@ angular.module('mainCtrl', ['ngMaterial'])
 
   vm.get_offset_with_reference = function(){
     var data = $rootScope.utils.get_offset_with_reference('path', 'guess', 'reference');
-    console.log(data);
-  }
-
-  vm.get_available_players = function(){
-    var data = $rootScope.utils.get_available_players();
     console.log(data);
   }
 

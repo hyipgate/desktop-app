@@ -1,0 +1,12 @@
+<md-bottom-sheet class="md-list md-has-header" style="position: fixed;overflow: hidden;">
+  <md-subheader ng-cloak>Select a player</md-subheader>
+  <md-list ng-cloak>
+    <md-list-item ng-repeat="player in film.players">
+
+      <md-button class="md-list-item-content" ng-click="film.listItemClick($index)">
+        <span class="md-inline-list-icon-label">{{ player }}</span>
+      </md-button>
+
+    </md-list-item>
+  </md-list>
+</md-bottom-sheet>
