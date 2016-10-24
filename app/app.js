@@ -7,8 +7,10 @@ angular.module('familyCinema', ['ngAnimate', 'ngMessages', 'app.routes', 'MainSe
       'hue-1': '100',
       'hue-2': '700',
     })
-    .accentPalette('orange', {
-      'default': '500'
+    .accentPalette('indigo', {
+      'default': '500',
+      'hue-1': '100',
+      'hue-2': '700',
     });
 })
 

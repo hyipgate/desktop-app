@@ -1,6 +1,15 @@
+<div class="fullPage" id="mainPage">
+	<div>
+		<h1 class="md-display-1">Family Cinema</h1>
 
-<input type="file" custom-on-change="main.getFile">
+		<input class="ng-hide" id="input-file-id" type="file" custom-on-change="main.getFile"/>
+		<label for="input-file-id" class="md-button md-raised md-hue-2 md-accent">Choose Files</label>
 
+	</div>
+</div>
+
+
+<!--
 <md-content class="select">
 	<md-button aria-label="Select a movie" ng-click="main.get_id_from_file(path)" class="md-button">IDFromFile</md-button>
 	<md-button aria-label="Select a movie" ng-click="main.get_content_by_id()" class="md-button">ContentByID</md-button>
@@ -12,3 +21,4 @@
 	<md-button aria-label="Select a movie" ng-click="main.get_thumbnails()" class="md-button">Thumbnails</md-button>
 	<md-button aria-label="Select a movie" ng-click="main.get_sync_reference()" class="md-button">SyncReference</md-button>
 </md-content>
+-->
