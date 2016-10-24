@@ -4,12 +4,20 @@ angular.module('app.routes', ['ngRoute'])
 
   $routeProvider
 
-    .when('/select', {
+    .when('/', {
       templateUrl : 'views/select.html',
       controller  : 'MainController',
           controllerAs: 'main',
     })
 
-    .otherwise({ redirectTo: '/select'})
+    .when('/film', {
+      templateUrl : 'views/film.html',
+      controller  : 'FilmController',
+          controllerAs: 'film',
+    })
 
+
+    .otherwise({ redirectTo: '/'})
+
+    $locationProvider.html5Mode(true);
 });
