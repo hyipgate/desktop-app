@@ -3,8 +3,10 @@
 		<h1 class="md-display-1">Family Cinema</h1>
 
 		<input class="ng-hide" id="input-file-id" type="file" custom-on-change="main.getFile"/>
-		<label for="input-file-id" class="md-button md-raised md-hue-2 md-accent">Choose Files</label>
-
+		<label for="input-file-id" ng-hide="main.processing" class="md-button md-raised md-hue-2 md-accent">Choose Files</label>
+		<div layout="row" ng-hide="!main.processing" layout-align="space-around">
+			<md-progress-circular md-mode="indeterminate" class="md-accent" md-diameter="30"></md-progress-circular>
+		</div>
 	</div>
 </div>
 

@@ -2,17 +2,19 @@ angular.module('mainCtrl', ['ngMaterial'])
 
 .controller('MainController', function($rootScope, $scope, service, $location, $window, $q) {
   var vm = this;
+  vm.processing = false;
 
   $rootScope.electron = require('electron');
   $rootScope.utils = $rootScope.electron.remote.require('./utils');
   $rootScope.db = new PouchDB('localData');
 
   vm.getFile = function(event){
+    vm.processing = true;
     var file = event.target.files;
     if(file){
       vm.get_id_from_file(file[0].path).then(function(guess){
         $rootScope.utils.get_content_by_id(guess.hash, guess.filesize, guess.estimated_title,null).then(function(film){
-          console.log(film);
+          vm.processing = false;
           if(film.IDs){
             console.log('Lista');
           }else{
