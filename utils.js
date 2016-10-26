@@ -26,7 +26,6 @@ const httpRequest = require('request');
 // Compute opensubtitles compliant hash and filesize
 //https://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
 function parse_input_file ( file ){
-  var file  = "/home/miguel/videoLab/0/Homeland.S03E01.mkv"
   return get_filesize( file ).then( function ( filesize ) {
     return new Promise( function (resolve, reject) {
       var oSub = new openSubtitles()
