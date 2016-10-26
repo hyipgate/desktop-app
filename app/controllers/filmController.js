@@ -32,7 +32,10 @@ angular.module('filmCtrl', ['ngMaterial'])
   };
 
   vm.get_available_players = function(){
-    vm.players = $rootScope.utils.get_available_players();
+    $rootScope.utils.get_available_players().then(function(data){
+      console.log(data);
+      vm.players = data;
+    });
   }
 
   vm.get_available_players();
