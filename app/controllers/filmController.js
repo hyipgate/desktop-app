@@ -11,6 +11,11 @@ angular.module('filmCtrl', ['ngMaterial'])
 
   vm.getMovie();
 
+  vm.css = {
+   'background': 'linear-gradient( rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('+vm.movieData.Backdrop+') no-repeat center center',
+   'background-size': 'cover',
+  }
+
   vm.showListBottomSheet = function() {
     $scope.alert = '';
     $mdBottomSheet.show({

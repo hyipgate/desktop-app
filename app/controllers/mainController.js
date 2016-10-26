@@ -1,6 +1,6 @@
 angular.module('mainCtrl', ['ngMaterial'])
 
-.controller('MainController', function($rootScope, $scope, service, $location, $window) {
+.controller('MainController', function($rootScope, $scope, service, $location, $window, $q) {
   var vm = this;
 
   $rootScope.electron = require('electron');
@@ -9,27 +9,28 @@ angular.module('mainCtrl', ['ngMaterial'])
 
   vm.getFile = function(event){
     var file = event.target.files;
-    var film;
     if(file){
-      film = vm.get_id_from_file(file[0].path);
-      if(film.IDs){
-        console.log('Lista');
-      }else{
-        service.saveSelectedFilm(film);
-        $location.path('/film');
-        console.log($rootScope.electron.remote.getCurrentWindow());
-        $rootScope.electron.remote.getCurrentWindow().setSize(1079,655,true);
-        if (!$rootScope.$$phase) $rootScope.$apply();
-      }
+      vm.get_id_from_file(file[0].path).then(function(guess){
+        $rootScope.utils.get_content_by_id(guess.hash, guess.filesize, guess.estimated_title,null).then(function(film){
+          console.log(film);
+          if(film.IDs){
+            console.log('Lista');
+          }else{
+            service.saveSelectedFilm(film);
+            $location.path('/film');
+            console.log($rootScope.electron.remote.getCurrentWindow());
+            $rootScope.electron.remote.getCurrentWindow().setSize(1190,680,true);
+            if (!$rootScope.$$phase) $rootScope.$apply();
+          }
+        });
+      })
     }else{
       console.log('ERROR');
     }
   };
 
   vm.get_id_from_file = function(text){
-    var data = $rootScope.utils.get_id_from_file(text);
-    console.log(data);
-    return data;
+    return $rootScope.utils.get_id_from_file(text);
   }
 
   vm.get_content_by_id = function(){
