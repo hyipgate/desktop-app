@@ -33,7 +33,7 @@ angular.module('mainCtrl', ['ngMaterial'])
   }
 
   vm.preview = function(){
-    var data = $rootScope.utils.preview();
+    var data = $rootScope.utils.preview('path','filter');
     console.log(data);
   }
 
