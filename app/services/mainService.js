@@ -1,11 +1,18 @@
 angular.module('MainService', ['ngCookies'])
 
-.factory('Main', ['$http', '$q', '$cookies', function($http, $q, $cookies) {
+.factory('service', ['$http', '$q', '$cookies', function($http, $q, $cookies) {
 
-  var vm = this;
-
+  var MainFactory = {};
   var data = {};
 
-  return data;
+  MainFactory.saveSelectedFilm = function(filmData){
+  	data.film = filmData;
+  }
+
+  MainFactory.getSelectedFilm = function(){
+  	return data.film;
+  }
+
+  return MainFactory;
 
 }]);

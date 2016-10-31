@@ -1,15 +1,36 @@
 angular.module('mainCtrl', ['ngMaterial'])
 
-.controller('MainController', function($rootScope, $scope) {
+.controller('MainController', function($rootScope, $scope, service, $location, $window, $q) {
   var vm = this;
 
   $rootScope.electron = require('electron');
   $rootScope.utils = $rootScope.electron.remote.require('./utils');
   $rootScope.db = new PouchDB('localData');
 
-  vm.get_id_from_file = function(){
-    var data = $rootScope.utils.get_id_from_file('text');
-    console.log(data);
+  vm.getFile = function(event){
+    var file = event.target.files;
+    if(file){
+      vm.get_id_from_file(file[0].path).then(function(guess){
+        $rootScope.utils.get_content_by_id(guess.hash, guess.filesize, guess.estimated_title,null).then(function(film){
+          console.log(film);
+          if(film.IDs){
+            console.log('Lista');
+          }else{
+            service.saveSelectedFilm(film);
+            $location.path('/film');
+            console.log($rootScope.electron.remote.getCurrentWindow());
+            $rootScope.electron.remote.getCurrentWindow().setSize(1190,680,true);
+            if (!$rootScope.$$phase) $rootScope.$apply();
+          }
+        });
+      })
+    }else{
+      console.log('ERROR');
+    }
+  };
+
+  vm.get_id_from_file = function(text){
+    return $rootScope.utils.get_id_from_file(text);
   }
 
   vm.get_content_by_id = function(){
@@ -19,11 +40,6 @@ angular.module('mainCtrl', ['ngMaterial'])
 
   vm.get_offset_with_reference = function(){
     var data = $rootScope.utils.get_offset_with_reference('path', 'guess', 'reference');
-    console.log(data);
-  }
-
-  vm.get_available_players = function(){
-    var data = $rootScope.utils.get_available_players();
     console.log(data);
   }
 

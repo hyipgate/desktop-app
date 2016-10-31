@@ -1,0 +1,33 @@
+<div class="fullPage" id="movieInfo" layout="column" ng-style="film.css">
+
+<div layout="row">
+  <img ng-src="{{film.movieData.Poster}}" alt="Film Poster" height="450px">
+  <div id="movieData" layout="column" layout-align="space-between stretch">
+    <div layout="column">
+      <span class="md-headline">{{film.movieData.Title}}</span>
+      <span class="md-caption">{{film.movieData.Released}}  &bull;  {{film.movieData.Runtime}}  &bull;  {{film.movieData.Genre}}  &bull;  {{film.movieData.ImdbRating}}/10</span>
+      <p class="md-body-1">{{film.movieData.Plot}}</p>
+    </div>
+    <div layout="row">
+      <md-button class="md-primary md-raised" ng-click="film.showListBottomSheet()">Play</md-button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- 
+	{{film.movieData.Actors}}
+	{{film.movieData.Awards}}
+	{{film.movieData.Director}}
+	{{film.movieData.Genre}}
+	{{film.movieData.ImdbRating}}
+	{{film.movieData.PGCode}}
+	{{film.movieData.Plot}}
+	<img ng-src="{{film.movieData.Poster}}">
+	{{film.movieData.Released}}
+	{{film.movieData.Runtime}}
+	{{film.movieData.Scenes}}
+	{{film.movieData.Title}}
+	{{film.movieData.Writers}}
+	-->
