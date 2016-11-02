@@ -44,7 +44,7 @@ function parse_input_file ( input ){
 
 // Ask server for film information
 function search_film( hash, bytesize, title, imdbid ) {
-  return get( "http://fcinema.org/api", { action:"search", filename:title, imdb_code:imdbid, hash:hash, bytesize:bytesize }, true )
+  return call_online_api( { action:"search", filename:title, imdb_code:imdbid, hash:hash, bytesize:bytesize } )
 }
 
 
@@ -506,10 +506,9 @@ function title_from_filename( str ) {
 }
 
 
-
-
-// GET method as a promise
-function get( url, params, json ) {
+// Call fcinema api, return object
+function call_online_api ( params ) {
+  var url = "http://fcinema.org/api"
   var str = [];
   for(var key in params) if(params[key]) str.push( key + "=" + params[key] );
   if( str.length != 0 )url = url+"?"+str.join("&")
@@ -518,14 +517,14 @@ function get( url, params, json ) {
     httpRequest( url, function(error, response, body) {
       if( error ){
         reject( "Network Error" )
-      } else if ( json ) {
+      } else {
         resolve( JSON.parse( body ) )
-      } else{
-        resolve( body )
       }
     });
   });
 }
+
+
 
 
 function presync_scene ( id ) {
@@ -548,34 +547,34 @@ function search ( file, title, imdbid ) {
   imdbid = "tt0000000"
   if ( !imdbid && file ) {
     return parse_input_file( file ).then( function ( stats ) {
-      get( "http://fcinema.org/api", { action:"search", filename:stats.estimated_title, hash:stats.hash, bytesize:stats.filesize }, true )
+      call_online_api( { action:"search", filename:stats.estimated_title, hash:stats.hash, bytesize:stats.filesize } )
     })
   };
-  return get( "http://fcinema.org/api", { action:"search", filename:title, imdb_code:imdbid }, true )
+  return call_online_api( { action:"search", filename:title, imdb_code:imdbid } )
 }
 
 function add_review ( imdb_code, review, token ) {
-  return get( "http://fcinema.org/api", { action:"review", review:review, token:token }, true )
+  return call_online_api( { action:"review", review:review, token:token } )
 }
 
 function log_in ( user, pass ) {
-  return get( "http://fcinema.org/api", { action:"login", username:user, password:pass }, true )
+  return call_online_api( { action:"login", username:user, password:pass } )
 }
 
 function new_user ( user, pass ) {
-  return get( "http://fcinema.org/api", { action:"newuser", username:user, password:pass }, true )
+  return call_online_api( { action:"newuser", username:user, password:pass } )
 }
 
 function new_pass ( user, pass, newpass ) {
-  return get( "http://fcinema.org/api", { action:"newpass", username:user, password:pass, newpass:newpass }, true )
+  return call_online_api( { action:"newpass", username:user, password:pass, newpass:newpass } )
 }
 
 function share_scenes ( ) {
-  return get( "http://fcinema.org/api", { action:"newpass", username:user, password:pass, newpass:newpass }, true )
+  return call_online_api( { action:"newpass", username:user, password:pass, newpass:newpass } )
 }
 
 function auto_assign ( ) {
-  return get( "http://fcinema.org/api", { action:"claim", imdb_code:imdbid }, true )
+  return call_online_api( { action:"claim", imdb_code:imdbid } )
 }
 
 // Expose functions
