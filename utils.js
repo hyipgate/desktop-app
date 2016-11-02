@@ -22,6 +22,9 @@ const get_filesize = require('file-bytes')
 const which = require('which')
 const httpRequest = require('request');
 
+const PouchDB = require('pouchdb');
+var localDB = new PouchDB('localData');
+
 //ffmpeg.setFfmpegPath(ffmpegPath);
 
 
@@ -29,7 +32,7 @@ const httpRequest = require('request');
 // Compute opensubtitles compliant hash and filesize
 //https://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
 function parse_input_file ( input ){
-  var input  = "/home/miguel/videoLab/0/Homeland.S03E01.mkv"
+  trace( "parse_input_file", arguments )
   return get_filesize( input ).then( function ( filesize ) {
     return new Promise( function (resolve, reject) {
       var oSub = new openSubtitles()
@@ -44,6 +47,7 @@ function parse_input_file ( input ){
 
 // Ask server for film information
 function search_film( hash, bytesize, title, imdbid ) {
+  trace( "search_film", arguments )
   return call_online_api( { action:"search", filename:title, imdb_code:imdbid, hash:hash, bytesize:bytesize } )
 }
 
@@ -51,11 +55,7 @@ function search_film( hash, bytesize, title, imdbid ) {
 
 // Get the exact times {start,end} of a scene based on hash reference and helped by approx times
 function get_scene_exact_times ( input, approx_start, approx_end, reference ) {
-  console.log( "get_offset_with_reference called")
-  input = "/home/miguel/videoLab/1/Homeland.S03E02.mp4"
-  reference    = default_reference;
-  approx_end   = reference.end
-  approx_start = reference.start
+  trace( "get_scene_exact_times", arguments )
   guessed_offset = 20
   // Find the offset for the start
   console.time("exact_time")
@@ -78,7 +78,7 @@ function get_scene_exact_times ( input, approx_start, approx_end, reference ) {
 
 
 function get_point_offset ( input, time, span, reference ) {
-  console.log( "get_point_offset called with: ", input, time, span )
+  trace( "get_point_offset", arguments )
   return create_sync_data( input, time-span/2, time+span/2 )
     .then( function ( this_version ) {
       //console.log( JSON.stringify( this_version ) )
@@ -99,8 +99,7 @@ function get_point_offset ( input, time, span, reference ) {
 
 // Perform crosscorrelation operation to find a our clip inside a ref clip
 function crosscorrelate( ref, our, span ){
-  console.time("xcorr");
-  console.log("crosscorrelate called with: span=",span,"; ref.length=",ref.length,"; our.length=",our.length)
+  trace( "crosscorrelate", arguments )
 // Set parameters
   var accuracy   = 1/24; // group offsets closer than 'accuracy'
   var count_min  = 30;   // ignore noisy offsets with few points
@@ -147,67 +146,12 @@ function crosscorrelate( ref, our, span ){
   }
 
 // return
-  console.timeEnd("xcorr")
   return { min:bef_offset_error*accuracy, center:t_min*accuracy, max:aft_offset_error*accuracy }
 }
 
 
-// Perform crosscorrelation operation to find a our clip inside a ref clip
-function crosscorrelate2( ref, our, span ){
-  console.time("xcorr");
-  console.log("crosscorrelate called with: span=",span,"; ref.length=",ref.length,"; our.length=",our.length)
-// Set parameters
-  const accuracy   = 1/24; // group offsets closer than 'accuracy'
-  const count_min  = 30;   // ignore noisy offsets with few points
-
-// Crosscorrelate
-  // Create array (zero filled by default I think)
-  const mino = -Math.round( (ref[0].time - our[our.length-1].time)/accuracy ); // DANGER: here we are assuming the arrays are in time order
-  const maxo = Math.round( (ref[ref.length-1].time - our[0].time)/accuracy ); // DANGER: here we are assuming the arrays are in time order
-  console.log(ref[0].time,ref[ref.length-1].time,our[0].time,our[our.length-1].time,mino,maxo,mino+maxo)
-  var d_array = new Uint16Array(mino+maxo);
-  var d_count = new Uint16Array(mino+maxo);
-
-  for (var o = 0; o < our.length; o++) {
-    for (var r = 0; r < ref.length; r++) {
-      // Compute time offset and hamming_distance
-      var t = ref[r].time - our[o].time;
-      var d = hamming_distance( ref[r].hash, our[o].hash )
-      // Store value in array
-      var i_offset = Math.round ( t / accuracy ) + mino;
-      d_count[i_offset] += 1;
-      d_array[i_offset] += d;
-    };
-  };
-
-// Find minimum
-  var min_norm_d = 1000;
-  var i_min = null;
-  for (var i = 0; i < d_array.length; i++) {
-    if ( d_count[i] < count_min ) continue
-    if ( d_array[i]/d_count[i] > min_norm_d ) continue;
-    min_norm_d = d_array[i]/d_count[i];
-    i_min = i;
-  };
-
-// Find  error interval
-  var bef_offset_error =  999999;
-  var aft_offset_error = -999999;
-  for (var i = 0; i < d_array.length; i++) {
-    if ( d_count[i] < count_min/3 ) continue  // Even if it is a noise point, if it has lower distance something might be wrong
-    if ( d_array[i]/d_count[i] > 1.5*min_norm_d ) continue;
-    if ( bef_offset_error > i ) bef_offset_error = i;
-    if ( aft_offset_error < i ) aft_offset_error = i;
-  }
-
-// return
-  function toTime (ind) { return (ind-mino)*accuracy }
-
-  console.timeEnd("xcorr")
-  return { min: toTime(bef_offset_error), center: toTime(i_min), max: toTime(aft_offset_error) }
-}
-
 function estimate_scene_change ( input, start, end ) {
+  trace( "estimate_scene_change", arguments )
   return create_sync_data( input, start, end ).then( function ( sync_data ) {
     var max_distance = 0
     var change_at = -1
@@ -242,12 +186,6 @@ function get_available_players () {
 
 
 function play ( input, player, filters, output ) {
-// Fake inputs TODO: remove this ;)
-  var input  = "/home/miguel/videoLab/0/Homeland.S03E01.mkv"
-  var output = "/home/miguel/videoLab/test.mp4"
-  var player = "ffplay"
-  var filters= [{start:3.21,end:10.42},{start:13.21,end:20.42},{start:23.21,end:40.42}]
-
 // Create skip filters
   var vf = create_ffmpeg_filter( "vf", filters )
   var af = create_ffmpeg_filter( "af", filters )
@@ -272,10 +210,7 @@ function play ( input, player, filters, output ) {
 }
 
 function preview ( input, filter ) {
-// Remove all but few seconds around scene
-  var input  = "/home/miguel/videoLab/0/Homeland.S03E01.mkv"
-  var filters= [{start:3.21,end:10.42},{start:13.21,end:20.42},{start:23.21,end:40.42}]
-  //filters = [filter,{start:filter.start-3,end:filter.end+3}]
+  filters = [filter,{start:filter.start-3,end:filter.end+3}]
 // Create skip filters
   var vf = create_ffmpeg_filter( "vf", filters )
   var af = create_ffmpeg_filter( "af", filters )
@@ -292,12 +227,12 @@ function get_current_time (){
 }
 
 function get_thumbnails ( input, start, end, fps, usage ) {
+  trace( "get_thumbnails", arguments )
 // Make sure times are reasonable
   if ( start < 0 ) {
     end   += -start
     start = 0
   };
-  console.log("get_thumbnails called with ",input, start, end, fps, usage )
 
   return new Promise( function (resolve, reject) {
   // Set default fps
@@ -330,7 +265,7 @@ function get_thumbnails ( input, start, end, fps, usage ) {
 
 // Generate thumbails and return their hash
 function get_sync_reference ( input, start, end ) {
-  console.log("get_sync_reference called with ", input, start, end )
+  trace( "get_sync_reference", arguments )
   var outer_span  = 10;
   var innter_span = 10;
   if ( end - start > innter_span*2 ) {
@@ -356,8 +291,7 @@ function get_sync_reference ( input, start, end ) {
 
 // Generate thumbails and return their hash
 function create_sync_data ( input, start, end ) {
-  console.log( "Time: "+Date.now )
-  console.log("get_sync_reference called with ", input, start, end )
+  trace( "create_sync_data", arguments )
   return get_thumbnails( input, start, end, 24, "sync" ).then( function ( thumbs ) {
     return Promise.all(
       thumbs.map( create_thumbnail_hash )
@@ -377,7 +311,7 @@ function create_sync_data ( input, start, end ) {
 
 
 function create_thumbnail_hash2 ( thumb ) {
-  console.log( "create_thumbnail_hash called ")
+  trace( create_thumbnail_hash2, arguments )
   return new Promise( function (resolve, reject) {
     //console.time("create_thumbnail_hash2"+thumb.file);
     get_pixels( thumb.file, function(err, pixels) {
@@ -508,7 +442,7 @@ function title_from_filename( str ) {
 
 // Call fcinema api, return object
 function call_online_api ( params ) {
-  var url = "http://fcinema.org/api"
+  var url = "http://fcinema.org/api2"
   var str = [];
   for(var key in params) if(params[key]) str.push( key + "=" + params[key] );
   if( str.length != 0 )url = url+"?"+str.join("&")
@@ -531,12 +465,59 @@ function presync_scene ( id ) {
   // body...
 }
 
-function add_scene ( start, end, tags, comments, id ) {
-  return 1
+function add_scene ( start, end, tags, comment, id ) {
+  trace( "add_scene", arguments )
+
+  return create_sync_data( input, start-10, end+10 ).then( function ( data ) {
+    if ( !data ) return -1;
+
+    var scene = {
+      id:       "548d568d5eudk",
+      tags:     tags,
+      comment:  comment,
+      start:    start,
+      end:      end,
+      syncData: data
+    }
+
+    var film = get_local_data( imdbid )
+    for ( var i = 0, found = 0; i < film.scenes.length; i++) {
+      if( film.scenes[i]["id"] == id ) {
+        film.scenes[i] = scene;
+        found = 1; break;
+      }
+    };
+    if( found != 1 ) film.scenes.push( scene );
+    set_local_data( film )
+
+    console.log( get_local_data( imdbid) )
+
+  })
 }
 
+function get_local_data ( id ) {
+  return localData[id]
+}
+
+function set_local_data ( data, alternative_id ) {
+  var id = data["id"]? data["id"]["imdbid"] : alternative_id
+  localData[id] = data;
+}
+
+var localData = {}
+
+
+
 function remove_scene ( id ) {
-  return 1
+  var film = get_local_data( id )
+  for (var i = 0; i < film.scenes.length-1; i++) {
+    if( film.scenes[i]["id"] == id ) {
+      film.scenes[i].splice( i, 1 )
+      set_local_data( film )
+      return 1
+    }
+  };
+  return -1
 }
 
 function play( player, skip_list, output ){
@@ -544,21 +525,48 @@ function play( player, skip_list, output ){
 }
 
 function search ( file, title, imdbid ) {
-  imdbid = "tt0000000"
+  trace( "search", arguments )
   if ( !imdbid && file ) {
+    console.log( "searching by file ")
     return parse_input_file( file ).then( function ( stats ) {
-      call_online_api( { action:"search", filename:stats.estimated_title, hash:stats.hash, bytesize:stats.filesize } )
+      console.log( "file stats are: ", JSON.stringify( stats ) )
+      call_online_api( { action:"search", filename:stats.estimated_title, hash:stats.hash, bytesize:stats.filesize } ).then( function ( film ) {
+        if ( film["status"] == 0 ) set_local_data( film["data"] )
+        return film;
+      })
     })
-  };
-  return call_online_api( { action:"search", filename:title, imdb_code:imdbid } )
+  } else {
+    return call_online_api( { action:"search", filename:title, imdb_code:imdbid } ).then( function ( film ) {
+      if ( film["status"] == 0 ) set_local_data( film["data"] )
+      return film;
+    })
+  }
+  
 }
 
-function add_review ( imdb_code, review, token ) {
+function test () {
+  var input = "/home/miguel/videoLab/1/Homeland.S03E02.mp4"
+  //search( "/home/miguel/videoLab/1/Homeland.S03E02.mp4", undefined, "tt0000000" )
+  log_in( "pepe", "pepe" )
+  //play ( input, "ffplay", [{start:3.21,end:10.42},{start:13.21,end:20.42},{start:23.21,end:40.42}], "/home/miguel/videoLab/test.mp4" )
+  //preview ( input, {start:23.21,end:40.42}  )
+  //get_scene_exact_times ( input, default_reference.start, default_reference.end, default_reference )  
+}
+
+function trace ( name, args ) {
+  console.log( "+ function",name,"called with",args,"at", Date.now() )
+}
+
+function add_review ( imdb_code, review ) {
+  var token = get_local_data( "token" )
   return call_online_api( { action:"review", review:review, token:token } )
 }
 
 function log_in ( user, pass ) {
-  return call_online_api( { action:"login", username:user, password:pass } )
+  trace( "log_in", arguments )
+  return call_online_api( { action:"login", username:user, password:pass } ).then( function ( reply ) {
+    if ( reply["status"] == 200 ) set_local_data( reply["data"]["token"], "token" )
+  })
 }
 
 function new_user ( user, pass ) {
@@ -578,14 +586,15 @@ function auto_assign ( ) {
 }
 
 // Expose functions
-exports.get_id_from_file          = parse_input_file;
-exports.get_content_by_id         = search_film;
-exports.get_offset_with_reference = get_scene_exact_times;
-exports.get_available_players     = get_available_players;
-exports.preview                   = preview;
-exports.get_current_time          = get_current_time;
-exports.get_thumbnails            = get_thumbnails
-exports.get_sync_reference        = get_sync_reference;
+exports.get_id_from_file          = test;
+exports.get_content_by_id         = test;
+exports.get_offset_with_reference = test;
+exports.get_available_players     = test;
+exports.preview                   = test;
+exports.get_current_time          = test;
+exports.get_thumbnails            = test;
+exports.get_sync_reference        = test;
+
 
 
 exports.presync_scene = presync_scene;
