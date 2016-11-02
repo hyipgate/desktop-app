@@ -496,10 +496,12 @@ function add_scene ( start, end, tags, comment, id ) {
 }
 
 function get_local_data ( id ) {
+  trace( "get_local_data", arguments )
   return localData[id]
 }
 
 function set_local_data ( data, alternative_id ) {
+  trace( "set_local_data", arguments )
   var id = data["id"]? data["id"]["imdbid"] : alternative_id
   localData[id] = data;
 }
@@ -558,6 +560,7 @@ function trace ( name, args ) {
 }
 
 function add_review ( imdb_code, review ) {
+  trace( "add_review", arguments )
   var token = get_local_data( "token" )
   return call_online_api( { action:"review", review:review, token:token } )
 }
