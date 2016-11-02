@@ -207,7 +207,20 @@ function crosscorrelate2( ref, our, span ){
   return { min: toTime(bef_offset_error), center: toTime(i_min), max: toTime(aft_offset_error) }
 }
 
-
+function estimate_scene_change ( input, start, end ) {
+  return create_sync_data( input, start, end ).then( function ( sync_data ) {
+    var max_distance = 0
+    var change_at = -1
+    for (var i = 1; i < sync_data.length-1; i++) {
+      var d = hamming_distance( sync_data[i-1][0], sync_data[i][0] )
+      if ( d > max_distance) {
+        max_distance = d;
+        change_at = sync_data[i][1];
+      };
+    };
+    return change_at;
+  })
+}
 
 
 // Return a list of availble players
@@ -318,6 +331,17 @@ function get_thumbnails ( input, start, end, fps, usage ) {
 // Generate thumbails and return their hash
 function get_sync_reference ( input, start, end ) {
   console.log("get_sync_reference called with ", input, start, end )
+  var outer_span  = 10;
+  var innter_span = 10;
+  if ( end - start > innter_span*2 ) {
+    var s1 = start - outer_span;
+    var s2 = start + outer_span;
+    var e1 = end   - outer_span;
+    var e1 = end   + outer_span;
+  } else {
+
+
+  };
   return new Promise( function (resolve, reject) {
     create_sync_data( input, start, end ).then( function ( data ) {
       var ref = { "start":start, "end":end, "data":data };
@@ -443,15 +467,6 @@ function hamming_distance ( a, b ) {
   return distance;
 }
 
-function add_review ( imdb_code, review, token ) {
-  return get( "http://fcinema.org/api", { action:"review", review:review, token:token }, true )
-}
-
-function log_in ( user, pass ) {
-  return get( "http://fcinema.org/api", { action:"login", username:user, password:pass }, true )
-}
-
-
 function create_ffmpeg_filter ( stream, times ) {
   /* http://stackoverflow.com/q/39122287/3766869 by Mulvya
     ffplay
@@ -513,13 +528,79 @@ function get( url, params, json ) {
 }
 
 
+function presync_scene ( id ) {
+  // body...
+}
+
+function add_scene ( start, end, tags, comments, id ) {
+  return 1
+}
+
+function remove_scene ( id ) {
+  return 1
+}
+
+function play( player, skip_list, output ){
+
+}
+
+function search ( file, title, imdbid ) {
+  imdbid = "tt0000000"
+  if ( !imdbid && file ) {
+    return parse_input_file( file ).then( function ( stats ) {
+      get( "http://fcinema.org/api", { action:"search", filename:stats.estimated_title, hash:stats.hash, bytesize:stats.filesize }, true )
+    })
+  };
+  return get( "http://fcinema.org/api", { action:"search", filename:title, imdb_code:imdbid }, true )
+}
+
+function add_review ( imdb_code, review, token ) {
+  return get( "http://fcinema.org/api", { action:"review", review:review, token:token }, true )
+}
+
+function log_in ( user, pass ) {
+  return get( "http://fcinema.org/api", { action:"login", username:user, password:pass }, true )
+}
+
+function new_user ( user, pass ) {
+  return get( "http://fcinema.org/api", { action:"newuser", username:user, password:pass }, true )
+}
+
+function new_pass ( user, pass, newpass ) {
+  return get( "http://fcinema.org/api", { action:"newpass", username:user, password:pass, newpass:newpass }, true )
+}
+
+function share_scenes ( ) {
+  return get( "http://fcinema.org/api", { action:"newpass", username:user, password:pass, newpass:newpass }, true )
+}
+
+function auto_assign ( ) {
+  return get( "http://fcinema.org/api", { action:"claim", imdb_code:imdbid }, true )
+}
+
 // Expose functions
 exports.get_id_from_file          = parse_input_file;
 exports.get_content_by_id         = search_film;
 exports.get_offset_with_reference = get_scene_exact_times;
 exports.get_available_players     = get_available_players;
-exports.play                      = play;
 exports.preview                   = preview;
 exports.get_current_time          = get_current_time;
 exports.get_thumbnails            = get_thumbnails
 exports.get_sync_reference        = get_sync_reference;
+
+
+exports.presync_scene = presync_scene;
+exports.add_scene     = add_scene;
+exports.estimate_scene_change     = estimate_scene_change;
+exports.remove_scene  = remove_scene;
+
+exports.play          = play;
+exports.search_film   = search;
+
+exports.add_review    = add_review;
+exports.share_scenes  = share_scenes;
+
+exports.new_user      = new_user;
+exports.new_pass      = new_pass;
+exports.log_in        = log_in;
+exports.auto_assign   = auto_assign;
