@@ -48,6 +48,11 @@ angular.module('mainCtrl', ['ngMaterial'])
     console.log(data);
   }
 
+  vm.test = function(){
+    var data = $rootScope.utils.test();
+    console.log(data);
+  }
+
   vm.preview = function(){
     var data = $rootScope.utils.preview('path','filter');
     console.log(data);

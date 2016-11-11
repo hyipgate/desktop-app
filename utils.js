@@ -24,23 +24,23 @@ var localDB       = new PouchDB('localData');
  * Play film
  * @param {string} player the media player we want to use (must be one from the list of available players)
  * @param {json} skip_list list of scenes we want to skip (must have "end" and "start" fields )
- * @param {string} output ... 
+ * @param {string} output in case player = "file" the path to put th file
  * @returns {number} don't know yet
  */
 function play( player, skip_list, output ){
 // Create skip filters
   var vf = create_ffmpeg_filter( "vf", skip_list )
   var af = create_ffmpeg_filter( "af", skip_list )
-// Get input file  
+// Get input file
   var input = get_local_data( "input" )
 
 // Play in ffplayer
   if( player == "ffplay" ){
-    spawn("ffplay",["-i",input,"-vf",vf,"-af",af],{stdio:"ignore"});
+    var ff = spawn("ffplay",["-i",input,"-vf",vf,"-af",af],{stdio:"ignore"});
   }
 // Dump to file
   else if ( player == "file" ) {
-    spawn("ffmpeg",["-i",input,"-vf",vf,"-af",af,output],{stdio:"ignore"});
+    var ff = spawn("ffmpeg",["-i",input,"-vf",vf,"-af",af,output],{stdio:"ignore"});
   }
 // Stream to player
   else {
@@ -49,9 +49,10 @@ function play( player, skip_list, output ){
   // Open the media player
     spawn( path,[stream] )
   // Start the video steam
-    spawn("ffmpeg",["-re","-i",input,"-vf",vf,"-af",af,"-q:v",3,"-q:a",3,"-f","mpegts",stream],{stdio:"ignore"});
+    var ff = spawn("ffmpeg",["-re","-i",input,"-vf",vf,"-af",af,"-q:v",3,"-q:a",3,"-f","mpegts",stream],{stdio:"ignore"});
     //ffmpeg -re -i $file -q:v 3 -q:a 3 -f mpegts udp://127.0.0.1:2000
   };
+  ff.stderr.on('data', ffmpeg_console_update )
   return 0;
 }
 
@@ -60,8 +61,8 @@ function play( player, skip_list, output ){
 
 /**
  * Preview a scene cut
- * @param {string} start ...
- * @param {string} end ...
+ * @param {string} start where to start skipping in seconds
+ * @param {string} end where to stop skipping in seconds
  * @returns {number} don't know yet
  */
 function preview ( start, end ) {
@@ -71,13 +72,14 @@ function preview ( start, end ) {
   var vf = create_ffmpeg_filter( "vf", filter )
   var af = create_ffmpeg_filter( "af", filter )
 
-// Play in ffplayer TODO: read the output (to extract time and errors)
-  var ff = spawn("ffplay",["-i",input,'-f', 's16le',"-vf",vf,"-af",af,"-x",300,"-y",220,"pipe:1"]);
-  ff.stdout.on('data', (data) => { console.log(data.toString() ) });
-  /*ff.stderr.on('data', (data) => { g_currentTime = data.time });*/
+  console.log(input)
+
+// Play in ffplayer
+  var ff = spawn("ffplay",["-i",input,"-vf",vf,"-af",af,"-x",300,"-y",220]);
+  ff.stderr.on('data', ffmpeg_console_update )
   return 0;
 }
-var g_currentTime = 9.235;
+var g_currentTime = 0.0;
 
 
 
@@ -143,7 +145,7 @@ function get_players () {
 /**
  * Syncs scene with the local film version
  * @param {string} id id of the scene we want to presync
- * @returns {number} Promise to a number defining how the sync went 
+ * @returns {number} Promise to a number defining how the sync went
  */
 function presync_scene ( id ) {
   trace( "presync_scene", arguments )
@@ -169,10 +171,10 @@ function presync_scene ( id ) {
 
 /**
  * Add a scene to the scene list
- * @param {number} start ...
- * @param {number} end ...
- * @param {array} tags ...
- * @param {string} comment ...
+ * @param {number} start where to start skipping (in seconds)
+ * @param {number} end where to stop skipping (in seconds)
+ * @param {array} tags list of tags
+ * @param {string} comment description of the scene
  * @param {string=null} id ...
  * @returns {number} don't know yet
  */
@@ -195,8 +197,8 @@ function add_scene ( start, end, tags, comment, id ) {
     // Add scene
     if ( i == -1 ) film.scenes.push( scene );
     // Edit scene
-    else film.scenes[i] = scene;  
-    
+    else film.scenes[i] = scene;
+
     set_local_data( "currentFilm", film )
 
     return 1
@@ -247,7 +249,7 @@ function search ( file, title, imdbid ) {
             set_local_data( "currentFilm", film["data"] )
           }
           resolve( film );
-        })  
+        })
       }
     })
   } else {
@@ -342,8 +344,7 @@ function auto_assign ( ) {
 }
 
 
-
-
+exports.test = test
 // Basic functions
 exports.search_film   = search;
 exports.presync_scene = presync_scene;
@@ -383,7 +384,7 @@ function parse_input_file ( input ){
       var oSub = new openSub()
       oSub.computeHash( input, function ( err, hash ) {
         var title = title_from_filename( input )
-        resolve({hash:hash,filesize:filesize+"",estimated_title:title})
+        resolve( { hash:hash, filesize:filesize+"", estimated_title:title })
       })
     })
   })
@@ -623,8 +624,9 @@ function title_from_filename( str ) {
 
 
 function test (a, b, c, d, e, f, g ) {
-  var input = "/home/miguel/videoLab/1/Homeland.S03E02.mp4"
-  var default_reference = {"start":60.46,"end":61.085,"data":[["0JEmM28d0r9GD2GZ0eF0w30R",79460],["0JEmM28d0r9GD2GZ0eF0w30R",79501],["0DEGM2ac0r9GD3GZ0eF0w30R",79543],["0D8GI3acWsCe53wZ0eF0w30R",79585],["0B8GQ3acWsCe53wn0eF0w30R",79626],["058GA22ZWwCe63gn0iF0w3WP",79668],["079OB2IZWwEec3un0iF0w3WP",79710],["079892Ip0QEWc1un0iF0u3WP",79751],["W588D2Ip0REmY1yn0aF0v3WP",79793],["W58852on0REGZ2qu0cF0n3WO",79835],["W58852on0PEGZ2qe0MF0n3WO",79876],["WX8853Yn0TAGp2qe0MD0L3WO",79918],["W08e53gn0TAGp2qe06D0n3WO",79960],["W08e42gn0DBOp2+i0sF0n3WO",80001],["W08e42gnWDFOn2Ui0tF0v3WU",80043],["yae39E0W14eO6ADm36y0J2W0",80085],["S4x3XD0m1VgG6Z5mO1860Y1G",80126],["Rqi3PEGi18kO0QOmMCy06A0G",80168],["Rmi3PEGi18kO8QOm6Cu06B0I",80210],["y8j3dF0d12hiWXoma98m43CO",80251],["Pet3qEG+19subvoNaGd1WP0G",80293],["+ad3xF0t1ct8pacP1p4Wn1mO",80335],["+ad3xF0t1ct8pacP1p4Wn1mO",80376],["i4t3yDGx1vtqu8v6mO7Cj16E",80418],["viv3Rkmd1ivCUOd33RGWT4m6",80460],["y0e3EEmZ1+eWDYn3mS0O62C3",80501],["y0e3CEmZ1+eWDYn3mS0O62C3",80543],["S0i36Fmn1Ueq6ouXOE8C32tH",80585],["y0u3GFOi17guXcRep7ivWnC8",80626],["SGu30ECk33fzGYFqv3sSmO64",80668],["SGu30ECc33fzGYFqv3sSmO64",80710],["RMu10E2ZdnePOc7oy1UUmk3M",80751],["CZen8E8nO8e72vX8UWf79x09",80793],["aXuO06Cl04q3XzGiBav3i-WL",80835],["aXuO06Cl04q3XzGiBav3i-W5",80876],["s0zDe2Mq0SKXyQ8c7se1cVmK",80918],["T083Op1RGBJuO6EpXQSe178G",80960],["S0k10vXVGb3CD3ZfmCCi53bG",81001],["S0k10vXVGb3CD3ZfmCCi53bG",81043],["S0+1WjnSOw1J6omci6Boa2cG",81085],["U0s7m1B72R7mXDCWk9eD6YD0",81126],["U0sDm0ZRYy3inXDGzO8d6o44",81168],["U0sDm0ZRYy3inXDGzO8d4o44",81210],["V0pCOWpF7Usmqe6RywCpSQ26",81251],["V0mCM0w34t0S7Wb7i1pCqc3C",81293],["-WuCB0sJuR0tBwud6oHaSI06",81335],["-WuCB0sJuR0tBwuZ6oHaSI06",81376],["-GuR6E+9nF4lnOybJ+OZEAW3",81418]]}
+  set_local_data( "input", "/home/miguel/videoLab/1/Homeland.S03E02.mp4" )
+  preview(25,30)
+  /*var default_reference = {"start":60.46,"end":61.085,"data":[["0JEmM28d0r9GD2GZ0eF0w30R",79460],["0JEmM28d0r9GD2GZ0eF0w30R",79501],["0DEGM2ac0r9GD3GZ0eF0w30R",79543],["0D8GI3acWsCe53wZ0eF0w30R",79585],["0B8GQ3acWsCe53wn0eF0w30R",79626],["058GA22ZWwCe63gn0iF0w3WP",79668],["079OB2IZWwEec3un0iF0w3WP",79710],["079892Ip0QEWc1un0iF0u3WP",79751],["W588D2Ip0REmY1yn0aF0v3WP",79793],["W58852on0REGZ2qu0cF0n3WO",79835],["W58852on0PEGZ2qe0MF0n3WO",79876],["WX8853Yn0TAGp2qe0MD0L3WO",79918],["W08e53gn0TAGp2qe06D0n3WO",79960],["W08e42gn0DBOp2+i0sF0n3WO",80001],["W08e42gnWDFOn2Ui0tF0v3WU",80043],["yae39E0W14eO6ADm36y0J2W0",80085],["S4x3XD0m1VgG6Z5mO1860Y1G",80126],["Rqi3PEGi18kO0QOmMCy06A0G",80168],["Rmi3PEGi18kO8QOm6Cu06B0I",80210],["y8j3dF0d12hiWXoma98m43CO",80251],["Pet3qEG+19subvoNaGd1WP0G",80293],["+ad3xF0t1ct8pacP1p4Wn1mO",80335],["+ad3xF0t1ct8pacP1p4Wn1mO",80376],["i4t3yDGx1vtqu8v6mO7Cj16E",80418],["viv3Rkmd1ivCUOd33RGWT4m6",80460],["y0e3EEmZ1+eWDYn3mS0O62C3",80501],["y0e3CEmZ1+eWDYn3mS0O62C3",80543],["S0i36Fmn1Ueq6ouXOE8C32tH",80585],["y0u3GFOi17guXcRep7ivWnC8",80626],["SGu30ECk33fzGYFqv3sSmO64",80668],["SGu30ECc33fzGYFqv3sSmO64",80710],["RMu10E2ZdnePOc7oy1UUmk3M",80751],["CZen8E8nO8e72vX8UWf79x09",80793],["aXuO06Cl04q3XzGiBav3i-WL",80835],["aXuO06Cl04q3XzGiBav3i-W5",80876],["s0zDe2Mq0SKXyQ8c7se1cVmK",80918],["T083Op1RGBJuO6EpXQSe178G",80960],["S0k10vXVGb3CD3ZfmCCi53bG",81001],["S0k10vXVGb3CD3ZfmCCi53bG",81043],["S0+1WjnSOw1J6omci6Boa2cG",81085],["U0s7m1B72R7mXDCWk9eD6YD0",81126],["U0sDm0ZRYy3inXDGzO8d6o44",81168],["U0sDm0ZRYy3inXDGzO8d4o44",81210],["V0pCOWpF7Usmqe6RywCpSQ26",81251],["V0mCM0w34t0S7Wb7i1pCqc3C",81293],["-WuCB0sJuR0tBwud6oHaSI06",81335],["-WuCB0sJuR0tBwuZ6oHaSI06",81376],["-GuR6E+9nF4lnOybJ+OZEAW3",81418]]}
   search( "/home/miguel/videoLab/1/Homeland.S03E02.mp4", undefined, "tt0000000" )/*.then(
   //log_in( "pepe", "pepe" )
   add_scene ( 28.23, 29.53, ["tag1","tag2"], "comment", "idtesting" )).then( console.log( localData ))
@@ -670,4 +672,15 @@ function random_id () {
     text += possilble.charAt( Math.floor( Math.random() * possilble.length ));
   };
   return text;
+}
+
+
+function ffmpeg_console_update ( data ) {
+  var timeRegex = /^ +(\d+.\d+)/;
+  var matched   = timeRegex.exec( data.toString() )
+  if ( matched ) {
+    g_currentTime = matched[1]
+  } else {
+    console.log( data.toString() )
+  }
 }
