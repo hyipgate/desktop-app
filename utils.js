@@ -36,11 +36,11 @@ function play( player, skip_list, output ){
 
 // Play in ffplayer
   if( player == "ffplay" ){
-    var ff = spawn("ffplay",["-i",input,"-vf",vf,"-af",af],{stdio:"ignore"});
+    var ff = spawn("ffplay",["-i",input,"-vf",vf,"-af",af]);
   }
 // Dump to file
   else if ( player == "file" ) {
-    var ff = spawn("ffmpeg",["-i",input,"-vf",vf,"-af",af,output],{stdio:"ignore"});
+    var ff = spawn("ffmpeg",["-i",input,"-vf",vf,"-af",af,output]);
   }
 // Stream to player
   else {
@@ -49,7 +49,7 @@ function play( player, skip_list, output ){
   // Open the media player
     spawn( path,[stream] )
   // Start the video steam
-    var ff = spawn("ffmpeg",["-re","-i",input,"-vf",vf,"-af",af,"-q:v",3,"-q:a",3,"-f","mpegts",stream],{stdio:"ignore"});
+    var ff = spawn("ffmpeg",["-re","-i",input,"-vf",vf,"-af",af,"-q:v",3,"-q:a",3,"-f","mpegts",stream]);
     //ffmpeg -re -i $file -q:v 3 -q:a 3 -f mpegts udp://127.0.0.1:2000
   };
   ff.stderr.on('data', ffmpeg_console_update )
