@@ -149,7 +149,7 @@ function presync_scene ( id ) { // TODO make sure it works
   trace( "presync_scene", arguments )
   return new Promise( function (resolve, reject) {
   // Get basic data
-    var film = get_local_data( "currentFilm" ) || return false;
+    var film = get_local_data( "currentFilm" ); if (!film) return false;
     var i    = find_in_array( film.scenes, id );  if( i == -1 ) return false;
   // Make a first estimation of the offset
   // First scene to arrive here will go straight, followings will wait for the first to finish calibrating and improve offset estimation, hence they will calibrate faster
@@ -348,7 +348,7 @@ function new_pass ( user, pass, newpass ) {
  */
 function share_scenes ( ) {
   trace( "share_scenes", arguments )
-  var film  = get_local_data( "currentFilm" ) || return Promise.reject( "No film is currently open" );
+  var film  = get_local_data( "currentFilm" ); if (!film) return Promise.reject( "No film is currently open" );
   return call_online_api( { action:"modify", data:film } )
 }
 
@@ -361,7 +361,7 @@ function share_scenes ( ) {
  */
 function auto_assign ( ) {
   trace( "auto_assign", arguments )
-  var film  = get_local_data( "currentFilm" ) || return Promise.reject( "No film is currently open" );
+  var film  = get_local_data( "currentFilm" ); if (!film) return Promise.reject( "No film is currently open" );
   return call_online_api( { action:"claim", imdb_code:film["id"]["imdb"] } )
 }
 
