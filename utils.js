@@ -42,15 +42,14 @@ function play( player, skip_list, output ){
   else if ( player == "file" ) {
     var ff = spawn("ffmpeg",["-i",input,"-vf",vf,"-af",af,output]);
   }
-// Stream to player
+// Stream to player TOOD: make sure it actually works
   else {
     var stream = "udp://@127.0.0.1:2000"
-    var path   = which.sync( player ) // todo make async
-  // Open the media player
+    var path   = which.sync( player )
+  // Open the media player // TODO onclose do something
     spawn( path,[stream] )
   // Start the video steam
     var ff = spawn("ffmpeg",["-re","-i",input,"-vf",vf,"-af",af,"-q:v",3,"-q:a",3,"-f","mpegts",stream]);
-    //ffmpeg -re -i $file -q:v 3 -q:a 3 -f mpegts udp://127.0.0.1:2000
   };
   ff.stderr.on('data', ffmpeg_console_update )
   return 0;
@@ -66,20 +65,18 @@ function play( player, skip_list, output ){
  * @returns {number} don't know yet
  */
 function preview ( start, end ) {
+// Retrieve input
   var input  = get_local_data( "input" )
-  var filter = [{start:start,end:end},{start:end+5,end:start-5}]
 // Create skip filters
+  var filter = [{start:start,end:end},{start:end+5,end:start-5}]
   var vf = create_ffmpeg_filter( "vf", filter )
   var af = create_ffmpeg_filter( "af", filter )
-
-  console.log(input)
-
-// Play in ffplayer
-  var ff = spawn("ffplay",["-i",input,"-vf",vf,"-af",af,"-x",300,"-y",220]);
+// Play in ffplay
+  var ff = spawn("ffplay",["-i",input,"-vf",vf,"-af",af,"-x",500,"-y",350]);
   ff.stderr.on('data', ffmpeg_console_update )
   return 0;
 }
-var g_currentTime = 0.0;
+
 
 
 
@@ -90,6 +87,7 @@ var g_currentTime = 0.0;
 function get_current_time (){
   return g_currentTime;
 }
+var g_currentTime = 0.0;
 
 
 
@@ -130,7 +128,7 @@ function get_players () {
 
     for (var i = 0; i < possible_players.length; i++) {
       try {
-        which.sync( possible_players[i] );  // TODO: this function does not work on MACOS
+        which.sync( possible_players[i] );  // TODO: this function does not work on MACOS (windows?)
         available_players.push( possible_players[i] );
       } catch(e){};
     };
@@ -147,22 +145,23 @@ function get_players () {
  * @param {string} id id of the scene we want to presync
  * @returns {number} Promise to a number defining how the sync went
  */
-function presync_scene ( id ) {
+function presync_scene ( id ) { // TODO make sure it works
   trace( "presync_scene", arguments )
   return new Promise( function (resolve, reject) {
-    var film = get_local_data( "currentFilm" );   if(  !film  ) return false;
+  // Get basic data
+    var film = get_local_data( "currentFilm" ) || return false;
     var i    = find_in_array( film.scenes, id );  if( i == -1 ) return false;
-    linear_estimator( film.scenes[i].start ).then( (time) => {
-      get_point_offset( time, "start", 5 ).then( (start) => {
-        linear_estimator( film.scenes[i].end ).then( (time) => {
-          get_point_offset( time, "end", 3 ).then( (end) => {
-            resolve( {star:start, end:end } )
-          })
+  // Make a first estimation of the offset
+  // First scene to arrive here will go straight, followings will wait for the first to finish calibrating and improve offset estimation, hence they will calibrate faster
+    linear_estimator( film.scenes[i].start ).then( ( approx_start ) => {
+    // Get the exact start
+      get_point_offset( approx_start, "start", 5 ).then( (start) => {
+      // Get the exact end
+        get_point_offset( film.scenes[i].end-film.scenes[i].start+start, "end", 3 ).then( (end) => {
+          resolve( {star:start, end:end } )
         })
       })
     })
-  }).catch( (code) => {
-    return {start:-1,end:-1}
   })
 }
 
@@ -180,11 +179,12 @@ function presync_scene ( id ) {
  */
 function add_scene ( start, end, tags, comment, id ) {
   trace( "add_scene", arguments )
+  id = id || random_id()
 
   return create_sync_data( start-10, end+10 ).then( function ( data ) {
 
     var scene = {
-      id:       random_id(),
+      id:       id,
       tags:     tags,
       comment:  comment,
       start:    start,
@@ -195,9 +195,9 @@ function add_scene ( start, end, tags, comment, id ) {
     var film = get_local_data( "currentFilm" )
     var i    = find_in_array( film.scenes, id );
     // Add scene
-    if ( i == -1 ) film.scenes.push( scene );
+    if ( i == -1 ){ film.scenes.push( scene ) }
     // Edit scene
-    else film.scenes[i] = scene;
+    else{ film.scenes[i] = scene }
 
     set_local_data( "currentFilm", film )
 
@@ -228,34 +228,44 @@ function remove_scene ( id ) {
 /**
  * Search film in database
  * @param {string} file Path to file eg. "/home/miguel/films/Homeland.S03E02.mp4"
+ * @param {string} url full url where the media is located
  * @param {string} title Film title eg. "The Lord Of The Rings"
  * @param {string} imdbid ID on IMDB eg. tt1234567
  * @returns {json} metadata and scene content of matched film OR list of ids if multiple films match searching criteria
  */
-function search ( file, title, imdbid ) {
+function search ( file, title, url, imdbid ) {
   trace( "search", arguments )
-  if ( !imdbid && file ) {
+  if ( imdbid ) {
+    var film = get_local_data( imdbid )
+    if ( film ) {
+      set_local_data( "currentFilm", film )
+      Promise.resolve( film );
+    };
+  };
+
+  if ( file ) {
     return parse_input_file( file ).then( function ( stats ) {
       var imdbid = get_local_data( stats.hash+"|"+stats.filesize )
-      if( imdbid ){
+      if ( imdbid ) {
         var film = get_local_data( imdbid )
-        set_local_data( "currentFilm", film )
-        resolve( film );
-      } else {
-        call_online_api( { action:"search", filename:stats.estimated_title, hash:stats.hash, bytesize:stats.filesize } ).then( function ( film ) {
-          if ( film["status"] == 0 ){
-            set_local_data( stats.hash+"|"+stats.filesize, film["data"]["id"]["imdb"] )
-            set_local_data( film["data"]["id"]["imdb"], film["data"] )
-            set_local_data( "currentFilm", film["data"] )
-          }
-          resolve( film );
-        })
-      }
+        if ( film ) {
+          set_local_data( "currentFilm", film )
+          return film;
+        };
+      };
+
+      call_online_api( { action:"search", filename:stats.estimated_title, hash:stats.hash, bytesize:stats.filesize, url:url } ).then( function ( film ) {
+        if ( film["status"] == 0 ){
+          set_local_data( stats.hash+"|"+stats.filesize, film["data"]["id"]["imdb"] )
+          set_local_data( "currentFilm", film["data"] )
+        }
+        return film;
+      })
     })
   } else {
-    return call_online_api( { action:"search", filename:title, imdb_code:imdbid } ).then( function ( film ) {
+    return call_online_api( { action:"search", filename:title, imdb_code:imdbid, url:url } ).then( function ( film ) {
       if ( film["status"] == 0 ) set_local_data( "currentFilm", film["data"] )
-      resolve( film );
+      return film;
     })
   }
 }
@@ -286,6 +296,18 @@ function add_review ( review ) {
 function log_in ( user, pass ) {
   trace( "log_in", arguments )
   return call_online_api( { action:"login", username:user, password:pass } )
+}
+
+
+
+
+/**
+ * Tells you who you are (this is, your username and permissions)
+ * @returns {json} {username:"pepe",permissions:undefined_yet}
+ */
+function who_i_am ( ) {
+  trace( "who_i_am", arguments )
+  return { username: get_local_data("username"), permissions: get_local_data("permissions") }
 }
 
 
@@ -326,7 +348,7 @@ function new_pass ( user, pass, newpass ) {
  */
 function share_scenes ( ) {
   trace( "share_scenes", arguments )
-  var film  = get_local_data( "currentFilm" )
+  var film  = get_local_data( "currentFilm" ) || return Promise.reject( "No film is currently open" );
   return call_online_api( { action:"modify", data:film } )
 }
 
@@ -339,7 +361,7 @@ function share_scenes ( ) {
  */
 function auto_assign ( ) {
   trace( "auto_assign", arguments )
-  var film = get_local_data( "currentFilm" ); if ( !film ) return -1;
+  var film  = get_local_data( "currentFilm" ) || return Promise.reject( "No film is currently open" );
   return call_online_api( { action:"claim", imdb_code:film["id"]["imdb"] } )
 }
 
@@ -367,6 +389,7 @@ exports.get_current_time          = get_current_time;
 exports.new_user      = new_user;
 exports.new_pass      = new_pass;
 exports.log_in        = log_in;
+exports.who_i_am      = who_i_am;
 
 
 
@@ -392,7 +415,7 @@ function parse_input_file ( input ){
 
 
 function linear_estimator ( time ) {
-  return time;
+  return Promise.resolve( time ); // TODO
 }
 
 
@@ -402,22 +425,27 @@ function get_point_offset ( guess, typ, ttl ) {
   return create_sync_data( guess-1, guess+1 )
     .then( function ( sync_data ) {
       //console.log( JSON.stringify( sync_data ) )
-      var xcorr = crosscorrelate( sync_data ) // TODO: this returns offsets! not absolute positions
-      if ( Math.abs(xcorr.center-guess)>1 ) return get_point_offset( xcorr.center, typ, ttl-1 );
+      var xcorr = crosscorrelate( sync_data, guess )
+    // If we have a lot of uncertainty
+      if ( xcorr.max-xcorr.min > 0.5 ) return -1
+    // If we have found the point, but it is far away from our hashed frames (and hence we can't really trust the value)
+      if ( Math.abs(xcorr.center-guess) > 4 ) return get_point_offset( xcorr.center, typ, ttl-1 );
+    // If we are syncing the start, better to remove extra frames that to start cutting late (and the other way around)
       if ( typ == "start" ) return xcorr.min
       if ( typ == "end" )   return xcorr.max
+    // Don't know why I wrote this option
       return xcorr.center
     })
 }
 
 // Perform crosscorrelation operation to find a our clip inside a ref clip
-function crosscorrelate( our ){
-  // TODO: avoid cross-correlating with the whole film (eg. do it by chunks...)
+function crosscorrelate( our, guess ){
+  // TODO: avoid cross-correlating with the whole film (eg. do it by chunks around guess)
   trace( "crosscorrelate", arguments )
-  var ref = get_local_data( "currentFilm" )["syncRef"]
+  var ref = get_local_data( "currentFilm" )["syncRef"]  // TODO: this will throw an error if we don't have a currentFilm
 // Set parameters
   var accuracy   = 1/24; // offset values will be rounded to this precision
-  var count_min  = 30;   // ignore noisy offsets with few points
+  var count_min  = 5;   // ignore noisy offsets with few points
 
 // Crosscorrelate
   var d_array = {};
@@ -460,8 +488,9 @@ function crosscorrelate( our ){
     if ( aft_offset_error < t ) aft_offset_error = t;
   }
 
+  function toTime (ind) { return (ind*accuracy)+guess }
 // return
-  return { min:bef_offset_error*accuracy, center:t_min*accuracy, max:aft_offset_error*accuracy }
+  return { min:toTime(bef_offset_error), center:toTime(t_min), max:toTime(aft_offset_error) }
 }
 
 
@@ -470,7 +499,7 @@ function get_thumbnails ( start, end, fps, usage ) {
   trace( "get_thumbnails", arguments )
 // Make sure times are reasonable
   if ( start < 0 ) {
-    end   += -start
+    end  += -start
     start = 0
   }
   // TODO: check end is reasonable (but we don't know the length :)
@@ -518,7 +547,7 @@ function create_thumbnail_hash ( thumb ) {
   return new Promise( function ( resolve, reject ) {
     getPixels( thumb.file, function( err, pixels ) {
       if ( err ) {
-        resolve( {} ) // standard would be to "reject", but we are inside a "Promise.all" and missing one point is okay
+        resolve( [] ) // standard would be to "reject", but we are inside a "Promise.all" and missing one point is okay
       } else {
         var base64 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
         var hash   = ""
@@ -544,11 +573,11 @@ function create_thumbnail_hash ( thumb ) {
 function hamming_distance ( a, b ) {
   var digitsMap = {"0":"000000","1":"000001","2":"000010","3":"000011","4":"000100","5":"000101","6":"000110","7":"000111","8":"001000","9":"001001","A":"001010","B":"001011","C":"001100","D":"001101","E":"001110","F":"001111","G":"010000","H":"010001","I":"010010","J":"010011","K":"010100","L":"010101","M":"010110","N":"010111","O":"011000","P":"011001","Q":"011010","R":"011011","S":"011100","T":"011101","U":"011110","V":"011111","W":"100000","X":"100001","Y":"100010","Z":"100011","a":"100100","b":"100101","c":"100110","d":"100111","e":"101000","f":"101001","g":"101010","h":"101011","i":"101100","j":"101101","k":"101110","l":"101111","m":"110000","n":"110001","o":"110010","p":"110011","q":"110100","r":"110101","s":"110110","t":"110111","u":"111000","v":"111001","w":"111010","x":"111011","y":"111100","z":"111101","+":"111110","-":"111111"}
   var distance  = 0;
-  for (var i = 0; i <= 23; i++) {
+  for (var i = 0; i < 24; i++) {
     if( a.charAt(i) == b.charAt(i) ) continue;
     var ai = digitsMap[ a.charAt(i) ]
     var bi = digitsMap[ b.charAt(i) ]
-    for (var j = 5; j >= 0; j--) {
+    for (var j = 0; j < 6; j++) {
       distance += ( ai.charAt(j) == bi.charAt(j) )
     };
   };
@@ -560,10 +589,7 @@ function hamming_distance ( a, b ) {
 // Create a ffmpeg filter
 function create_ffmpeg_filter ( stream, times ) {
   /* http://stackoverflow.com/q/39122287/3766869 by Mulvya
-    ffplay
-      -vf "select='lte(t\,4)+gte(t\,16)',setpts=N/FRAME_RATE/TB"
-      -af "aselect='lte(t\,4)+gte(t\,16)',asetpts=N/SR/TB"
-      -i INPUT*/
+  ffplay -vf "select='lte(t\,4)+gte(t\,16)',setpts=N/FRAME_RATE/TB" -af "aselect='lte(t\,4)+gte(t\,16)',asetpts=N/SR/TB" -i INPUT*/
   var filter = [];
   for (var i = 0; i < times.length; i++) {
     filter.push("(lte(t\,"+times[i].start+")"+"+gte(t\,"+times[i].end+"))")
@@ -582,15 +608,16 @@ function create_ffmpeg_filter ( stream, times ) {
 // Call fcinema api, return object
 function call_online_api ( params ) {
   trace( "call_online_api", arguments )
-  var url = "http://fcinema.org/api2"
-
+// Set authentication token (if available)  
   var token = get_local_data( "token" )
   if ( token ) params["token"] = token;
-
+// Create query
   var str = [];
   for( var key in params ) if(params[key]) str.push( key + "=" + params[key] );
-  if( str.length != 0 ) url = url+"?"+str.join("&") // return null promise rather than calling the API with no params
-
+  var url = "http://fcinema.org/api2?"+str.join("&")
+// Reject if query is invalid
+  if( str.length == 0 ) return Promise.reject( "Invalid parameters" );
+// Return promise with API result
   return new Promise(function(resolve, reject) {
     httpRequest( url, function(error, response, body) {
       if( error ){
@@ -598,7 +625,8 @@ function call_online_api ( params ) {
       } else {
         var data = JSON.parse( body )
         if( data["token"] )    set_local_data( "token", data["token"] )
-        if( data["username"] ) set_local_data( "user", data["username"] )
+        if( data["username"] ) set_local_data( "username", data["username"] )
+        if( data["permissions"] ) set_local_data( "permissions", data["permissions"] )
         resolve( data )
       }
     });
@@ -666,10 +694,10 @@ function find_in_array ( array, id ) {
 }
 
 function random_id () {
-  var text      = ""
-  var possilble = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
+  var text     = ""
+  var possible = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
   for (var i = 0; i < 10; i++) {
-    text += possilble.charAt( Math.floor( Math.random() * possilble.length ));
+    text += possible.charAt( Math.floor( Math.random() * possible.length ));
   };
   return text;
 }
