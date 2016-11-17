@@ -145,7 +145,7 @@ function get_players () {
  * @param {string} id id of the scene we want to presync
  * @returns {number} Promise to a number defining how the sync went
  */
-function presync_scene ( id ) { // TODO make sure it works
+function presync_scene ( id ) {
   trace( "presync_scene", arguments )
   return new Promise( function (resolve, reject) {
   // Get basic data
@@ -153,12 +153,13 @@ function presync_scene ( id ) { // TODO make sure it works
     var i    = find_in_array( film.scenes, id );  if( i == -1 ) return false;
   // Make a first estimation of the offset
   // First scene to arrive here will go straight, followings will wait for the first to finish calibrating and improve offset estimation, hence they will calibrate faster
-    linear_estimator( film.scenes[i].start ).then( ( approx_start ) => {
+    estimate_time_on_our( film.scenes[i].start ).then( ( our_time_approx_start ) => {
     // Get the exact start
-      get_point_offset( approx_start, "start", 5 ).then( (start) => {
+      find_this_in_our_version( film.scenes[i].start, our_time_approx_start, "start", 5 ).then( (our_time_start) => {
       // Get the exact end
-        get_point_offset( film.scenes[i].end-film.scenes[i].start+start, "end", 3 ).then( (end) => {
-          resolve( {star:start, end:end } )
+        var our_time_approx_end = film.scenes[i].end-film.scenes[i].start+our_time_start
+        find_this_in_our_version( film.scenes[i].end, our_time_approx_end, "end", 3 ).then( (our_time_end) => {
+          resolve( {star:our_time_start, end:our_time_end } )
         })
       })
     })
@@ -414,35 +415,79 @@ function parse_input_file ( input ){
 }
 
 
-function linear_estimator ( time ) {
+function estimate_time_on_our ( time ) {
   return Promise.resolve( time ); // TODO
 }
 
+function estimate_time_on_ref ( our_time ) {
+  return our_time; // TODO
+}
 
-function get_point_offset ( guess, typ, ttl ) {
-  trace( "get_point_offset", arguments )
-  if ( ttl = 0 ) return -1;
-  return create_sync_data( guess-1, guess+1 )
-    .then( function ( sync_data ) {
-      //console.log( JSON.stringify( sync_data ) )
-      var xcorr = crosscorrelate( sync_data, guess )
+function want_to_see ( skip_list, our_sync_data, our_time ) {
+
+  return new Promise( function (resolve, reject) {
+    var ref_guess = estimate_time_on_ref( our_time );
+    var offsets   = get_data_offsets( our_sync_data, ref_guess );
+    var ref_times = {max:our_time+offsets, min:our_time+offsets}
+
+    var our_next_ok  = 0
+    var our_next_bad = 24*60*60
+    for (var i = 0; i < skip_list.length; i++) {
+      if ( ref_times.min > skip_list[i].end ) continue; // point in the past
+    // How much do we have until the badness?
+      var time_to_bad = skip_list[i].start-ref_times.max
+      our_next_bad = Math.min( our_next_bad, our_time + time_to_bad )
+      if ( ref_times.max > skip_list[i].start ) continue; // scene not started
+    // How much do we have until the goodness?
+      var time_to_good = skip_list[i].end-ref_times.min
+      our_next_ok = Math.max( our_next_ok, our_time + time_to_good )
+    };
+    if ( our_next_ok != 0 ){
+      resolve( { want:0, friendly:our_next_ok, accuracy: ref_times.max-ref_times.min } )
+    } else {
+      resolve( { want:1, avoid:our_next_bad, accuracy: ref_times.max-ref_times.min } )
+    }
+  });
+}
+
+
+// I want to find where ref_time is in our current movie. I guess it is in our_time_guess. Where is it?
+function find_this_in_our_version ( ref_time, our_time_guess, typ, ttl ) {
+  trace( "find_this_in_our_version", arguments )
+  if ( ttl == 0 ) return -1;
+  return create_sync_data( guess-1, our_time_guess+1 )
+    .then( function ( our_data ) {
+      var offsets   = get_data_offsets( our_data, ref_time )
+      var our_times = {min:ref_time-offsets.min, center:ref_time-offsets.center, max:ref_time-offsets.max}
+    // If our guess was too far away from the real point, the sync_data is far away from the real point, and we might have problems if we have extra/less scenes
+      if ( Math.abs( our_times.center-our_time_guess ) > 4 ){
+        return find_this_in_our_version( ref_time, our_times.center, typ, ttl-1 );
     // If we have a lot of uncertainty
-      if ( xcorr.max-xcorr.min > 0.5 ) return -1
-    // If we have found the point, but it is far away from our hashed frames (and hence we can't really trust the value)
-      if ( Math.abs(xcorr.center-guess) > 4 ) return get_point_offset( xcorr.center, typ, ttl-1 );
-    // If we are syncing the start, better to remove extra frames that to start cutting late (and the other way around)
-      if ( typ == "start" ) return xcorr.min
-      if ( typ == "end" )   return xcorr.max
-    // Don't know why I wrote this option
-      return xcorr.center
+      } else if ( our_times.max-our_times.min > 4 ){
+        return -1
+    // If we are syncing the start, better to remove extra frames that to start cutting late
+      } else if ( typ == "start" ){
+        return our_times.min
+      } else {
+        return our_times.max
+      }
     })
 }
 
-// Perform crosscorrelation operation to find a our clip inside a ref clip
-function crosscorrelate( our, guess ){
-  // TODO: avoid cross-correlating with the whole film (eg. do it by chunks around guess)
-  trace( "crosscorrelate", arguments )
-  var ref = get_local_data( "currentFilm" )["syncRef"]  // TODO: this will throw an error if we don't have a currentFilm
+
+
+
+/* *
+ * Locates the specified time in the reference film.
+ * @param {number} our_time the time point (in our current version) that we want to find in the original film
+ * @param {json} our_data some our_data of our current film
+ * @param {number} guess a first guess to speed up the searching process
+ * @returns {json} { min: earliest possible point, center: most probable time, max: latest possible time}
+ */
+function get_data_offsets( our_data, ref_time_guess ){
+// TODO: avoid cross-correlating with the whole film (eg. do it by chunks around guess)
+  trace( "get_data_offsets", arguments )
+  var ref_data = get_local_data( "currentFilm" )["syncRef"]  // TODO: this will throw an error if we don't have a currentFilm
 // Set parameters
   var accuracy   = 1/24; // offset values will be rounded to this precision
   var count_min  = 5;   // ignore noisy offsets with few points
@@ -450,12 +495,12 @@ function crosscorrelate( our, guess ){
 // Crosscorrelate
   var d_array = {};
   var d_count = {};
-  for (var o = our.length - 1; o >= 0; o--) {
-    for (var r = ref.length - 1; r >= 0; r--) {
-      if ( !ref[r][1] || !our[o][1] ) continue;
+  for (var o = our_data.length - 1; o >= 0; o--) {
+    for (var r = ref_data.length - 1; r >= 0; r--) {
+      if ( !ref_data[r][1] || !our_data[o][1] ) continue;
     // Compute time offset and hamming_distance
-      var t = ref[r][1] - our[o][1];
-      var d = hamming_distance( ref[r][0], our[o][0] )
+      var t = ref_data[r][1] - our_data[o][1];
+      var d = hamming_distance( ref_data[r][0], our_data[o][0] )
     // Store value in array
       var i_offset = Math.round ( t / accuracy ) + "";
       if ( d_array[i_offset] == undefined ) {
@@ -488,7 +533,7 @@ function crosscorrelate( our, guess ){
     if ( aft_offset_error < t ) aft_offset_error = t;
   }
 
-  function toTime (ind) { return (ind*accuracy)+guess }
+  function toTime (ind) { return (ind*accuracy) }
 // return
   return { min:toTime(bef_offset_error), center:toTime(t_min), max:toTime(aft_offset_error) }
 }
@@ -608,7 +653,7 @@ function create_ffmpeg_filter ( stream, times ) {
 // Call fcinema api, return object
 function call_online_api ( params ) {
   trace( "call_online_api", arguments )
-// Set authentication token (if available)  
+// Set authentication token (if available)
   var token = get_local_data( "token" )
   if ( token ) params["token"] = token;
 // Create query
