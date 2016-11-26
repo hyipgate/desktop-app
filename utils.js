@@ -265,6 +265,7 @@ function search ( file, title, url, imdbid ) {
         return film;
       })
     })
+  }
 
 // We just got a title/url
   return call_online_api( { action:"search", filename:title, url:url } ).then( function ( film ) {
