@@ -1,12 +1,12 @@
 <div class="fullPage" id="movieInfo" layout="column" ng-style="film.css">
 
 <div layout="row">
-  <img ng-src="{{film.movieData.Poster}}" alt="Film Poster" height="450px">
+  <img ng-src="{{film.movieData.images.posters[0]}}" alt="Film Poster" height="450px">
   <div id="movieData" layout="column" layout-align="space-between stretch">
     <div layout="column">
-      <span class="md-headline">{{film.movieData.Title}}</span>
-      <span class="md-caption">{{film.movieData.Released}}  &bull;  {{film.movieData.Runtime}}  &bull;  {{film.movieData.Genre}}  &bull;  {{film.movieData.ImdbRating}}/10</span>
-      <p class="md-body-1">{{film.movieData.Plot}}</p>
+      <span class="md-headline">{{film.movieData.metadata.title}}</span>
+      <span class="md-caption">{{film.movieData.metadata.released}}  &bull;  {{film.movieData.metadata.runtime}}  &bull;  {{film.movieData.metadata.genre}}  &bull;  {{film.movieData.metadata.imdbRating}}/10</span>
+      <p class="md-body-1">{{film.movieData.metadata.plot}}</p>
     </div>
     <div layout="row">
       <md-button class="md-primary md-raised" ng-click="film.showListBottomSheet()">Play</md-button>

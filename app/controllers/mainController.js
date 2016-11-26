@@ -12,6 +12,7 @@ angular.module('mainCtrl', ['ngMaterial'])
     if(file){
       vm.search_film(file[0].path).then(function(film){
         console.log(film);
+        film = film["data"];
         if(film.IDs){
           console.log('Lista');
         }else{

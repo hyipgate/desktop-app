@@ -262,6 +262,7 @@ function search ( file, title, url, imdbid ) {
           set_local_data( stats.hash+"|"+stats.filesize, film["data"]["id"]["imdb"] )
           set_local_data( "currentFilm", film["data"] )
         }
+        console.log(film)
         return film;
       })
     })
@@ -374,7 +375,7 @@ exports.test = test
 // Basic functions
 exports.search_film   = search;
 exports.presync_scene = presync_scene;
-exports.get_players   = get_players;
+exports.get_available_players   = get_players;
 exports.play          = play;
 exports.add_review    = add_review;
 
