@@ -242,7 +242,12 @@ function search ( file, title, url, imdbid ) {
     if ( film ) {
       set_local_data( "currentFilm", film )
       Promise.resolve( film );
-    };
+    } else {
+      return call_online_api( { action:"search", imdb_code: imdbid } ).then( function ( film ) {
+        if ( film["status"] == 0 ) set_local_data( "currentFilm", film["data"] )
+        return film;
+      })
+    }
   };
 
 // We got a file
