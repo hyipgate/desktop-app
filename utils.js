@@ -236,6 +236,7 @@ function remove_scene ( id ) {
  */
 function search ( file, title, url, imdbid ) {
   trace( "search", arguments )
+// We got an id
   if ( imdbid ) {
     var film = get_local_data( imdbid )
     if ( film ) {
@@ -244,6 +245,7 @@ function search ( file, title, url, imdbid ) {
     };
   };
 
+// We got a file
   if ( file ) {
     return parse_input_file( file ).then( function ( stats ) {
       var imdbid = get_local_data( stats.hash+"|"+stats.filesize )
@@ -255,7 +257,7 @@ function search ( file, title, url, imdbid ) {
         };
       };
 
-      call_online_api( { action:"search", filename:stats.estimated_title, hash:stats.hash, bytesize:stats.filesize, url:url } ).then( function ( film ) {
+      return call_online_api( { action:"search", filename:stats.estimated_title, hash:stats.hash, bytesize:stats.filesize, url:url } ).then( function ( film ) {
         if ( film["status"] == 0 ){
           set_local_data( stats.hash+"|"+stats.filesize, film["data"]["id"]["imdb"] )
           set_local_data( "currentFilm", film["data"] )
@@ -263,12 +265,12 @@ function search ( file, title, url, imdbid ) {
         return film;
       })
     })
-  } else {
-    return call_online_api( { action:"search", filename:title, imdb_code:imdbid, url:url } ).then( function ( film ) {
-      if ( film["status"] == 0 ) set_local_data( "currentFilm", film["data"] )
-      return film;
-    })
-  }
+
+// We just got a title/url
+  return call_online_api( { action:"search", filename:title, url:url } ).then( function ( film ) {
+    if ( film["status"] == 0 ) set_local_data( "currentFilm", film["data"] )
+    return film;
+  })
 }
 
 
@@ -719,14 +721,13 @@ function trace ( name, args ) {
 
 
 var localData = {}
-function get_local_data ( id ) {
+function get_local_data ( id ) {  // TODO: use a ddbb (and make sure it's store bt sessions)
   trace( "get_local_data", arguments )
   return localData[id]
 }
 
-function set_local_data ( id, data ) {
+function set_local_data ( id, data ) {  // TODO: use a ddbb (and make sure it's store bt sessions)
   trace( "set_local_data", arguments )
-  //var id = data["id"]? data["id"]["imdbid"] : alternative_id
   localData[id] = data;
 }
 

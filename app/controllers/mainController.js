@@ -10,27 +10,25 @@ angular.module('mainCtrl', ['ngMaterial'])
   vm.getFile = function(event){
     var file = event.target.files;
     if(file){
-      vm.get_id_from_file(file[0].path).then(function(guess){
-        $rootScope.utils.get_content_by_id(guess.hash, guess.filesize, guess.estimated_title,null).then(function(film){
-          console.log(film);
-          if(film.IDs){
-            console.log('Lista');
-          }else{
-            service.saveSelectedFilm(film);
-            $location.path('/film');
-            console.log($rootScope.electron.remote.getCurrentWindow());
-            $rootScope.electron.remote.getCurrentWindow().setSize(1190,680,true);
-            if (!$rootScope.$$phase) $rootScope.$apply();
-          }
-        });
+      vm.search_film(file[0].path).then(function(film){
+        console.log(film);
+        if(film.IDs){
+          console.log('Lista');
+        }else{
+          service.saveSelectedFilm(film);
+          $location.path('/film');
+          console.log($rootScope.electron.remote.getCurrentWindow());
+          $rootScope.electron.remote.getCurrentWindow().setSize(1190,680,true);
+          if (!$rootScope.$$phase) $rootScope.$apply();
+        }
       })
     }else{
       console.log('ERROR');
     }
   };
 
-  vm.get_id_from_file = function(text){
-    return $rootScope.utils.get_id_from_file(text);
+  vm.search_film = function(text){
+    return $rootScope.utils.search_film(text);
   }
 
   vm.get_content_by_id = function(){
