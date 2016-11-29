@@ -2,8 +2,6 @@ angular.module('filmCtrl', ['ngMaterial'])
 
 .controller('FilmController', function($rootScope, $scope, service, $location, $mdBottomSheet) {
   var vm = this;
-
-  console.log($rootScope.electron);
   
   vm.getMovie = function(){
     vm.movieData = service.getSelectedFilm();
@@ -12,7 +10,7 @@ angular.module('filmCtrl', ['ngMaterial'])
   vm.getMovie();
 
   vm.css = {
-   'background': 'linear-gradient( rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('+vm.movieData.Backdrop+') no-repeat center center',
+   'background': 'linear-gradient( rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('+vm.movieData.images.backdrops[0]+') no-repeat center center',
    'background-size': 'cover',
   }
 
