@@ -668,7 +668,7 @@ function call_online_api ( params ) {
 // Create query
   var str = [];
   for( var key in params ) if(params[key]) str.push( key + "=" + params[key] );
-  var url = "http://fcinema.org/api2?"+str.join("&")
+  var url = "http://fcinema.org/api?"+str.join("&")
 // Reject if query is invalid
   if( str.length == 0 ) return Promise.reject( "Invalid parameters" );
 // Return promise with API result
