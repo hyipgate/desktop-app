@@ -2,8 +2,6 @@ angular.module('filmCtrl', ['ngMaterial'])
 
 .controller('FilmController', function($rootScope, $scope, service, $location, $mdBottomSheet) {
   var vm = this;
-
-  console.log($rootScope.electron);
   
   vm.getMovie = function(){
     vm.movieData = service.getSelectedFilm();

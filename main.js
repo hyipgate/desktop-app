@@ -1,6 +1,4 @@
 const electron = require('electron')
-//Load the local server for angular
-const server = require("./server");
 // Module to control application life.
 const app = electron.app
 // Module to create native browser window.
@@ -15,8 +13,7 @@ function createWindow () {
   mainWindow = new BrowserWindow({width: 380, height: 185})
 
   // and load the index.html of the app.
-  //mainWindow.loadURL(`file://${__dirname}/app/index.html`)
-  mainWindow.loadURL(`http://localhost:3333`);
+  mainWindow.loadURL('file://' + __dirname + '/app/index.html')
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools({detach:true})
