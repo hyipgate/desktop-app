@@ -12,8 +12,8 @@
     "file-bytes": "^2.0.3",
     "fs": "0.0.1-security",
     "get-pixels": "^3.3.0",
+    "node-persist": "^2.0.7",
     "opensubtitles": "0.0.4",
-    "pouchdb": "^6.0.7",
     "request": "^2.75.0",
     "tmp": "0.0.29",
     "which": "^1.2.11"
