@@ -10,9 +10,9 @@ const openSub     = require('opensubtitles')
 const getFilesize = require('file-bytes')
 const which       = require('which')
 const httpRequest = require('request');
-const PouchDB     = require('pouchdb');
-var localDB       = new PouchDB('localData');
+const storage     = require('node-persist');
 
+storage.init();
 
 
 
@@ -241,10 +241,10 @@ function search ( file, title, url, imdbid ) {
     var film = get_local_data( imdbid )
     if ( film ) {
       set_local_data( "currentFilm", film )
-      Promise.resolve( film );
+      Promise.resolve( { status:205, data:film } );
     } else {
       return call_online_api( { action:"search", imdb_code: imdbid } ).then( function ( film ) {
-        if ( film["status"] == 0 ) set_local_data( "currentFilm", film["data"] )
+        if ( film["status"] == 200 ) set_local_data( "currentFilm", film["data"] )
         return film;
       })
     }
@@ -258,13 +258,14 @@ function search ( file, title, url, imdbid ) {
         var film = get_local_data( imdbid )
         if ( film ) {
           set_local_data( "currentFilm", film )
-          return film;
+          return { status:205, data:film };
         };
       };
 
       return call_online_api( { action:"search", filename:stats.estimated_title, hash:stats.hash, bytesize:stats.filesize, url:url } ).then( function ( film ) {
-        if ( film["status"] == 0 ){
+        if ( film["status"] == 200 ){
           set_local_data( stats.hash+"|"+stats.filesize, film["data"]["id"]["imdb"] )
+          set_local_data( film["data"]["id"]["imdb"], film["data"] )
           set_local_data( "currentFilm", film["data"] )
         }
         console.log(film)
@@ -275,7 +276,7 @@ function search ( file, title, url, imdbid ) {
 
 // We just got a title/url
   return call_online_api( { action:"search", filename:title, url:url } ).then( function ( film ) {
-    if ( film["status"] == 0 ) set_local_data( "currentFilm", film["data"] )
+    if ( film["status"] == 200 ) set_local_data( "currentFilm", film["data"] )
     return film;
   })
 }
@@ -675,7 +676,7 @@ function call_online_api ( params ) {
   return new Promise(function(resolve, reject) {
     httpRequest( url, function(error, response, body) {
       if( error ){
-        reject( "Network Error" )
+        resolve( {status:400} )
       } else {
         var data = JSON.parse( body )
         if( data["token"] )    set_local_data( "token", data["token"] )
@@ -726,16 +727,14 @@ function trace ( name, args ) {
 }
 
 
-
-var localData = {}
-function get_local_data ( id ) {  // TODO: use a ddbb (and make sure it's store bt sessions)
+function get_local_data ( id ) {
   trace( "get_local_data", arguments )
-  return localData[id]
+  return storage.getItemSync( id )
 }
 
-function set_local_data ( id, data ) {  // TODO: use a ddbb (and make sure it's store bt sessions)
+function set_local_data ( id, data ) {
   trace( "set_local_data", arguments )
-  localData[id] = data;
+  storage.setItem( id, data )
 }
 
 
