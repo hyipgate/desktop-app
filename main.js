@@ -4,13 +4,44 @@ const app = electron.app
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 
+
+
+// You have to pass the filename of `widevinecdmadapter` here, it is
+// * `widevinecdmadapter.plugin` on macOS,
+// * `libwidevinecdmadapter.so` on Linux,
+// * `widevinecdmadapter.dll` on Windows.
+
+let pluginName
+switch (process.platform) {
+  case 'win32':
+    pluginName = __dirname+'\\app\\widevine\\win_x64\\widevinecdmadapter.dll'
+    break
+  case 'darwin':
+    pluginName = 'widevinecdmadapter.plugin'
+    break
+  case 'linux':
+    pluginName = 'libwidevinecdmadapter.so'
+    break
+}
+
+console.log( pluginName )
+app.commandLine.appendSwitch('widevine-cdm-path', pluginName)
+// The version of plugin can be got from `chrome://plugins` page in Chrome.
+app.commandLine.appendSwitch('widevine-cdm-version', '1.4.8.903')
+
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 380, height: 185})
+  mainWindow = new BrowserWindow({width: 380, height: 185,
+    webPreferences: {
+      // The `plugins` have to be enabled.
+      plugins: true
+    }
+  })
 
   // remove menu bar
   mainWindow.setMenu(null);
