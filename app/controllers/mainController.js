@@ -74,4 +74,9 @@ angular.module('mainCtrl', ['ngMaterial'])
     console.log(data);
   }
 
+  vm.netflix = function(){
+    console.log("loading netflix")
+    $location.path('/netflix');
+  }
+
 });
