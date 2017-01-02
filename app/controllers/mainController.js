@@ -74,7 +74,15 @@ angular.module('mainCtrl', ['ngMaterial'])
     console.log(data);
   }
 
+  var startScreenshoting;
   vm.netflix = function(){
+    startScreenshoting = Date.now() 
+    var cb = function () { console.log( Date.now() -startScreenshoting) }
+    var remote = require('electron').remote
+    remote.getCurrentWindow().capturePage(function handleCapture (img) {
+      remote.require('fs').writeFile("test", img.toPng(), cb)
+    })
+
     console.log("loading netflix")
     $location.path('/netflix');
   }

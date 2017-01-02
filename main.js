@@ -24,7 +24,6 @@ switch (process.platform) {
     break
 }
 
-console.log( pluginName )
 app.commandLine.appendSwitch('widevine-cdm-path', pluginName)
 // The version of plugin can be got from `chrome://plugins` page in Chrome.
 app.commandLine.appendSwitch('widevine-cdm-version', '1.4.8.903')
