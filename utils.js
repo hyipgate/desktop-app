@@ -377,6 +377,18 @@ function auto_assign ( ) {
 }
 
 
+
+
+
+/**
+ * Return a list of available tags
+ * @returns {json} API response
+ */
+function get_tag_list () {
+  return {"Summary":{"es":"Resumen","desc":"Summary of previous episodes","cat":"general"},"Ad":{"es":"Anuncio","desc":"","cat":"general"},"Physical":{"es":"Física","desc":"","cat":"violence"},"Psicological":{"es":"","desc":"","cat":"violence"},"Discrimination":{"es":"","desc":"","cat":"violence"},"Sadism":{"es":"","desc":"","cat":"violence"},"War":{"es":"","desc":"","cat":"violence"},"Torture":{"es":"","desc":"","cat":"violence"},"Nudity":{"es":"","desc":"","cat":"sex"},"Sensuality":{"es":"","desc":"","cat":"sex"},"Explicit sex":{"es":"","desc":"","cat":"sex"},"Implicit sex":{"es":"","desc":"","cat":"sex"},"No love":{"es":"","desc":"","cat":"sex"},"Rape":{"es":"","desc":"","cat":"sex"},"Tobaco/Alcohol":{"es":"","desc":"","cat":"drugs"},"Weed":{"es":"","desc":"","cat":"drugs"},"Cocaine/Heroine":{"es":"","desc":"","cat":"drugs"},"Medicine misuse":{"es":"","desc":"","cat":"drugs"},"Drug Overdose":{"es":"","desc":"","cat":"drugs"},"Drug Dealing":{"es":"","desc":"","cat":"drugs"},"Plot":{"es":"","desc":"","cat":"generic"}}
+}
+
+
 exports.test = test
 // Basic functions
 exports.search_film   = search;
@@ -436,9 +448,9 @@ function estimate_time_on_ref ( our_time ) {
 function want_to_see ( skip_list, our_sync_data, our_time ) {
 
   return new Promise( function (resolve, reject) {
-    var ref_guess = estimate_time_on_ref( our_time );
-    var offsets   = get_data_offsets( our_sync_data, ref_guess );
-    var ref_times = {max:our_time+offsets, min:our_time+offsets}
+    var ref_time_guess = estimate_time_on_ref( our_time );
+    var offsets   = get_data_offsets( our_sync_data, ref_time_gues );
+    var ref_times = {max:our_time+offsets.max, min:our_time+offsets.min} // todo check min/max -> min/max
 
     var our_next_ok  = 0
     var our_next_bad = 24*60*60
@@ -505,6 +517,7 @@ function get_data_offsets( our_data, ref_time_guess ){
 // Crosscorrelate
   var d_array = {};
   var d_count = {};
+  // For each available point
   for (var o = our_data.length - 1; o >= 0; o--) {
     for (var r = ref_data.length - 1; r >= 0; r--) {
       if ( !ref_data[r][1] || !our_data[o][1] ) continue;
@@ -604,22 +617,27 @@ function create_thumbnail_hash ( thumb ) {
       if ( err ) {
         resolve( [] ) // standard would be to "reject", but we are inside a "Promise.all" and missing one point is okay
       } else {
-        var base64 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
-        var hash   = ""
-        var data   = pixels.data; data.push( data[0] )
-        for (var i = 4; i < data.length; i+=24) {
-          var n = ( data[i-4+0] > data[i+0] ) * 1
-          n += ( data[i-4+ 4] > data[i+ 4] ) * 2
-          n += ( data[i-4+ 8] > data[i+ 8] ) * 4
-          n += ( data[i-4+12] > data[i+12] ) * 8
-          n += ( data[i-4+16] > data[i+16] ) * 16
-          n += ( data[i-4+20] > data[i+20] ) * 32
-          hash += base64.charAt(n)
-        };
+        var hash = bitmap_to_hash( pixels.data )
         resolve( [hash,thumb.time] )
       }
     })
   })
+}
+
+function bitmap_to_hash ( data ) {
+  var base64 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
+  var hash   = ""
+  data.push( data[0] )  // To compare last with first one (dunno how efficient this is)
+  for (var i = 4; i < data.length; i+=24) {
+    var n = ( data[i-4+0] > data[i+0] ) * 1
+    n += ( data[i-4+ 4] > data[i+ 4] ) * 2
+    n += ( data[i-4+ 8] > data[i+ 8] ) * 4
+    n += ( data[i-4+12] > data[i+12] ) * 8
+    n += ( data[i-4+16] > data[i+16] ) * 16
+    n += ( data[i-4+20] > data[i+20] ) * 32
+    hash += base64.charAt(n)
+  };
+  return hash;
 }
 
 

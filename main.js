@@ -11,22 +11,26 @@ const BrowserWindow = electron.BrowserWindow
 // * `libwidevinecdmadapter.so` on Linux,
 // * `widevinecdmadapter.dll` on Windows.
 
-let pluginName
+let pluginName, pluginVersion
 switch (process.platform) {
   case 'win32':
     pluginName = __dirname+'\\app\\widevine\\win_x64\\widevinecdmadapter.dll'
+    pluginVersion = '1.4.8.903'
     break
   case 'darwin':
     pluginName = 'widevinecdmadapter.plugin'
+    pluginVersion = '1.4.8.903'
     break
   case 'linux':
-    pluginName = 'libwidevinecdmadapter.so'
+    pluginName = 'file:///'+__dirname+'/app/widevine/linux/libwidevinecdmadapter'
+    pluginVersion = '1.4.8.903'
     break
 }
 
+console.log( pluginName, pluginVersion )
 app.commandLine.appendSwitch('widevine-cdm-path', pluginName)
 // The version of plugin can be got from `chrome://plugins` page in Chrome.
-app.commandLine.appendSwitch('widevine-cdm-version', '1.4.8.903')
+//app.commandLine.appendSwitch('widevine-cdm-version', pluginVersion )
 
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -46,7 +50,7 @@ function createWindow () {
   mainWindow.setMenu(null);
 
   // and load the index.html of the app.
-  mainWindow.loadURL('file://' + __dirname + '/app/index.html')
+  mainWindow.loadURL('file://' + __dirname + '/app/views/netflix.html')
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools({detach:true})

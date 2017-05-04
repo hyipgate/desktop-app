@@ -1,162 +1,529 @@
 <html style="overflow-y: hidden;">
-	<head></head>
-	<body style="margin: 0px">
-		<webview src="https://www.netflix.com/browse" autosize="on" style="height: 100%;" preload="../realtimeVideoController.js" plugins></webview>
-	</body>
-	<script type="text/javascript">
+  <head></head>
+  <body style="margin: 0px">
+    <webview src="https://www.youtube.com" autosize="on" style="height: 100%;" preload="../realtimeVideoController.js" plugins></webview>
+  </body>
+  <script type="text/javascript">
 
-	const webview = document.getElementsByTagName('webview')[0]
-  		webview.addEventListener('ipc-message', event => {
-	    console.log(event.channel,event.args[0])
-  	})
-		/*
-		electron = require('electron');
-  		utils = electron.remote.require('../../utils');
+
+/* Require libraries */
+const electron = require('electron');
+const remote = require('electron').remote
 
 
 
 
-var video, skip, mode, fast_rate;
+//************************************************************************//
+//                       EXTERNAL FUNCTIONS                               //
+//************************************************************************//
 
-window.onload = function () {
-  video = document.getElementsByTagName("video")[0]
-  skip  = get_skip_list();
-  mode  = detect_mode();
-  video.onseeked = check_status;
-  fast_rate = 8;
-  check_status()
+
+/**
+ * Watch film in user mode (skipping unwanted frames)
+ */
+function watch_film() {
+  mode = "user";
+  initialize_stats()
+  if ( timer_id ) clearInterval( timer_id );
+  timer_id = setInterval( get_thumbail, 1000 );
+}
+
+/**
+ * Watch film in editors mode (capturing frames and storing time-hash pairs)
+ */
+function start_editing(){
+  mode = "editor";
+  if ( timer_id ) clearInterval( timer_id );
+  timer_id = setInterval( get_thumbail, 80 );
+}
+
+/**
+ * Stop watching
+ */
+function end_capture() {
+  if ( mode == "editor" ) { syncRef = hash_list;}
+  else { print_stats() }
+  if ( timer_id ) clearInterval(timer_id);
+  timer_id = false;
 }
 
 
+/**
+ * Mark current time as the start/end of a scene
+ */
+function mark_current_time() {
+  if ( !s_start ) {
+    s_start = video_time()
+    console.log( "Scene start marked at ", s_start )
+  } else {
+    s_list.push({start:s_start,end:video_time()})
+    s_start = null;
+    console.log( "Scene added ", s_list[s_list.length-1] )
+  }
+}
+var s_list = []
+var s_start = null;
+
+
+
+//************************************************************************//
+//                         CORE FUNCTIONS                                 //
+//************************************************************************//
+
+
+/* Global variables */
+var historic_sync = { t_bef: -1, t_min:-1, t_aft:-1, c_time:-1, span:5, confidence:0 }
+var rect;
+var orect;
+var time;
+var hash_list = {};
+var mode = "user";
+var timer_id;
+var cpu_time = 0;
+const webview = document.getElementsByTagName('webview')[0]
+
+
+
+
+/**
+ * Listen to events from player
+ */
+webview.addEventListener('ipc-message', event => {
+  if ( event.channel == "video_rect") {
+    orect = event.args[0];
+    rect  = orect;
+    improve_rect();
+  } else if ( event.channel == "currentTime" ) {
+    time = 1000*event.args[0];
+    cpu_time = Date.now();
+  } else {
+    console.log("ipc-message received: ",event.channel)
+  }
+})
+
+
+
+/**
+ * Listen to events from player
+ */
+function get_rect() {
+  webview.executeJavaScript('handpick.get_rect()')
+}
+
+
+
+/**
+ * Gets the timestamps of the current video
+ * @returns {number} current time
+ */
+function video_time() {
+// Elapsed time since variable "time" was updated.
+  var elapsed_time = (Date.now()-cpu_time);
+// Detect if video is paused (as time gets updated at least every 250ms) TODO: Improve this hack
+  if ( elapsed_time > 500 ) elapsed_time = 0;
+// Return video time
+  return Math.floor(time+elapsed_time)
+}
+
+
+
+/**
+ * Improves the quality of the rect (croping black borders)
+ */
+function improve_rect() {
+  remote.getCurrentWindow().capturePage(function handleCapture (img) {
+    var bitmap  = img.getBitmap() // TODO: find out why this blocks the video
+    var columns = img.getSize().width
+    var rows    = img.getSize().height
+    var j       = orect.y;
+    for ( j = orect.y; j < orect.height+orect.y; j++) {
+      var sum = 0;
+      for (var i = orect.x; i < orect.width+orect.x-1; i++) {
+        var r = bitmap[(j*columns+i)*4]
+        var g = bitmap[(j*columns+i)*4+1]
+        var b = bitmap[(j*columns+i)*4+2]
+        sum+= (r+g+b)+ 10*Math.abs(r-g)+10*Math.abs(b-g)
+      }
+      console.log(sum / orect.width)
+      if ( sum / orect.width > 50 ) break;
+    }
+    var first = j-1;
+
+    /*for ( j = orect.height+orect.y-1; j > orect.y; j--) {
+      var sum = 0;
+      for (var i = orect.x; i < orect.width+orect.x-1; i++) {
+        var r = bitmap[(j*columns+i)*4]
+        var g = bitmap[(j*columns+i)*4+1]
+        var b = bitmap[(j*columns+i)*4+2]
+        sum+= (r+g+b)+ 10*Math.abs(r-g)+10*Math.abs(b-g)
+      }
+      console.log(sum / orect.width)
+      if ( sum / orect.width > 50*1.5 ) break;
+    }
+    var last = j+1*/
+    var last = orect.height-first // do it symmetric
+    var usual_ratios = [1.33,1.77,1.85,2.39]
+    var our = orect.width/(last-first)
+    var dmin = Infinity; var amin = 0;
+    for (var i = 0; i < usual_ratios.length; i++) {
+      var d = Math.abs(usual_ratios[i]-our)
+      if ( d < dmin ) {
+        dmin = d;
+        amin = i;
+      }
+    }
+
+    console.log(usual_ratios[amin],our)
+    var crop = orect.height - orect.width/usual_ratios[amin];
+    rect.y = Math.round(orect.y+crop/2);
+    rect.height = Math.round(Math.min(orect.height,orect.width/usual_ratios[amin]));
+  })
+}
+
+
+
+
+/**
+ * Capture current frame, generate hash and skip/watch/store accordingly
+ */
+function get_thumbail ( ) {
+  if (!rect){
+    webview.executeJavaScript('handpick.get_rect()')
+    return;
+  }
+  cb("start")
+  var bef_time = video_time();
+  remote.getCurrentWindow().capturePage(function handleCapture (img) {
+    var aft_time = video_time()
+    if ( bef_time > aft_time || aft_time > 50 + bef_time ) {
+      console.log("DISCARDING FRAME. Unsure about time of captured frame. Uncertainty  ",Math.floor((aft_time-bef_time)))
+      return;
+    }
+    img = img.crop(rect).resize( { width:16, height:9, quality: "good" } ) // TODO check performance/improvement when using better resize quality
+    var hash = bitmap_to_hash( img.getBitmap() )
+    if( mode == "editor" ){
+      add_to_ref_list( hash, (bef_time+aft_time)/2 )
+    } else {
+      want_to_see( hash, (bef_time+aft_time)/2 )
+    }
+  })
+}
+
+
+
+
+/**
+ * add the hash-time pair to the ref list
+ * @param {c_hash} hash hash from current editors video
+ * @param {c_time} time time in current editors video timing of the hash parameter
+ * @returns {null}
+ */
+function add_to_ref_list(c_hash,c_time) {
+  cb("hashed")
+  var block = Math.floor(c_time/1000) // block = seconds
+  if ( !hash_list[block] ) hash_list[block] = []
+  var ms    = Math.round(c_time-(block)*1000)
+  hash_list[block].push([c_hash,ms])
+  //console.log( hash, block, ms )
+}
+
+
+
+
+/**
+ * Given a hash-time pair from the users video, tells the time of the next wanted/unwanted frame
+ * @param {string} hash hash from current users video
+ * @param {number} time time in current users video timing of the hash parameter
+ * @returns {json} { min: earliest possible point, center: most probable time, max: latest possible time}
+ */
+function want_to_see ( hash, time ) {
+
+  //return new Promise( function (resolve, reject) {
+    var ref_times   = find_time_in_reference( hash, time );
+    var skip_list   = get_skip_list()
+    if( !skiping ) skiping = false;
+
+    var ref_next_ok  = -Infinity, ref_next_bad = Infinity
+    for (var i = 0; i < skip_list.length; i++) {
+    // Ignore scenes in the past. Find next "bad" frame
+      if ( ref_times.t_bef > skip_list[i].end ) continue;
+      ref_next_bad = Math.min( ref_next_bad, skip_list[i].start )
+
+    // Ignore scenes in the future. Find next "good" frame
+      if ( ref_times.t_aft < skip_list[i].start ) continue;
+      ref_next_ok = Math.max( ref_next_ok, skip_list[i].end )
+    };
+
+
+    cb("decided what to do:")
+    if ( ref_next_ok != -Infinity ){
+      var our_next_ok = guess_users_time( ref_next_ok )
+      console.log("hide until ", our_next_ok)
+      if ( skiping != our_next_ok ) { // avoid skipping twice, as it breaks
+        webview.executeJavaScript('handpick.hide_until('+our_next_ok/1000+')')  // TODO: this is the definition of unsecure!
+      }
+      skiping = our_next_ok;
+    } else {
+      skiping = false
+      var our_next_bad = guess_users_time( ref_next_bad )
+      console.log("we are fine until ", our_next_bad)
+      if ( our_next_bad - video_time() < 5000 ) {
+        setTimeout(get_thumbail, 200 )
+      }
+      //resolve( { want:1, avoid:our_next_bad } )
+      return { want:1, avoid:our_next_bad };
+    }
+  //});
+}
+var skiping = false;
+
+
+
+
+
+/* *
+ * Locates the specified time in the reference film.
+ * @param {number} our_time the time point (in our current version) that we want to find in the original film
+ * @returns {json} { min: earliest possible point, center: most probable time, max: latest possible time}
+ */
+function guess_ref_time(c_time) {
+  return (historic_sync.t_min-historic_sync.c_time+c_time)
+}
+
+/**
+ * Try to guess the specified time in the users film.
+ * @param {number} r_time a timestamp point (in our current version) that we want to find in the original film
+ * @returns {json} { min: earliest possible point, center: most probable time, max: latest possible time}
+ */
+function guess_users_time(r_time) {
+  return (historic_sync.c_time-historic_sync.t_min+r_time)
+}
+
+
+
+
+/* *
+ * Locates the specified time in the reference film.
+ * @param {string} c_hash hash of the frame we want to find
+ * @param {number} c_time time (users) of the frame we want to find (to speed up a bit the search...)
+ * @returns {json} { min: earliest possible point, center: most probable time, max: latest possible time}
+ */
+function find_time_in_reference( c_hash, c_time ){
+
+// Check we have the data we need
+  if( !c_hash || !c_time ) return;
+
+// Prepare data
+  //var currentFilm = get_local_data( "currentFilm" ); if( !currentFilm ) return;
+  //var syncRef = currentFilm["syncRef"]; if( !currentFilm ) return;
+  var guessed_time  = guess_ref_time( c_time );
+  var guessed_block = Math.floor( guessed_time/1000 );
+  console.log(guessed_block)
+  var span = historic_sync.span;
+
+// Compare user's frame with reference's frames in "span" blocks around the "guessed_time"
+  var d_arr = {};
+  var d_min = Infinity;
+  var t_min = null;
+  var n_blocks = 0;
+  for (var block = guessed_block-span; block <= guessed_block+span; block++){
+    var ref_data = syncRef[block+""]; if( !ref_data ) continue;
+    n_blocks++;
+    for (var r = 0; r < ref_data.length; r++) {
+    // Calculate how different the frames are
+      var d = hamming_distance( ref_data[r][0], c_hash )
+      var t = ref_data[r][1]+block*1000
+    // Update best matching point
+      if ( d < d_min ) {
+        t_min = t;
+        d_min = d;
+      }
+    // Store value in array
+      d_arr[t] = d;
+    }
+  }
+
+// Find error interval and try pick the best "t_min"
+  var d_min2= Infinity;
+  var t_bef = Infinity;
+  var t_aft =-Infinity;
+  var th    = d_min*1.3;
+  for (var t_str in d_arr ) {
+    var t = parseInt(t_str)
+  // Find error interval
+    if ( d_arr[t_str] <= th ){
+      if ( t_bef > t ) t_bef = t;
+      if ( t_aft < t ) t_aft = t;
+    }
+  // If we got multiple frames with distance d_min, pick the one that is more consistent with historic data
+    if ( d_arr[t_str] < d_min + 1 ){
+      var d2 = Math.abs( guessed_time - t );
+      if ( d2 < d_min2 ) {
+        t_min  = t;
+        d_min2 = d2;
+      }
+    }
+  }
+
+// Detect/guess/bet wheter we have an error or not
+  var error_detected = ( d_min > 40 || Math.abs(t_aft-t_bef) > 400 || n_blocks < 5 || !syncRef[guessed_block+""] )
+
+// Some stats (useful when we knew the time offset in advance and want to check the sync accuracy)
+  var error_th = 150; // Error threshold for stats only
+  var offset   = 0;   // Known offset
+  total++
+  if( Math.abs(c_time-t_min+offset) > error_th ){
+    error++
+    if ( !error_detected ) false_negative++;
+  } else {
+    if (  error_detected ) false_positive++;
+  }
+  console.log(historic_sync,c_time-t_min+offset)
+
+
+// Make history :)
+  if ( !error_detected) {
+    span = Math.max(historic_sync.span,5);
+  } else {
+    console.log("DETECTED AN ERROR ",d_min,t_min,t_bef,t_aft,n_blocks,c_time,d_arr)
+    var elapsed_time = c_time - historic_sync.c_time;
+    t_bef = historic_sync.t_bef + elapsed_time;
+    t_aft = historic_sync.t_aft + elapsed_time;
+    t_min = historic_sync.t_min + elapsed_time;
+    span  = Math.min(historic_sync.span+10,300);
+  }
+  historic_sync = { t_bef:t_bef, t_min:t_min, t_aft:t_aft, c_time:c_time, span:Math.round(span)};
+
+// More stats after corrections
+  abs_error += Math.abs(c_time-t_min+offset)
+  if( Math.abs(c_time-t_min+offset) > error_th ) real_error++;
+
+// Return
+  return historic_sync;
+
+}
+
+
+
+
+//************************************************************************//
+//                        HELPER FUNCTIONS                                //
+//************************************************************************//
+
+
+
+/**
+ * Calculate the hamming distance between two base64 encoded strings
+ * @param {string} a hash one
+ * @param {string} b hash two
+ * @returns {number} hamming distance between hashes
+ */
+function hamming_distance ( a, b ) {
+  var digitsMap = {"0":"000000","1":"000001","2":"000010","3":"000011","4":"000100","5":"000101","6":"000110","7":"000111","8":"001000","9":"001001","A":"001010","B":"001011","C":"001100","D":"001101","E":"001110","F":"001111","G":"010000","H":"010001","I":"010010","J":"010011","K":"010100","L":"010101","M":"010110","N":"010111","O":"011000","P":"011001","Q":"011010","R":"011011","S":"011100","T":"011101","U":"011110","V":"011111","W":"100000","X":"100001","Y":"100010","Z":"100011","a":"100100","b":"100101","c":"100110","d":"100111","e":"101000","f":"101001","g":"101010","h":"101011","i":"101100","j":"101101","k":"101110","l":"101111","m":"110000","n":"110001","o":"110010","p":"110011","q":"110100","r":"110101","s":"110110","t":"110111","u":"111000","v":"111001","w":"111010","x":"111011","y":"111100","z":"111101","+":"111110","-":"111111"}
+  var distance  = 0;
+  for (var i = 0; i < a.length-1; i++) {
+    if( a.charAt(i) == b.charAt(i) ) continue;
+    var ai = digitsMap[ a.charAt(i) ]
+    var bi = digitsMap[ b.charAt(i) ]
+    for (var j = 0; j < 6; j++) {
+      distance += ( ai.charAt(j) == bi.charAt(j) )
+    };
+  };
+  return distance;
+}
+
+
+/**
+ * Generates a hash from an image in bitmap format
+ * @param {string} data bitmap containing the image we want the hash from
+ * @returns {string} String containing the hash
+ */
+function bitmap_to_hash ( data ) {
+  var base64 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
+  var hash   = ""
+  for (var i = 4; i < data.length-20; i+=24) {
+    var n = ( data[i-4] > data[i] ) * 1
+    n += ( data[i-4+ 4] > data[i+ 4] ) * 2
+    n += ( data[i-4+ 8] > data[i+ 8] ) * 4
+    n += ( data[i-4+12] > data[i+12] ) * 8
+    n += ( data[i-4+16] > data[i+16] ) * 16
+    n += ( data[i-4+20] > data[i+20] ) * 32
+    hash += base64.charAt(n)
+  };
+  return hash;
+}
+
+function print_stats() {
+  /*for (var i = 200; i >= 0; i--) {
+    if ( !hash_list[i] ) continue;
+    var block = hash_list[i]
+    for (var j = block.length - 1; j >= 0; j--) {
+      find_time_in_reference( block[j][0], block[j][1]+i*1000)
+    }
+  }*/
+  console.log(false_negative,false_positive,total,error,real_error)
+}
+
+
+function initialize_stats() {
+  false_positive = 0
+  false_negative = 0
+  total = 0
+  error = 0
+  real_error = 0
+  abs_error = 0;
+}
+
+
+// Check we don't have weird things
+function purge() {
+  for (var i = 200; i >= 0; i--) {
+    if ( !syncRef[i] ) continue;
+    var block = syncRef[i]
+    var last_h = ""
+    var last_t = -5;
+    for (var j = block.length - 1; j >= 0; j--) {
+      if (block[j][1] == last_t && block[j][0] != last_h ) {
+        console.log("disssarter! at ",i,j)
+        syncRef[i] = null
+      }
+      last_t = block[j][1]
+      last_h = block[j][0]
+    }
+  }
+}
+
+
+
+// Get/fake a skip list for testing purposes
 function get_skip_list() {
+  if ( s_list.length > 0 ) return s_list;
   var skip = []
   for (var i = 20; i >= 0; i--) {
-    skip.push({start:i*30+5,end:i*30+25})
+    skip.push({start:(i*30+5)*1000,end:(i*30+25)*1000})
   }
   return skip;
 }
 
 
-function detect_mode() {
-  var url = window.location.href 
-  if ( url.indexOf("netflix") != -1  ) {
-    return 3
-  } else if ( url.indexOf("amazon") != -1  ) {
-    return 2
+
+// Draw a rectangle around the rect (to check it has been detected properly)
+function draw( v ) {
+  webview.executeJavaScript("handpick.draw_rect("+rect.height+","+rect.y+","+rect.x+","+rect.width+",'"+v+"')")
+}
+
+
+
+// Print timings on console
+function cb ( what ) {
+  if( what == "start"){
+    startScreenshoting = Date.now()
   } else {
-    return 1
+    //console.log( what,": ",Date.now() -startScreenshoting)
   }
 }
-
-function edl_check( ) {
-  if ( video.muted ) console.log("this would crash!!!")
-  var time = video.currentTime
-  var first_ok  = 0
-  var first_bad = 24*60*60
-  for (var i = skip.length - 1; i >= 0; i--) {
-    var start = skip[i].start
-    var end   = skip[i].end
-    if ( time > end ) continue;
-    first_bad = Math.min(first_bad,start)
-    if ( time < start ) continue;
-    first_ok  = Math.max(first_ok,end)
-  }
-  if ( first_ok == 0 ) {
-    return { status:"ok",first_bad:first_bad}
-  } else {
-    return { status:"bad",first_ok:first_ok}
-  }
-}
-
-function check_status() {
-  var status = edl_check()
-  if ( status.status == "ok") {
-    show_until( status.first_bad )
-  } else {
-    hide_until( status.first_ok )
-  }
-}
-
-function hide_until( time ) {
-  if ( mode != 3 ) {
-    video.currentTime = time // this will automatically call check_status when seeking is finished
-  } else {
-    var now  = video.currentTime
-    console.log( "hide until ",time, " now is", now )
-    if ( now > time ) {
-      css_show();
-      check_status(); // Check status if we have already pass the "bad" point
-    } else {
-      var rate = (time-now<1)? 1 : 8
-      css_hide( rate )
-      setTimeout(hide_until.bind(null,time), toms(time-now,8) ); // call hide_until again after 1/8th, see if we have pass already the time
-    }
-  }
-}
-
-function toms( time, factor ){
-  console.log( "checking again in ", time, factor )
-  return time*1000/factor
-}
-
-function show_until( time ) {
-  setTimeout(check_status, toms(time-video.currentTime, 2) ); // Check half way just in case
-  if ( mode == 3 && video.muted ) css_show()
-}
-
-function css_show() {
-  console.log( "Unhiding player ")
-  video.playbackRate = 1;
-  video.style.visibility = 'visible';
-  video.muted = false;
-}
-
-function css_hide( rate ) {
-  console.log( "Hiding player ", rate )
-  video.playbackRate = rate;
-  video.style.visibility = 'hidden';
-  video.muted = true;
-}
+var startScreenshoting;
 
 
-function focus_video(argument) {
-// remove all video elements but ours (to make sure we are controlling the right one)
-  var video_list =  document.getElementsByTagName("video")
-  for (var i = video_list.length - 1; i >= 1; i--) {
-    video_list[i].parentElement.removeChild(video_list[i]);
-  }
-// hide all page but our video  
-  document.body.style.visibility = "hidden"
-  video.style = "position: fixed; right: 0; bottom: 0; max-width: 100%; max-height: 100%;  width: auto; height: auto; z-index: 999;   background: #FFFFF;  background-size: cover; visibility:visible;" 
-// hide all iframes (seem to ignore the body visibility hidden)
-  var iframes = document.querySelectorAll("iframe");
-  for (var i = 0; i < iframes.length; i++) {
-    iframes[i].style.visibility = 'hidden';
-  }
-}
-
-
-function get_video_rect () {
-  var video_rect   = video.getBoundingClientRect();
-  var video_ratio  = video.videoWidth/video.videoHeight
-  var display_ratio= video.offsetWidth/video.offsetHeight
-  if ( video_ratio > display_ratio ) {
-    var w = video.offsetWidth
-    var h = video.offsetWidth/video_ratio
-    var t = video_rect.top + (video.offsetHeight-h)/2
-    var l = video_rect.left    
-  } else {
-    var w = video.offsetHeight*video_ratio
-    var h = video.offsetHeight
-    var t = video_rect.top
-    var l = video_rect.left + (video.offsetWidth-w)/2    
-  }
-  return {t:t,l:l,w:w,h:h}
-}
-
-function reshape(rect) {
-  var box = document.getElementById('box')
-  box.style = "position: fixed; left:"+rect.l+"px; top:"+rect.t+"px; width:"+rect.w+"px; height:"+rect.h+"px; border: 3px solid #73AD21;"
-}*/
-	</script>
+  </script>
 </html>
