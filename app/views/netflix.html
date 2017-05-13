@@ -53,10 +53,11 @@ function end_capture() {
  */
 function mark_current_time() {
   if ( !s_start ) {
-    s_start = video_time()
+    s_start = nearest_scene_change( video_time(), true )
     console.log( "Scene start marked at ", s_start )
   } else {
-    s_list.push({start:s_start,end:video_time()})
+    var s_end = nearest_scene_change( video_time(), false )
+    s_list.push({start:s_start,end:s_end})
     s_start = null;
     console.log( "Scene added ", s_list[s_list.length-1] )
   }
@@ -383,7 +384,7 @@ function find_time_in_reference( c_hash, c_time ){
 
 // Make history :)
   if ( !error_detected) {
-    span = Math.max(historic_sync.span,5);
+    span = Math.max(historic_sync.span-10,5);
   } else {
     console.log("DETECTED AN ERROR ",d_min,t_min,t_bef,t_aft,n_blocks,c_time,d_arr)
     var elapsed_time = c_time - historic_sync.c_time;
@@ -401,6 +402,40 @@ function find_time_in_reference( c_hash, c_time ){
 // Return
   return historic_sync;
 
+}
+
+
+/**
+ * Find and return the sharpest scene change
+ * @param {number} start wheter it's the start or the end of the scene
+ * @param {number} t_pressed time the mark scene button was pressed
+ * @returns {number} timestamp of the first frame after a sharp scene change
+ */
+function nearest_scene_change ( t_pressed, start ) {
+  var max_distance = 0;
+  var change_at    =-1;
+  var span         = start? 2000:1000
+  var previous_hash=false
+  for (var block = Math.floor((t_pressed-span)/1000); block <= Math.floor(t_pressed/1000); block++){
+    var ref_data = hash_list[block+""]; if( !ref_data ) continue;
+    for (var i = 1; i < ref_data.length; i++) {
+      var t = ref_data[i][1]+block*1000
+      if ( t < t_pressed-span || t > t_pressed ) continue;
+      if ( previous_hash ) {
+        var d = hamming_distance( ref_data[i][0], previous_hash );
+        var dev = ((t_pressed-t)-span/2)/750
+        console.log(t," -> ",d," -> ",d-dev*dev)
+        d = d-dev*dev
+        if ( d > max_distance ) {
+          max_distance = d;
+          change_at = t-(120*start)
+        };
+      }
+      previous_hash = ref_data[i][0]
+    };
+  };
+  console.log("Pressed at: ",t_pressed," scene change at: ",change_at)
+  return change_at;
 }
 
 
