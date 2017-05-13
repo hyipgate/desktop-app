@@ -3,6 +3,7 @@
   <body style="margin: 0px">
     <webview src="https://www.youtube.com" autosize="on" style="height: 100%;" preload="../realtimeVideoController.js" plugins></webview>
   </body>
+  <script src="./../../utils.js"></script>
   <script type="text/javascript">
 
 
@@ -17,6 +18,22 @@ const remote = require('electron').remote
 //                       EXTERNAL FUNCTIONS                               //
 //************************************************************************//
 
+function load_film( url, skip_list ) {
+  webview.loadURL( url ) // TODO: or return false
+  skip_list = skip_list;
+  var currentFilm = get_local_data( "currentFilm" ); if( !currentFilm ) return false;
+  syncRef = currentFilm["syncRef"]; if( !currentFilm ) return false;
+  watch_film()
+  return true;
+}
+
+
+function preview( start, end ) {
+  skip_list = [{start:start,end:end}];
+  var u_start = guess_users_time( start )
+  hide_until( u_start - 3000 );
+  watch_film()
+}
 
 /**
  * Watch film in user mode (skipping unwanted frames)
@@ -57,12 +74,10 @@ function mark_current_time() {
     console.log( "Scene start marked at ", s_start )
   } else {
     var s_end = nearest_scene_change( video_time(), false )
-    s_list.push({start:s_start,end:s_end})
-    s_start = null;
-    console.log( "Scene added ", s_list[s_list.length-1] )
+    add_scene( s_start, s_end, [], "" )
+    console.log( "Scene added ", s_start," -> ", s_end )
   }
 }
-var s_list = []
 var s_start = null;
 
 
@@ -189,7 +204,7 @@ function improve_rect() {
  */
 function get_thumbail ( ) {
   if (!rect){
-    webview.executeJavaScript('handpick.get_rect()')
+    get_rect()
     return;
   }
   cb("start")
@@ -241,7 +256,6 @@ function want_to_see ( hash, time ) {
 
   //return new Promise( function (resolve, reject) {
     var ref_times   = find_time_in_reference( hash, time );
-    var skip_list   = get_skip_list()
     if( !skiping ) skiping = false;
 
     var ref_next_ok  = -Infinity, ref_next_bad = Infinity
@@ -261,7 +275,7 @@ function want_to_see ( hash, time ) {
       var our_next_ok = guess_users_time( ref_next_ok )
       console.log("hide until ", our_next_ok)
       if ( skiping != our_next_ok ) { // avoid skipping twice, as it breaks
-        webview.executeJavaScript('handpick.hide_until('+our_next_ok/1000+')')  // TODO: this is the definition of unsecure!
+        hide_until( our_next_ok )
       }
       skiping = our_next_ok;
     } else {
@@ -315,8 +329,6 @@ function find_time_in_reference( c_hash, c_time ){
   if( !c_hash || !c_time ) return;
 
 // Prepare data
-  //var currentFilm = get_local_data( "currentFilm" ); if( !currentFilm ) return;
-  //var syncRef = currentFilm["syncRef"]; if( !currentFilm ) return;
   var guessed_time  = guess_ref_time( c_time );
   var guessed_block = Math.floor( guessed_time/1000 );
   console.log(guessed_block)
@@ -445,6 +457,10 @@ function nearest_scene_change ( t_pressed, start ) {
 //                        HELPER FUNCTIONS                                //
 //************************************************************************//
 
+function hide_until( time ) {
+  webview.executeJavaScript('handpick.hide_until('+time/1000+')')  // TODO: this is the definition of unsecure!
+}
+
 
 
 /**
@@ -526,18 +542,6 @@ function purge() {
       last_h = block[j][0]
     }
   }
-}
-
-
-
-// Get/fake a skip list for testing purposes
-function get_skip_list() {
-  if ( s_list.length > 0 ) return s_list;
-  var skip = []
-  for (var i = 20; i >= 0; i--) {
-    skip.push({start:(i*30+5)*1000,end:(i*30+25)*1000})
-  }
-  return skip;
 }
 
 
