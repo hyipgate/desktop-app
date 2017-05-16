@@ -44,6 +44,10 @@ handpick = {
     }
   },
 
+  mute: function ( state ) {
+    handpick.video.muted = state;
+  },
+
   toms : function( time, factor ){
     console.log( "checking again in ", time*1000/factor, "ms" )
     return time*1000/factor
@@ -114,6 +118,8 @@ handpick = {
 
   skip_until : function( time ) {
     handpick.isloaded()
+    var now   = handpick.video.currentTime
+    if ( Math.abs( now - time ) < 100 ) return; // ignore ultra short jumps
     handpick.hide_until( time )
   },
 

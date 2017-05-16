@@ -8,28 +8,26 @@
 
 
 /* Require libraries */
-const electron = require('electron');
-const remote = require('electron').remote
-
-
+const {remote} = require('electron')
 
 
 //************************************************************************//
 //                       EXTERNAL FUNCTIONS                               //
 //************************************************************************//
 
-function load_film( url, skip_list ) {
+
+function load_film( url, skip ) {
   webview.loadURL( url ) // TODO: or return false
-  skip_list = skip_list;
+  load_skip_list( skip );
   var currentFilm = get_local_data( "currentFilm" ); if( !currentFilm ) return false;
   syncRef = currentFilm["syncRef"]; if( !currentFilm ) return false;
-  watch_film()
+  //watch_film()
   return true;
 }
 
 
 function preview( start, end ) {
-  skip_list = [{start:start,end:end}];
+  load_skip_list( [{start:start,end:end}] );
   var u_start = guess_users_time( start )
   hide_until( u_start - 3000 );
   watch_film()
@@ -71,13 +69,18 @@ function end_capture() {
 function mark_current_time() {
   if ( !s_start ) {
     s_start = nearest_scene_change( video_time(), true )
+    webview.executeJavaScript('handpick.mute(true)')
     console.log( "Scene start marked at ", s_start )
   } else {
     var s_end = nearest_scene_change( video_time(), false )
+    skip_list.push({start:s_start,end:s_end})
     add_scene( s_start, s_end, [], "" )
+    s_start = null;
+    webview.executeJavaScript('handpick.mute(false)')
     console.log( "Scene added ", s_start," -> ", s_end )
   }
 }
+var skip_list = []
 var s_start = null;
 
 
@@ -99,6 +102,15 @@ var cpu_time = 0;
 const webview = document.getElementsByTagName('webview')[0]
 
 
+/**
+ * Listen keyboard events
+ */
+window.onkeyup = function(e) {
+   var key = e.keyCode ? e.keyCode : e.which;
+   if ( key == 110 ) {
+      mark_current_time()
+   }
+}
 
 
 /**
@@ -235,7 +247,6 @@ function get_thumbail ( ) {
  * @returns {null}
  */
 function add_to_ref_list(c_hash,c_time) {
-  cb("hashed")
   var block = Math.floor(c_time/1000) // block = seconds
   if ( !hash_list[block] ) hash_list[block] = []
   var ms    = Math.round(c_time-(block)*1000)
@@ -244,53 +255,51 @@ function add_to_ref_list(c_hash,c_time) {
 }
 
 
+function load_skip_list( scenes ) { // TODO: check this actually merge ovelaping scenes. Remove duplicates...
+  for (var i = 0; i < scenes.length; i++) {
+    for (var j = 0; j < scenes.length; j++) {
+      if ( scenes[i].start < scenes[j].start && scenes[j].start < scenes[i].end ) {
+        scenes[i].end = Math.max( scenes[i].end, scenes[j].end )
+      }
+    }
+  }
+  skip_list = scenes;
+}
 
 
 /**
- * Given a hash-time pair from the users video, tells the time of the next wanted/unwanted frame
+ * Given a hash-time pair from the users video, decides wheter to watch it or to skip it
  * @param {string} hash hash from current users video
- * @param {number} time time in current users video timing of the hash parameter
+ * @param {number} time time of the hash parameter
  * @returns {json} { min: earliest possible point, center: most probable time, max: latest possible time}
  */
 function want_to_see ( hash, time ) {
 
-  //return new Promise( function (resolve, reject) {
-    var ref_times   = find_time_in_reference( hash, time );
-    if( !skiping ) skiping = false;
-
-    var ref_next_ok  = -Infinity, ref_next_bad = Infinity
-    for (var i = 0; i < skip_list.length; i++) {
-    // Ignore scenes in the past. Find next "bad" frame
-      if ( ref_times.t_bef > skip_list[i].end ) continue;
-      ref_next_bad = Math.min( ref_next_bad, skip_list[i].start )
-
-    // Ignore scenes in the future. Find next "good" frame
-      if ( ref_times.t_aft < skip_list[i].start ) continue;
-      ref_next_ok = Math.max( ref_next_ok, skip_list[i].end )
-    };
-
-
-    cb("decided what to do:")
-    if ( ref_next_ok != -Infinity ){
-      var our_next_ok = guess_users_time( ref_next_ok )
-      console.log("hide until ", our_next_ok)
-      if ( skiping != our_next_ok ) { // avoid skipping twice, as it breaks
-        hide_until( our_next_ok )
-      }
-      skiping = our_next_ok;
-    } else {
-      skiping = false
-      var our_next_bad = guess_users_time( ref_next_bad )
-      console.log("we are fine until ", our_next_bad)
-      if ( our_next_bad - video_time() < 5000 ) {
-        setTimeout(get_thumbail, 200 )
-      }
-      //resolve( { want:1, avoid:our_next_bad } )
-      return { want:1, avoid:our_next_bad };
+// Find next scene
+  var ref_times  = find_time_in_reference( hash, time );
+  var next_start = Infinity
+  var next_end   = Infinity
+  for (var i = 0; i < skip_list.length; i++) {
+    var time_to_end   = skip_list[i].end - ref_times.t_bef
+    var time_to_start = skip_list[i].start - ref_times.t_aft
+  // Update times if scene is in the future, and the nearest one
+    if ( time_to_end > 0 && time_to_start < next_start ) {
+      next_start = time_to_start
+      next_end   = time_to_end
     }
-  //});
+  };
+
+  if ( next_start < 60 ) {
+    cb("Oops, we are ",-next_start,"ms in the middle of a scene. ")
+    hide_until( next_end + video_time() )
+  } else if ( next_start < 300 ) {
+    cb("Scene almost here, wait ",next_start,"ms and skip: ")
+    setTimeout( function(){ hide_until( next_end + video_time() ) }, next_start )
+  } else if ( next_start < 4000 ){
+    cb("Scene is close (",next_start,"ms) check again a bit later: ")
+    setTimeout( get_thumbail, 800 )
+  }
 }
-var skiping = false;
 
 
 
@@ -458,9 +467,9 @@ function nearest_scene_change ( t_pressed, start ) {
 //************************************************************************//
 
 function hide_until( time ) {
+  console.log("hide until ", time)
   webview.executeJavaScript('handpick.hide_until('+time/1000+')')  // TODO: this is the definition of unsecure!
 }
-
 
 
 /**
