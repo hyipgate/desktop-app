@@ -9,7 +9,7 @@ There are three main parts in this project a [website](https://www.fcinema.org),
 
 # Installation
 
-This project is build on [electron](http://electron.atom.io/) and [node.js](https://nodejs.org/en/). After installing [Node](https://nodejs.org/en/download/) download/clone this project and on the command line execute 
+This project is build on [electron](http://electron.atom.io/) and [node.js](https://nodejs.org/en/). After installing [node.js](https://nodejs.org/en/download/) download/clone this project, open the terminal on the project folder and execute 
 ```
 npm install
 bower install
