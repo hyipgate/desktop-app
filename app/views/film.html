@@ -8,6 +8,26 @@
       <span class="md-caption">{{film.movieData.metadata.released}}  &bull;  {{film.movieData.metadata.runtime}}  &bull;  {{film.movieData.metadata.genres}}  &bull;  {{film.movieData.metadata.imdbRating}}/10</span>
       <p class="md-body-1">{{film.movieData.metadata.plot}}</p>
     </div>
+
+    <!-- -->
+  <div layout="column">
+      <md-content>
+        <md-list class="md-dense" flex="">
+          <md-list-item class="md-3-line" ng-repeat="scene in film.movieData.scenes" ng-click="editScene($index, $event)">
+            <md-checkbox ng-model="scene.skip"></md-checkbox>
+            <div class="md-list-item-text" layout="column">
+              <h4>{{ scene.start | time:scene.end }}s at {{ scene.start | minutes }}min OF {{ scene.tags | tags }}</h4>
+              <p>{{ scene.comment }}</p>
+            </div>
+          </md-list-item>
+        </md-list>
+      </md-content>
+
+  </div>
+<!---->
+
+
+
     <div layout="row">
       <md-button class="md-primary md-raised" ng-click="film.showListBottomSheet()">Play</md-button>
     </div>
@@ -17,17 +37,17 @@
 </div>
 
 <!-- 
-	{{film.movieData.Actors}}
-	{{film.movieData.Awards}}
-	{{film.movieData.Director}}
-	{{film.movieData.Genre}}
-	{{film.movieData.ImdbRating}}
-	{{film.movieData.PGCode}}
-	{{film.movieData.Plot}}
-	<img ng-src="{{film.movieData.Poster}}">
-	{{film.movieData.Released}}
-	{{film.movieData.Runtime}}
-	{{film.movieData.Scenes}}
-	{{film.movieData.Title}}
-	{{film.movieData.Writers}}
-	-->
+  {{film.movieData.Actors}}
+  {{film.movieData.Awards}}
+  {{film.movieData.Director}}
+  {{film.movieData.Genre}}
+  {{film.movieData.ImdbRating}}
+  {{film.movieData.PGCode}}
+  {{film.movieData.Plot}}
+  <img ng-src="{{film.movieData.Poster}}">
+  {{film.movieData.Released}}
+  {{film.movieData.Runtime}}
+  {{film.movieData.Scenes}}
+  {{film.movieData.Title}}
+  {{film.movieData.Writers}}
+  -->
