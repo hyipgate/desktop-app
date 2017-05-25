@@ -1,12 +1,3 @@
-<html style="overflow-y: hidden;">
-  <head></head>
-  <body style="margin: 0px">
-    <webview src="https://www.youtube.com" autosize="on" style="height: 100%;" preload="../realtimeVideoController.js" plugins></webview>
-  </body>
-  <script src="./../../utils.js"></script>
-  <script type="text/javascript">
-
-
 /* Require libraries */
 const {remote} = require('electron')
 
@@ -16,14 +7,19 @@ const {remote} = require('electron')
 //************************************************************************//
 
 
-function load_film( url, skip ) {
-  webview.loadURL( url ) // TODO: or return false
-  load_skip_list( skip );
-  var currentFilm = get_local_data( "currentFilm" ); if( !currentFilm ) return false;
-  syncRef = currentFilm["syncRef"]; if( !currentFilm ) return false;
-  //watch_film()
-  return true;
+function load_film( url, film, edit ) {
+  currentUrl  = "https://www.youtube.com/"
+  currentFilm = film;
+  load_skip_list( film.scenes );
+  syncRef = []//currentFilm["syncRef"];
+  if ( edit ) {
+    start_editing()
+  } else {
+    watch_film()
+  }
+
 }
+
 
 
 function preview( start, end ) {
@@ -47,6 +43,14 @@ function watch_film() {
  * Watch film in editors mode (capturing frames and storing time-hash pairs)
  */
 function start_editing(){
+  // Listen keyboard events 
+  window.onkeyup = function(e) {
+     var key = e.keyCode ? e.keyCode : e.which;
+     if ( key == 110 ) {
+        mark_current_time()
+     }
+  }
+
   mode = "editor";
   if ( timer_id ) clearInterval( timer_id );
   timer_id = setInterval( get_thumbail, 80 );
@@ -74,7 +78,7 @@ function mark_current_time() {
   } else {
     var s_end = nearest_scene_change( video_time(), false )
     skip_list.push({start:s_start,end:s_end})
-    add_scene( s_start, s_end, [], "" )
+    //add_scene( s_start, s_end, [], "" ) // TODO :)
     s_start = null;
     webview.executeJavaScript('handpick.mute(false)')
     console.log( "Scene added ", s_start," -> ", s_end )
@@ -89,53 +93,57 @@ var s_start = null;
 //                         CORE FUNCTIONS                                 //
 //************************************************************************//
 
+function load_webview() {
+  webview = document.getElementsByTagName('webview')[0]
+  if ( !webview ) {
+    console.log( "webview not ready yet")
+    return
+  }
+  webview.loadURL( currentUrl ) // TODO: or return false
 
-/* Global variables */
-var historic_sync = { t_bef: -1, t_min:-1, t_aft:-1, c_time:-1, span:5, confidence:0 }
-var rect;
-var orect;
-var time;
-var hash_list = {};
-var mode = "user";
-var timer_id;
-var cpu_time = 0;
-const webview = document.getElementsByTagName('webview')[0]
+// Listen to events from player 
+  webview.addEventListener('ipc-message', event => {
+    if ( event.channel == "video_rect") {
+      var r = event.args[0];
+      if( r.width == 0 || r.height == 0 ) return;
+      orect = r;
+      rect  = r;
+      improve_rect();
+    } else if ( event.channel == "currentTime" ) {
+      time = 1000*event.args[0];
+      cpu_time = Date.now();
+    } else {
+      console.log("ipc-message received: ",event.channel)
+    }
+  })
 
-
-/**
- * Listen keyboard events
- */
-window.onkeyup = function(e) {
-   var key = e.keyCode ? e.keyCode : e.which;
-   if ( key == 110 ) {
-      mark_current_time()
-   }
+  return true;
 }
 
 
-/**
- * Listen to events from player
- */
-webview.addEventListener('ipc-message', event => {
-  if ( event.channel == "video_rect") {
-    orect = event.args[0];
-    rect  = orect;
-    improve_rect();
-  } else if ( event.channel == "currentTime" ) {
-    time = 1000*event.args[0];
-    cpu_time = Date.now();
-  } else {
-    console.log("ipc-message received: ",event.channel)
-  }
-})
-
+/* Define some global variables */
+  var historic_sync = { t_bef: -1, t_min:-1, t_aft:-1, c_time:-1, span:5, confidence:0 }
+  var rect  = false;
+  var orect = false;
+  var time  = 0;
+  var mode  = "user";
+  var timer_id = false;
+  var hash_list= {};
+  var cpu_time = 0;
+  var webview  = false;
 
 
 /**
  * Listen to events from player
  */
 function get_rect() {
-  webview.executeJavaScript('handpick.get_rect()')
+  if( webview ){
+    //console.log( "try to get rect!")
+    webview.executeJavaScript('handpick.get_rect()')  
+  } else {
+    console.log( "try to load webview!")
+    load_webview()
+  }  
 }
 
 
@@ -145,6 +153,8 @@ function get_rect() {
  * @returns {number} current time
  */
 function video_time() {
+// Check we have some time data
+  if ( time == 0 || cpu_time == 0 ) return 0;
 // Elapsed time since variable "time" was updated.
   var elapsed_time = (Date.now()-cpu_time);
 // Detect if video is paused (as time gets updated at least every 250ms) TODO: Improve this hack
@@ -159,6 +169,7 @@ function video_time() {
  * Improves the quality of the rect (croping black borders)
  */
 function improve_rect() {
+  console.log("improve rect, don't do this too often")
   remote.getCurrentWindow().capturePage(function handleCapture (img) {
     var bitmap  = img.getBitmap() // TODO: find out why this blocks the video
     var columns = img.getSize().width
@@ -172,7 +183,7 @@ function improve_rect() {
         var b = bitmap[(j*columns+i)*4+2]
         sum+= (r+g+b)+ 10*Math.abs(r-g)+10*Math.abs(b-g)
       }
-      console.log(sum / orect.width)
+      console.log(sum / orect.width )
       if ( sum / orect.width > 50 ) break;
     }
     var first = j-1;
@@ -215,10 +226,8 @@ function improve_rect() {
  * Capture current frame, generate hash and skip/watch/store accordingly
  */
 function get_thumbail ( ) {
-  if (!rect){
-    get_rect()
-    return;
-  }
+  get_rect()
+  if ( !rect ) return;
   cb("start")
   var bef_time = video_time();
   remote.getCurrentWindow().capturePage(function handleCapture (img) {
@@ -571,7 +580,3 @@ function cb ( what ) {
   }
 }
 var startScreenshoting;
-
-
-  </script>
-</html>

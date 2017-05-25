@@ -12,7 +12,20 @@ handpick = {
   div: null,
 
   load : function () {
-    handpick.video = document.getElementsByTagName("video")[0]
+    var video = document.getElementsByTagName("video")
+    if ( video.length != 1 ){
+      console.log( "[webview] loading fail, more/less than one video, ie. ", video.length )
+      return;
+    }
+    if ( video[0].readyState < 1 || !video[0].currentTime || video[0].currentTime < 5 ) {
+      console.log( "[webview] too early to tell if this is the video, ie. ", video[0].currentTime )
+      return; 
+    }
+    if ( video[0].duration < 30 ) {
+      console.log( "[webview] video too short to be a film :), ie. ", video[0].duration )
+      return; 
+    }
+    handpick.video = video[0];
     handpick.video.onseeked = function(){ handpick.ipcRenderer.sendToHost( "seek" ); }
     handpick.video.ontimeupdate = function() { handpick.get_current_time() };
 
@@ -28,12 +41,12 @@ handpick = {
   },
 
   hide_until: function( time ) {
+    var now  = video.currentTime
+    console.log( "[webview] hiding from ",now," to ",time," using mode ", handpick.mode )
     var video = handpick.video;
     if ( handpick.mode != 3 ) {
-      video.currentTime = time // this will automatically call check_status when seeking is finished
+      video.currentTime = time
     } else {
-      var now  = video.currentTime
-      console.log( "hide until ",time, " now is", now )
       if ( now > time ) {
         handpick.css_show();
       } else {
@@ -109,32 +122,36 @@ handpick = {
   },
 
   isloaded : function () {
-    if ( !handpick.video) {
+    if ( !handpick.video ) {
       handpick.load();
-      return (!!handpick.video)
     };
-    return true
+    return (!!handpick.video)
   },
 
   skip_until : function( time ) {
-    handpick.isloaded()
+    if( !handpick.isloaded() ) return;
     var now   = handpick.video.currentTime
     if ( Math.abs( now - time ) < 100 ) return; // ignore ultra short jumps
     handpick.hide_until( time )
   },
 
   get_rect : function () {
-    handpick.isloaded()
-    handpick.ipcRenderer.sendToHost( "video_rect", handpick.get_video_rect() )
+    if( !handpick.isloaded() ) return;
+    var r = handpick.get_video_rect();
+    var lr= handpick.last_rect;
+    if ( !lr || r.width != lr.width || r.height != lr.height || r.x != lr.x || r.y != lr.y) {
+      handpick.ipcRenderer.sendToHost( "video_rect", r )
+      handpick.last_rect = r
+    }
   },
 
   get_current_time : function () {
-    handpick.isloaded()
+    if( !handpick.isloaded() ) return;
     handpick.ipcRenderer.sendToHost( "currentTime", handpick.video.currentTime )
   },
 
   focus_video : function () {
-    handpick.isloaded()
+    if( !handpick.isloaded() ) return;
     handpick.focus_video2();
   }
 

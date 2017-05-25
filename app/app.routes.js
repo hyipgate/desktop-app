@@ -7,13 +7,19 @@ angular.module('app.routes', ['ngRoute'])
     .when('/', {
       templateUrl : './views/select.html',
       controller  : 'MainController',
-          controllerAs: 'main',
+      controllerAs: 'main',
     })
 
     .when('/film', {
       templateUrl : './views/film.html',
       controller  : 'FilmController',
-          controllerAs: 'film',
+      controllerAs: 'film',
+    })
+
+    .when('/stream', {
+      templateUrl : './views/stream.html',
+      controller  : 'StreamController',
+      controllerAs: 'stream',
     })
 
     .otherwise({ redirectTo: '/'})

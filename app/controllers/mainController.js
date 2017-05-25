@@ -5,7 +5,7 @@ angular.module('mainCtrl', ['ngMaterial'])
   vm.processing = false;
 
   $rootScope.electron = require('electron');
-  $rootScope.utils = $rootScope.electron.remote.require('./utils');
+  $rootScope.utils = $rootScope.electron.remote.require('./app/assets/js/utils');
   $rootScope.db = new PouchDB('localData');
 
   vm.getFile = function(event){

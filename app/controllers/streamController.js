@@ -1,38 +1,18 @@
-angular.module('filmCtrl', ['ngMaterial'])
+angular.module('streamCtrl', ['ngMaterial'])
 
-.controller('FilmController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog) {
+.controller('StreamController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog) {
   var vm = this;
   
+  $rootScope.electron = require('electron');
+
   vm.getMovie = function(){
     vm.movieData = service.getSelectedFilm();
   }
 
+  load_film
+
   vm.getMovie();
 
-  vm.css = {
-   'background': 'linear-gradient( rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('+vm.movieData.images.backdrops[0]+') no-repeat center center',
-   'background-size': 'cover',
-  }
-
-  vm.showListBottomSheet = function() {
-    $scope.alert = '';
-    $mdBottomSheet.show({
-      templateUrl: 'views/bottom-sheet-list-template.html',
-      controller: 'FilmController as film'
-    }).then(function(clickedItem) {
-      console.log(clickedItem + ' clicked!');
-    });
-  };
-
-  vm.listItemClick = function($index) {
-    var clickedItem = vm.movieData.providers[$index]
-    $mdBottomSheet.hide(clickedItem.name);
-    service.saveSelectedFilm(vm.movieData);
-    $location.path('/stream');
-    if (!$rootScope.$$phase) $rootScope.$apply();
-    var edit = true;//true
-    load_film( clickedItem.url, vm.movieData, edit )
-  };
 
 
   $scope.editScene = function(id,$event) {
