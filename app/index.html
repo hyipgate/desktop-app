@@ -25,11 +25,13 @@
   <script type="text/javascript" src="./controllers/mainController.js"></script>
   <script type="text/javascript" src="./controllers/filmController.js"></script>
   <script type="text/javascript" src="./controllers/streamController.js"></script>
-
-  <script type="text/javascript" src="./assets/js/stream.js"></script>
+  <script type="text/javascript" src="./controllers/chooseFilmTableController.js"></script>
 
   <!-- services -->
   <script type="text/javascript" src="./services/mainService.js"></script>
+
+  <!-- Utils -->
+  <script type="text/javascript" src="./assets/js/stream.js"></script>
 
   <!-- main Angular app files -->
   <script type="text/javascript" src="./app.routes.js"></script>
@@ -40,9 +42,9 @@
   <link rel="stylesheet" href="./assets/css/style.css">
 
 </head>
-<body ng-app="familyCinema" ng-controller="MainController as main" ng-cloak layout="column">
+<body ng-app="familyCinema" ng-controller="MainController as main" ng-cloak>
     <!-- ANGULAR VIEWS -->
-    <div ng-view flex layout="column">
+    <div layout="row" ng-view>
         <!--Here comes the view -->
     </div>
 </body>

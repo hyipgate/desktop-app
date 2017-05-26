@@ -39,7 +39,7 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 380, height: 185,
+  mainWindow = new BrowserWindow({width: 1190, height: 680,
     webPreferences: {
       // The `plugins` have to be enabled.
       plugins: true

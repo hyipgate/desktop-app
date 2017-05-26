@@ -1,26 +1,30 @@
 angular.module('mainCtrl', ['ngMaterial'])
 
-.controller('MainController', function($rootScope, $scope, service, $location, $window, $q) {
+.controller('MainController', function($rootScope, $route, $scope, service, $location, $window, $q) {
   var vm = this;
   vm.processing = false;
+  vm.searchQuery;
+
+  vm.searchQuery = service.getSearchQuery();
 
   $rootScope.electron = require('electron');
   $rootScope.utils = $rootScope.electron.remote.require('./app/assets/js/utils');
-  $rootScope.db = new PouchDB('localData');
 
   vm.getFile = function(event){
     vm.processing = true;
     var file = event.target.files;
     if(file){
-      vm.search_film(file[0].path).then(function(film){
+      vm.search_film(file[0].path,null).then(function(film){
         vm.processing = false;
         film = film["data"];
-        if(film.IDs){
-          console.log('Lista');
+        if(film.type=="list"){
+          service.saveSelectedFilm(film);
+          service.saveSearchQuery(vm.searchQuery);
+          $location.path('/chooseFilmTable');
+          if (!$rootScope.$$phase) $rootScope.$apply();
         }else{
           service.saveSelectedFilm(film);
           $location.path('/film');
-          $rootScope.electron.remote.getCurrentWindow().setSize(1190,680,true);
           if (!$rootScope.$$phase) $rootScope.$apply();
         }
       })
@@ -29,8 +33,39 @@ angular.module('mainCtrl', ['ngMaterial'])
     }
   };
 
-  vm.search_film = function(text){
-    return $rootScope.utils.search_film(text);
+  vm.searchTitle = function(){
+    vm.processing = true;
+      vm.search_film(null,vm.searchQuery).then(function(film){
+        vm.processing = false;
+        film = film["data"];
+        if(film.type=="list"){
+          service.saveSelectedFilm(film);
+          service.saveSearchQuery(vm.searchQuery);
+          $location.path('/chooseFilmTable');
+                    console.log(film);
+                    $route.reload();
+          if (!$rootScope.$$phase) $rootScope.$apply();
+        }else{
+          console.log(film);
+          service.saveSelectedFilm(film);
+          $location.path('/film');
+          if (!$rootScope.$$phase) $rootScope.$apply();
+        }
+      });
+  };
+
+  vm.selected = function(imdbid){
+    $rootScope.utils.search_film(null,null,null,imdbid).then(function(film){
+      console.log(film);
+      service.saveSelectedFilm(film.data);
+      $location.path('/film');
+      if (!$rootScope.$$phase) $rootScope.$apply();
+    });
+  }
+
+  vm.search_film = function(filepath,title){
+    //return $rootScope.utils.search_film(text);
+    return $rootScope.utils.search_film(filepath,title,null,null);
   }
 
   vm.get_content_by_id = function(){

@@ -1,4 +1,4 @@
-angular.module('familyCinema', ['ngAnimate', 'ngMessages', 'app.routes', 'MainService', 'mainCtrl','ngMaterial','filmCtrl','streamCtrl'])
+angular.module('familyCinema', ['ngAnimate', 'ngMessages', 'app.routes', 'MainService', 'mainCtrl','ngMaterial','filmCtrl', 'chooseFilmCtrl', 'streamCtrl'])
 
 .config(function($mdThemingProvider) {
   $mdThemingProvider.theme('default')
@@ -12,6 +12,19 @@ angular.module('familyCinema', ['ngAnimate', 'ngMessages', 'app.routes', 'MainSe
       'hue-1': '100',
       'hue-2': '700',
     });
+
+  $mdThemingProvider.theme('darkTheme')
+    .primaryPalette('green', {
+      'default': '500',
+      'hue-1': '100',
+      'hue-2': '700',
+    })
+    .accentPalette('indigo', {
+      'default': '500',
+      'hue-1': '100',
+      'hue-2': '700',
+    })
+    .dark();
 })
 
 .directive('customOnChange', function() {

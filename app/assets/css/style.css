@@ -2,39 +2,38 @@
 	Select a movie styles
 */
 
-.select{
-	background-color: #4CAF50;
-	text-align: center;
-}
-
-.select md-icon{
-	width: 40vmin;
-	height: 40vmin;
-}
-
-.select .material-icons{
-	font-size: 40vmin;
-}
-
-.fullPage{
-
+body div{
 	min-width: 100%;
 	min-height: 100%;
+	position: absolute;
 }
 
 #mainPage{
-	display: table;
-	text-align: center;
+	min-width: 100%;
+	padding: 0;
 	color: #fff;
-	background-color: #4CAF50;
+  background: linear-gradient( rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../img/bg.jpg') no-repeat center center;
+  background-size: cover;
 }
 
-#mainPage div{
-	min-width: 100%;
-	min-height: 100%;
-	display: table-cell;
-	vertical-align: center;
+.takeFileLabel{
+	margin-left: 15%;
 }
+
+.takeFileLabel:hover{
+	color: #66BB6A;
+	cursor:pointer;
+}
+
+.movieList{
+	min-width:40%;
+}
+
+.movieList md-list{
+	height:300px;
+	overflow-y: scroll;
+}
+
 
 #movieInfo{
 	padding-top: 10%;
@@ -46,3 +45,4 @@
 #movieInfo #movieData{
 	margin-left: 5%;
 }
+
