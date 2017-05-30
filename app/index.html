@@ -26,6 +26,7 @@
   <script type="text/javascript" src="./controllers/filmController.js"></script>
   <script type="text/javascript" src="./controllers/streamController.js"></script>
   <script type="text/javascript" src="./controllers/chooseFilmTableController.js"></script>
+  <script type="text/javascript" src="./controllers/configController.js"></script>
 
   <!-- services -->
   <script type="text/javascript" src="./services/mainService.js"></script>
@@ -42,10 +43,14 @@
   <link rel="stylesheet" href="./assets/css/style.css">
 
 </head>
-<body ng-app="familyCinema" ng-controller="MainController as main" ng-cloak>
+<body ng-app="familyCinema" ng-controller="MainController as main" ng-cloak style="overflow: hidden;">
     <!-- ANGULAR VIEWS -->
-    <div layout="row" ng-view>
+    <div layout="row" ng-view style="min-height: 100%">
         <!--Here comes the view -->
     </div>
+
+    <md-button class="md-fab md-fab-top-right" aria-label="Settings" ng-click="openSettings()" style="background-color:transparent">
+      <md-icon md-svg-src="./assets/img/config.svg" style="fill:white"></md-icon>
+    </md-button>
 </body>
 </html>

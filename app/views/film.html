@@ -1,8 +1,11 @@
 <div id="mainPage" layout="column" md-theme="darkTheme" layout-align="center center" ng-style="film.css">
 	
-	<section flex></section>
+	<section flex>
+   
+   <md-switch ng-model="film.editor" aria-label="Editor mode" ng-true-value="'visible'" ng-false-value="'none'"></md-switch> 
+  </section>
 
-	<section layout="row" flex style="margin-left: 10%; margin-right: 10%">
+	<section layout="row" flex style="margin-left: 10%; margin-right: 10%; margin-top: -10%">
 		<img ng-src="{{film.movieData.images.posters[0]}}" alt="Film Poster" height="450px">
 		<section layout="column" style="margin-left: 10%;" layout-align="space-around start">
 			<span>
@@ -13,20 +16,31 @@
 			</span>
 
 			<span style="width: 100%">
-				<md-list>
+				<md-list class="md-dense" flex>
 					<md-list-item class="md-2-line" ng-repeat="scene in film.movieData.scenes" ng-click="editScene($index, $event)">
 						<md-checkbox ng-model="scene.skip"></md-checkbox>
 						<div class="md-list-item-text" layout="column">
-							<h3>{{ scene.start | time:scene.end }}s at {{ scene.start | minutes }}min OF {{ scene.tags | tags }}</h3>
+							<h3>{{ scene.start | time:scene.end }}s at {{ scene.start | minutes }}min</h3>
 							<p>{{ scene.comment }}</p>
 						</div>
+            <!--<md-chips ng-model="scene.tags" readonly="true"></md-chips>-->
 					</md-list-item>
 				</md-list>
 			</span>
 
-			<md-button class="md-primary md-raised" ng-click="film.showListBottomSheet()">Play</md-button>
+      <dir layout="row">
+        <md-button class="md-raised" ng-click="film.showListBottomSheet()" style="display:{{film.editor}}">Share</md-button>
+        <md-button class="md-primary md-raised" ng-click="film.showListBottomSheet()">Play</md-button>  
+      </dir>
+
+			
+
 		</section>
 	</section>
+
+  <md-button class="md-fab md-fab-top-left" aria-label="Back" ng-click="backToSearch()" style="background-color:transparent">
+    <md-icon md-svg-src="./assets/img/back.svg"></md-icon>
+  </md-button>
 
 	<section flex></section>
 

@@ -9,8 +9,6 @@ angular.module('streamCtrl', ['ngMaterial'])
     vm.movieData = service.getSelectedFilm();
   }
 
-  load_film
-
   vm.getMovie();
 
 

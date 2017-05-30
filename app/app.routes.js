@@ -28,6 +28,12 @@ angular.module('app.routes', ['ngRoute'])
       controllerAs: 'stream',
     })
 
+    .when('/config', {
+      templateUrl : './views/config.html',
+      controller  : 'ConfigController',
+      controllerAs: 'config',
+    })
+
     .otherwise({ redirectTo: '/'})
 
 });

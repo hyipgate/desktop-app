@@ -4,11 +4,23 @@ angular.module('mainCtrl', ['ngMaterial'])
   var vm = this;
   vm.processing = false;
   vm.searchQuery;
+  vm.beforeConfig;
 
   vm.searchQuery = service.getSearchQuery();
 
   $rootScope.electron = require('electron');
   $rootScope.utils = $rootScope.electron.remote.require('./app/assets/js/utils');
+
+  $scope.openSettings = function () {
+    var openTab = $location.path()
+    if ( openTab != "/config") {
+      vm.beforeConfig = openTab;
+      $location.path('/config');
+    } else {
+      $location.path(vm.beforeConfig);
+    }
+    
+  }
 
   vm.getFile = function(event){
     vm.processing = true;

@@ -1,12 +1,19 @@
-<md-bottom-sheet class="md-list md-has-header" style="position: fixed;overflow: hidden;">
-  <md-subheader ng-cloak>Select a player</md-subheader>
-  <md-list ng-cloak>
-    <md-list-item ng-repeat="provider in film.movieData.providers">
 
-      <md-button class="md-list-item-content" ng-click="film.listItemClick($index)">
-        <span class="md-inline-list-icon-label">{{ provider.name }}</span>
-      </md-button>
-
-    </md-list-item>
-  </md-list>
+<md-bottom-sheet class="md-grid" layout="column"  style="background-color: rgba(0, 0, 0, 0.60); color:white">
+  <div layout="row" layout-align="center center" ng-cloak>
+    <h4>Select source</h4>
+  </div>
+  <div ng-cloak>
+    <md-list flex layout="row" layout-align="center center">
+      <md-list-item ng-repeat="provider in film.providers">
+        <div>
+          <md-button class="md-grid-item-content" ng-click="film.listItemClick($index)">
+            <img ng-src="{{provider.icon}}" height="50px" style="fill:white">
+            <div class="md-grid-text"> {{ provider.name }} </div>
+          </md-button>
+        </div>
+      </md-list-item>
+    </md-list>
+  </div>
 </md-bottom-sheet>
+
