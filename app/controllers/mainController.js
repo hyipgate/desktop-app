@@ -1,137 +1,155 @@
-angular.module('mainCtrl', ['ngMaterial'])
+angular.module( 'mainCtrl', [ 'ngMaterial' ] )
 
-.controller('MainController', function($rootScope, $route, $scope, service, $location, $window, $q) {
-  var vm = this;
-  vm.processing = false;
-  vm.searchQuery;
-  vm.beforeConfig;
+.controller( 'MainController', function( $rootScope, $route, $scope, service, $location, $window, $q, $mdDialog, $mdToast ) {
+    var vm = this;
+    vm.processing = false;
+    vm.searchQuery;
+    vm.beforeConfig = "main";
 
-  vm.searchQuery = service.getSearchQuery();
+    vm.searchQuery = service.getSearchQuery();
 
-  $rootScope.electron = require('electron');
-  $rootScope.utils = $rootScope.electron.remote.require('./app/assets/js/utils');
+    $rootScope.electron = require( 'electron' );
+    $rootScope.utils = $rootScope.electron.remote.require( './app/assets/js/utils' );
 
-  $scope.openSettings = function () {
-    var openTab = $location.path()
-    if ( openTab != "/config") {
-      vm.beforeConfig = openTab;
-      $location.path('/config');
-    } else {
-      $location.path(vm.beforeConfig);
+    $rootScope.openToast = function( msg ) {
+        $mdToast.show($mdToast.simple().textContent( msg ).hideDelay(2000));
+    };
+
+    $scope.closeSettings = function() {
+        $location.path( vm.beforeConfig );
     }
-    
-  }
 
-  vm.getFile = function(event){
-    vm.processing = true;
-    var file = event.target.files;
-    if(file){
-      vm.search_film(file[0].path,null).then(function(film){
-        vm.processing = false;
-        film = film["data"];
-        if(film.type=="list"){
-          service.saveSelectedFilm(film);
-          service.saveSearchQuery(vm.searchQuery);
-          $location.path('/chooseFilmTable');
-          if (!$rootScope.$$phase) $rootScope.$apply();
-        }else{
-          service.saveSelectedFilm(film);
-          $location.path('/film');
-          if (!$rootScope.$$phase) $rootScope.$apply();
-        }
-      })
-    }else{
-      console.log('ERROR');
+    $scope.openSettings = function() {
+        vm.beforeConfig = $location.path();
+        $location.path( '/config' );
     }
-  };
 
-  vm.searchTitle = function(){
-    vm.processing = true;
-      vm.search_film(null,vm.searchQuery).then(function(film){
-        vm.processing = false;
-        film = film["data"];
-        if(film.type=="list"){
-          service.saveSelectedFilm(film);
-          service.saveSearchQuery(vm.searchQuery);
-          $location.path('/chooseFilmTable');
-                    console.log(film);
-                    $route.reload();
-          if (!$rootScope.$$phase) $rootScope.$apply();
-        }else{
-          console.log(film);
-          service.saveSelectedFilm(film);
-          $location.path('/film');
-          if (!$rootScope.$$phase) $rootScope.$apply();
+    vm.getFile = function( event ) {
+        vm.processing = true;
+        var file = event.target.files;
+        //service.setFile( file[0].path )
+        if ( file ) {
+            vm.search_film( file[ 0 ].path, null ).then( function( film ) {
+                vm.processing = false;
+                film = film[ "data" ];
+                if ( film.type == "list" ) {
+                    service.saveSelectedFilm( film );
+                    service.saveSearchQuery( vm.searchQuery );
+                    $location.path( '/chooseFilmTable' );
+                    if ( !$rootScope.$$phase ) $rootScope.$apply();
+                } else {
+                    service.saveSelectedFilm( film );
+                    $location.path( '/film' );
+                    if ( !$rootScope.$$phase ) $rootScope.$apply();
+                }
+            } )
+        } else {
+            console.log( 'ERROR' );
         }
-      });
-  };
+    };
 
-  vm.selected = function(imdbid){
-    $rootScope.utils.search_film(null,null,null,imdbid).then(function(film){
-      console.log(film);
-      service.saveSelectedFilm(film.data);
-      $location.path('/film');
-      if (!$rootScope.$$phase) $rootScope.$apply();
-    });
-  }
+    vm.searchTitle = function() {
+        vm.processing = true;
+        vm.search_film( null, vm.searchQuery ).then( function( film ) {
+            vm.processing = false;
+            film = film[ "data" ];
+            if ( film.type == "list" ) {
+                service.saveSelectedFilm( film );
+                service.saveSearchQuery( vm.searchQuery );
+                $location.path( '/chooseFilmTable' );
+                console.log( film );
+                $route.reload();
+                if ( !$rootScope.$$phase ) $rootScope.$apply();
+            } else {
+                console.log( film );
+                service.saveSelectedFilm( film );
+                $location.path( '/film' );
+                if ( !$rootScope.$$phase ) $rootScope.$apply();
+            }
+        } );
+    };
 
-  vm.search_film = function(filepath,title){
-    //return $rootScope.utils.search_film(text);
-    return $rootScope.utils.search_film(filepath,title,null,null);
-  }
+    vm.selected = function( imdbid ) {
+        $rootScope.utils.search_film( null, null, null, imdbid ).then( function( film ) {
+            console.log( film );
+            service.saveSelectedFilm( film.data );
+            $location.path( '/film' );
+            if ( !$rootScope.$$phase ) $rootScope.$apply();
+        } );
+    }
 
-  vm.get_content_by_id = function(){
-    var data = $rootScope.utils.get_content_by_id(0);
-    console.log(data);
-  }
+    vm.search_film = function( filepath, title ) {
+        //return $rootScope.utils.search_film(text);
+        return $rootScope.utils.search_film( filepath, title, null, null );
+    }
 
-  vm.get_offset_with_reference = function(){
-    var data = $rootScope.utils.get_offset_with_reference('path', 'guess', 'reference');
-    console.log(data);
-  }
+    vm.editScene = function( id, $event ) {
+        $mdDialog.show( {
+            targetEvent: $event,
+            templateUrl: 'views/edit-scene-template.html',
+            locals: { id: id },
+            controller: [ '$scope', 'id', function( $scope, id ) {
+                $scope.scene = service.getScenes()[ id ];
+                $scope.selectedItem = null;
+                $scope.searchText = null;
+                $scope.tags = loadTags();
+                $scope.selectedTags = $scope.scene.tags;
 
-  vm.play = function(){
-    var data = $rootScope.utils.play('path', 'player', 'filters', 'output');
-    console.log(data);
-  }
+                /* Search tags */
+                $scope.querySearch = function( query ) {
+                    var results = query ? $scope.tags.filter( createFilterFor( query ) ) : [];
+                    return results;
+                }
 
-  vm.test = function(){
-    var data = $rootScope.utils.test();
-    console.log(data);
-  }
+                /* Create filter function for a query string */
+                function createFilterFor( query ) {
+                    var lowercaseQuery = angular.lowercase( query );
 
-  vm.preview = function(){
-    var data = $rootScope.utils.preview('path','filter');
-    console.log(data);
-  }
+                    return function filterFn( tag ) {
+                        return ( tag._lowername.indexOf( lowercaseQuery ) === 0 ) ||
+                            ( tag._lowertype.indexOf( lowercaseQuery ) === 0 );
+                    };
+                }
 
-  vm.get_current_time = function(){
-    var data = $rootScope.utils.get_current_time();
-    console.log(data);
-  }
+                function loadTags() {
+                    var tags = service.getTags()
+                    return tags.map( function( tag ) {
+                        tag._lowername = tag.name.toLowerCase();
+                        tag._lowertype = tag.type.toLowerCase();
+                        return tag;
+                    } );
+                }
 
-  vm.get_thumbnails = function(){
-    var data = $rootScope.utils.get_thumbnails('path', 'start', 'end');
-    console.log(data);
-  }
+                $scope.closeDialog = function() {
+                    $mdDialog.hide();
+                    $scope.scene.tags = $scope.selectedTags
+                    service.updateScene( id, $scope.scene )
+                    $rootScope.utils.save_edition( service.getSelectedFilm(), service.getScenes() )
+                    pause( false )
+                }
 
-  vm.get_sync_reference = function(){
-    var data = $rootScope.utils.get_sync_reference('path', 'start', 'end');
-    data.then( function( ref ) { console.log(JSON.stringify(ref)) } )  
-    console.log(data);
-  }
+                $scope.preview = function() {
+                    if ( $location.path != '/stream' ) {
+                        $location.path( '/stream' );
+                    } else {
+                        console.log( "will previw again ", id )
+                        setTimeout( function() { vm.editScene( id ) }, 5000 );
+                    }
+                    preview( $scope.scene.start, $scope.scene.end )
+                    $scope.closeDialog()
+                }
 
-  var startScreenshoting;
-  vm.netflix = function(){
-    startScreenshoting = Date.now() 
-    var cb = function () { console.log( Date.now() -startScreenshoting) }
-    var remote = require('electron').remote
-    remote.getCurrentWindow().capturePage(function handleCapture (img) {
-      remote.require('fs').writeFile("test", img.toPng(), cb)
-    })
+                $scope.remove = function() {
+                    $mdDialog.hide();
+                    service.removeScene( id )
+                    $rootScope.utils.save_edition( service.getSelectedFilm(), service.getScenes() )
+                    pause( false )
+                }
 
-    console.log("loading netflix")
-    $location.path('/netflix');
-  }
+            } ]
+        } )
+    }
 
-});
+
+
+} );

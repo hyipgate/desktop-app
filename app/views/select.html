@@ -1,36 +1,21 @@
 <div id="mainPage" layout="column" md-theme="darkTheme" layout-align="start center">
-	
-	<section flex>
-		<h1 class="md-display-1">Personal Cinema</h1>
-	</section>
-
-	<section flex>
-		<md-input-container>
-			<label>Search movie</label>
-			<input size="30" ng-model="main.searchQuery" ng-keyup="$event.keyCode == 13 && main.searchTitle()">
-		</md-input-container>
-		<md-input-container>
-			<md-button class="md-primary md-raised" aria-label="Select a movie" ng-click="main.searchTitle()" class="md-button">Search</md-button>
-		</md-input-container>
-		<br>
-
-		<input class="ng-hide" id="input-file-id" type="file" custom-on-change="main.getFile"/>
-		<label for="input-file-id" ng-hide="main.processing" class="takeFileLabel">or select a file in your computer</label>
-	</section>
-
-	<section flex></section>
-
-
-
-
-	<!--
-	<label for="input-file-id" ng-hide="main.processing" class="md-button md-raised md-hue-2 md-accent">Choose Files</label>
-	<div layout="row" ng-hide="!main.processing" layout-align="space-around">
-		<md-progress-circular md-mode="indeterminate" class="md-accent" md-diameter="30"></md-progress-circular>
-	</div>
-
-	<md-button aria-label="Select a movie" ng-click="main.test()" class="md-button">test</md-button>
-
-	<md-button aria-label="Select a movie" ng-click="main.netflix()" class="md-button">Netflix</md-button>
-	-->
+    <section flex>
+        <h1 class="md-display-1">Personal Cinema</h1>
+    </section>
+    <section flex>
+        <md-input-container>
+            <label>Search movie</label>
+            <input size="30" ng-model="main.searchQuery" ng-keyup="$event.keyCode == 13 && main.searchTitle()">
+        </md-input-container>
+        <md-input-container>
+            <md-button class="md-primary md-raised" aria-label="Select a movie" ng-click="main.searchTitle()" class="md-button">Search</md-button>
+        </md-input-container>
+        <br>
+        <input class="ng-hide" id="input-file-id" type="file" custom-on-change="main.getFile" />
+        <label for="input-file-id" ng-hide="main.processing" class="takeFileLabel">or select a file in your computer</label>
+    </section>
+    <section flex></section>
+    <md-button class="md-fab md-fab-top-right transparentFab" aria-label="Settings" ng-click="openSettings()">
+        <md-icon md-svg-src="./assets/img/config.svg" style="fill:white"></md-icon>
+    </md-button>
 </div>

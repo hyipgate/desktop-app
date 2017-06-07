@@ -1,48 +1,35 @@
-<md-dialog layout="column">
-  
-  <md-dialog-content>
-    <md-content layout="row" layout-padding>
-      <md-input-container flex="20">
-        <label>Start</label>
-        <input type="text" ng-model="scene.start" placeholder="second"/>
-      </md-input-container>
-
-      <md-input-container flex="20">
-        <label>End</label>
-        <input type="text" ng-model="scene.end" placeholder="second"/>
-      </md-input-container>
-    
-      <md-input-container flex="60">
-        <label>Comment</label>
-        <input type="text" ng-model="scene.comment" placeholder="Short comment"/><br>
-      </md-input-container>
-
-    </md-content>
-
-    <md-content style="margin-top: -40px" layout="row" layout-padding>
-      <md-input-container flex="100">
-        <label>Tags</label>
-        <md-chips ng-model="selectedTags" md-autocomplete-snap md-require-match="true">
-          <md-autocomplete
-              md-selected-item="selectedItem"
-              md-search-text="searchText"
-              md-items="item in querySearch(searchText)"
-              md-item-text="item.name"
-              placeholder="Search for a tag or category">
-            <span md-highlight-text="searchText">{{item.name}} ({{item.type}})</span>
-          </md-autocomplete>
-          <md-chip-template>{{$chip.name}}</md-chip-template>
-        </md-chips>
-      </md-input-container>
-    </md-content>
-
-  </md-dialog-content>
-
-  <md-dialog-actions>
-    <md-button ng-click="preview()">Preview</md-button>
-    <md-button ng-click="closeDialog()" class="md-primary">Finish</md-button>
-  </md-dialog-actions>
-
+<md-dialog layout="column" md-theme="darkTheme">
+    <md-dialog-content>
+        <md-content layout="row" layout-padding>
+            <md-input-container flex="17">
+                <label>Start</label>
+                <input type="number" step=".04" ng-model="scene.start" placeholder="second" />
+            </md-input-container>
+            <md-input-container flex="17">
+                <label>End</label>
+                <input type="number" step=".04" ng-value="scene.end" placeholder="second" />
+            </md-input-container>
+            <md-input-container flex="66">
+                <label>Comment</label>
+                <input type="text" ng-model="scene.comment" placeholder="Short comment" />
+                <br>
+            </md-input-container>
+        </md-content>
+        <md-content style="margin-top: -50px" layout="row" layout-padding>
+            <md-input-container flex="100">
+                <label>Tags</label>
+                <md-chips ng-model="selectedTags" md-autocomplete-snap md-require-match="true">
+                    <md-autocomplete md-selected-item="selectedItem" md-search-text="searchText" md-items="item in querySearch(searchText)" md-item-text="item.name" placeholder="Search for a tag or category">
+                        <span md-highlight-text="searchText">{{item.name}} ({{item.type}})</span>
+                    </md-autocomplete>
+                    <md-chip-template>{{$chip.name}}</md-chip-template>
+                </md-chips>
+            </md-input-container>
+        </md-content>
+    </md-dialog-content>
+    <md-dialog-actions>
+        <md-button ng-click="remove()">Delete</md-button>
+        <md-button ng-click="preview()">Preview</md-button>
+        <md-button ng-click="closeDialog()" class="md-primary">Save</md-button>
+    </md-dialog-actions>
 </md-dialog>
-
-        

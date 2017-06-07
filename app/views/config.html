@@ -1,22 +1,63 @@
 <div id="mainPage" layout="column" md-theme="darkTheme" layout-align="start center">
-	
-	<section flex>
-		<h1 class="md-display-1">Personal Cinema - Config</h1>
-	</section>
-
-	<section flex>
-		<md-input-container>
-			<label>Username</label>
-			<input type="text">
-		</md-input-container>
-		<br>
-
-		<md-input-container>
-		  <label>Username</label>
-		  <input ng-model="user.name" type="text">
-		</md-input-container>
-	</section>
-
-	<section flex></section>
-
+  <section flex="15">
+    <h1 class="md-display-1">Settings</h1>
+  </section>
+  <section flex="60" layout="row" style="width: 80%">
+    <div flex="30">
+      <h3>Violence</h3>
+      <p> Skip | List | Tag </p>
+      <div style="overflow-y: auto; overflow-x: hidden; max-height: 400px">
+        <md-list class="md-dense">
+          <md-list-item class="md-1-line" ng-repeat="tag in config.tags | filter: {type: 'Violence' }">
+            <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
+            <md-checkbox ng-model="tag.show" aria-label="Show on scene list"></md-checkbox>
+            <div class="md-list-item-text" layout="column">{{tag.name}}</div>
+          </md-list-item>
+        </md-list>
+      </div>
+    </div>
+    <div flex="30">
+      <h3>Sex and Nudity</h3>
+      <p> Skip | List | Tag </p>
+      <div style="overflow-y: auto; overflow-x: hidden; max-height: 400px">
+        <md-list class="md-dense">
+          <md-list-item class="md-1-line" ng-repeat="tag in config.tags | filter: {type: 'Sex' }">
+            <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
+            <md-checkbox ng-model="tag.show" aria-label="Show on scene list"></md-checkbox>
+            <div class="md-list-item-text" layout="column">{{tag.name}}</div>
+          </md-list-item>
+        </md-list>
+      </div>
+    </div>
+    <div flex="30">
+      <h3>Profanity</h3>
+      <p> Skip | List | Tag </p>
+      <div style="overflow-y: auto; overflow-x: hidden; max-height: 400px">
+        <md-list class="md-dense">
+          <md-list-item class="md-1-line" ng-repeat="tag in config.tags | filter: {type: 'Profanity' }">
+            <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
+            <md-checkbox ng-model="tag.show" aria-label="Show on scene list"></md-checkbox>
+            <div class="md-list-item-text" layout="column">{{tag.name}}</div>
+          </md-list-item>
+        </md-list>
+      </div>
+    </div>
+  </section>
+  <section flex="25" layout="column">
+    <div flex="50">
+        <h3>Advanced</h3>
+    </div>
+    <div layout="row">
+      <md-switch ng-model="settings.editors_view" aria-label="Editor mode" ng-change="config.saveSettings()">
+        Show editor's options
+      </md-switch>
+      <md-button class="md-raised" ng-click="config.logIn($event)">Log In</md-button>
+      <md-button class="md-raised" ng-click="config.newUser($event)">New user</md-button>
+      <md-button class="md-raised" ng-click="config.newPass($event)">New password</md-button>
+    </div>
+  </section>
+  <section flex></section>
+  <md-button class="md-fab md-fab-top-left transparentFab" aria-label="Settings" ng-click="closeSettings()">
+    <md-icon md-svg-src="./assets/img/back.svg" style="fill:white"></md-icon>
+  </md-button>
 </div>

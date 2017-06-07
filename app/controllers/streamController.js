@@ -1,41 +1,50 @@
 angular.module('streamCtrl', ['ngMaterial'])
 
-.controller('StreamController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog) {
+.controller('StreamController', function($rootScope, $scope, service, $location, $mdDialog ) {
   var vm = this;
   
-  $rootScope.electron = require('electron');
-
-  vm.getMovie = function(){
-    vm.movieData = service.getSelectedFilm();
+   // Listen keyboard events 
+  window.onkeyup = function(e) {
+     var key = e.keyCode ? e.keyCode : e.which;
+     if ( key == 110 ) {
+        var scene = mark_current_time()
+        if ( scene ) {
+          var index = service.addScene( scene.start, scene.end )
+          $scope.main.editScene( index )
+        }
+     }
   }
 
-  vm.getMovie();
+  $scope.backToFilm = function (argument) {
+    window.onkeyup = null
+    $location.path('/film');
+  }
 
 
 
-  $scope.editScene = function(id,$event) {
+  $scope.sceneList = function($event) {
+    pause(true)
     $mdDialog.show({
       targetEvent: $event,
-      template:
-        '<md-dialog>' +
-        ' <md-dialog-content>'+
-        '<label>Start:</label><input type="text" ng-model="scene.start" placeholder="ms"/><br>'+
-        '<label>End:</label><input type="text" ng-model="scene.end" placeholder="ms"/><br>'+
-        '<label>Comment:</label><input type="text" ng-model="scene.comment" placeholder="Brief comment"/><br>'+
-        '</md-dialog-content>' +
-        '  <md-dialog-actions>' +
-        '    <md-button>Preview</md-button>' +
-        '    <md-button ng-click="closeDialog()" class="md-primary">Finish</md-button>' +
-        '  </md-dialog-actions>' +
-        '</md-dialog>',
-      locals: { id: id },
-      controller: ['$scope', 'id', function($scope, id) {
-        $scope.scene = vm.movieData.scenes[id];
-        $scope.closeDialog = function() {
-          $mdDialog.hide();
-        }
-      }]
+      locals: { editScene: $scope.main.editScene },
+      templateUrl: 'views/scene-list-template.html',
+      controller: sceneListController
     })
+    
+    function sceneListController ($scope, $mdDialog, editScene ) {
+
+      $scope.scenes  = service.getScenes();
+
+      $scope.closeAndEditScene = function ($index, $event) {
+        $mdDialog.hide()
+        editScene( $index)
+      }
+
+      $scope.newScene = function () {
+        var index = service.addScene()
+        editScene( index )
+      }
+    }
   }
 
 }).filter('minutes', function() {

@@ -19,11 +19,11 @@ handpick = {
     }
     if ( video[0].readyState < 1 || !video[0].currentTime || video[0].currentTime < 5 ) {
       console.log( "[webview] too early to tell if this is the video, ie. ", video[0].currentTime )
-      return; 
+      return;
     }
     if ( video[0].duration < 30 ) {
       console.log( "[webview] video too short to be a film :), ie. ", video[0].duration )
-      return; 
+      return;
     }
     handpick.video = video[0];
     handpick.video.onseeked = function(){ handpick.ipcRenderer.sendToHost( "seek" ); }
@@ -41,9 +41,13 @@ handpick = {
   },
 
   hide_until: function( time ) {
-    var now  = video.currentTime
-    console.log( "[webview] hiding from ",now," to ",time," using mode ", handpick.mode )
+    if( !handpick.isloaded() ){
+      console.log("unable to hide!! video not loaded")
+      return;
+    }
     var video = handpick.video;
+    var now   = video.currentTime
+    console.log( "[webview] hiding from ",now," to ",time," using mode ", handpick.mode )
     if ( handpick.mode != 3 ) {
       video.currentTime = time
     } else {
@@ -59,6 +63,14 @@ handpick = {
 
   mute: function ( state ) {
     handpick.video.muted = state;
+  },
+
+  pause: function ( state ) {
+    if ( state ) {
+      handpick.video.pause();
+    } else {
+      handpick.video.play();
+    }
   },
 
   toms : function( time, factor ){

@@ -16,70 +16,6 @@ storage.init();
 
 
 
-/**
- * Add a scene to the scene list
- * @param {number} start where to start skipping (in seconds)
- * @param {number} end where to stop skipping (in seconds)
- * @param {array} tags list of tags
- * @param {string} comment description of the scene
- * @param {string=null} id ...
- * @returns {number} don't know yet
- */
-function add_scene ( start, end, tags, comment, id, syncData ) {
-  trace( "add_scene", arguments )
-  id = id || random_id()
-
-  var scene = {
-    id:       id,
-    tags:     tags,
-    comment:  comment,
-    start:    start,
-    end:      end,
-    syncData: syncData
-  }
-
-  var film = get_local_data( "currentFilm" )
-  var i    = find_in_array( film.scenes, id );
-  // Add scene
-  if ( i == -1 ){ film.scenes.push( scene ) }
-  // Edit scene
-  else{ film.scenes[i] = scene }
-
-  set_local_data( "currentFilm", film )
-
-  return film.scenes
-}
-
-
-/**
- * Remove scene from scene list
- * @param {string} id scene id
- * @returns {number} don't know yet, probably an integer with 0/1 for success/error
- */
-function remove_scene ( id ) {
-  trace( "remove_scene", arguments )
-  var film = get_local_data( "currentFilm" )
-  var i    = find_in_array( film.scenes, id )
-  if ( i == -1 ) return -1;
-  film.scenes[i].splice( i, 1 )
-  set_local_data( "currentFilm", film )
-  return i
-}
-
-
-/**
- * Get list of scenes
- * @returns {json} json with the list of scenes
- */
-function get_scenes ( ) {
-  trace( "get_scene", arguments )
-  var film = get_local_data( "currentFilm" )
-  return film.scenes
-}
-
-
-
-
 
 /**
  * Search film in database
@@ -93,47 +29,42 @@ function search_film ( file, title, url, imdbid ) {
   trace( "search_film", arguments )
 // We got an id
   if ( imdbid ) {
-    var film = get_local_data( imdbid )
-    if ( film ) {
-      set_local_data( "currentFilm", film )
-      Promise.resolve( { status:205, data:film } );
-    } else {
-      return call_online_api( { action:"search", imdb_code: imdbid } ).then( function ( film ) {
-        if ( film["status"] == 200 ) set_local_data( "currentFilm", film["data"] )
-        return film;
-      })
-    }
+  // Check online
+    return call_online_api( { action:"search", imdb_code: imdbid } ).then( function ( film ) {
+      if ( film["status"] == 200 ){
+        set_local_data( imdbid, film["data"] )
+        return merge_local_tags( film );
+      }
+    // In case of network error... check if we got a local copy
+      film = get_local_data( imdbid )
+      if ( film["status"] == 200 ) return  merge_local_tags( { status:205, data:film } )
+    // If we don't have anything
+      return { status:400, data:{} }
+    })
+    
   };
 
 // We got a file
   if ( file ) {
     return parse_input_file( file ).then( function ( stats ) {
+    // Check if we have identified this file before
       var imdbid = get_local_data( stats.hash+"|"+stats.filesize )
-      if ( imdbid ) {
-        var film = get_local_data( imdbid )
-        if ( film ) {
-          set_local_data( "currentFilm", film )
-          return { status:205, data:film };
-        };
-      };
-
+      if ( imdbid ) return search_film( null, null, null, imdbid )
+    // If we haven't, ask the network
       return call_online_api( { action:"search", filename:stats.estimated_title, hash:stats.hash, bytesize:stats.filesize, url:url } ).then( function ( film ) {
         if ( film["status"] == 200 && film["data"]["type"] != "list" ){
-          console.log( film )
-          set_local_data( stats.hash+"|"+stats.filesize, film["data"]["id"]["imdb"] )
-          set_local_data( film["data"]["id"]["imdb"], film["data"] )
-          set_local_data( "currentFilm", film["data"] )
+          var imdbid = film["data"]["id"]["imdb"]
+          set_local_data( stats.hash+"|"+stats.filesize, imdbid )
+          set_local_data( imdbid, film["data"] )
         }
-        console.log(film)
-        return film;
+        return merge_local_tags( film );
       })
     })
   }
 
 // We just got a title/url
   return call_online_api( { action:"search", filename:title, url:url } ).then( function ( film ) {
-    if ( film["status"] == 200 ) set_local_data( "currentFilm", film["data"] )
-    return film;
+    return merge_local_tags( film );
   })
 }
 
@@ -213,11 +144,42 @@ function new_pass ( user, pass, newpass ) {
  * Share local scenes editions with online database (doesn't matter if we are "agents" or normal users)
  * @returns {json} API response
  */
-function share_scenes ( ) {
+function share_scenes ( film ) {
   trace( "share_scenes", arguments )
-  var film  = get_local_data( "currentFilm" ); if (!film) return Promise.reject( "No film is currently open" );
+  film = encodeURIComponent(JSON.stringify(film))
   return call_online_api( { action:"modify", data:film } )
 }
+
+
+
+
+/**
+ * Save scenes editions localy
+ * @returns {something}
+ */
+function save_edition ( film, scenes ) {
+  trace( "save_edition", arguments )
+  var imdbid = film["id"]["imdb"]
+  return set_local_data( imdbid+"_mytags", scenes )
+}
+
+
+/**
+ * Merge "mytags" into "communitytags"
+ * @returns {json} with film
+ */
+function merge_local_tags ( film ) {
+  trace( "merge_local_tags", arguments )
+  if ( film.status == 400 || !film.data["id"] || !film.data["id"]["imdb"] ) return film
+  var imdbid = film.data["id"]["imdb"]
+  var scenes = get_local_data( imdbid+"_mytags" )
+  if ( scenes ) {
+    film.data.scenes = scenes
+  }
+  return film;
+}
+
+
 
 
 
@@ -226,22 +188,21 @@ function share_scenes ( ) {
  * Assign current user as "agent" of this film
  * @returns {json} API response
  */
-function claim ( ) {
+function claim ( imdbid ) {
   trace( "claim", arguments )
-  var film  = get_local_data( "currentFilm" ); if (!film) return Promise.reject( "No film is currently open" );
-  return call_online_api( { action:"claim", imdb_code:film["id"]["imdb"] } )
+  return call_online_api( { action:"claim", imdb_code:imdbid } )
 }
 
 
 function get_settings() {
   var settings = get_local_data( "settings" )
-  if ( !settings) settings = defaul_settings;
+  if ( !settings ) settings = defaul_settings;
   return settings;
 }
 
 var defaul_settings = {
   username: undefined,
-  editors_view_enabled : false,
+  editors_view : false,
   players: [
     { name: "Netflix", enabled: true, url:"https://www.netflix.com/watch/#netflix#", alturl:"https://www.netflix.com/search?q=#title#" },
     { name: "Amazon Video",  enabled: true, url:"https://www.amazon.co.uk" },
@@ -253,7 +214,7 @@ var defaul_settings = {
 }
 
 
-function update_settings( settings ) {
+function set_settings( settings ) {
   if ( !settings ) return;
   set_local_data( "settings", settings )
 }
@@ -267,14 +228,9 @@ function update_settings( settings ) {
 exports.search_film   = search_film;
 exports.add_review    = add_review;
 exports.get_settings  = get_settings;
-exports.update_settings  = update_settings;
-
-
-// Scene edition
+exports.set_settings  = set_settings;
+exports.save_edition  = save_edition;
 exports.claim         = claim;
-exports.add_scene     = add_scene;
-exports.get_scenes    = get_scenes;
-exports.remove_scene  = remove_scene;
 exports.share_scenes  = share_scenes;
 
 // Authentication functions
@@ -370,15 +326,6 @@ function find_in_array ( array, id ) {
     if( array[i]["id"] == id ) return i
   };
   return -1;
-}
-
-function random_id () {
-  var text     = ""
-  var possible = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
-  for (var i = 0; i < 10; i++) {
-    text += possible.charAt( Math.floor( Math.random() * possible.length ));
-  };
-  return text;
 }
 
 

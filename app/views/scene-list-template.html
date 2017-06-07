@@ -1,0 +1,20 @@
+<md-dialog layout="column" md-theme="darkTheme">
+    <md-dialog-content>
+        <md-content layout="row" layout-padding>
+            <div style="width: 100%">
+                <md-list class="md-dense" flex>
+                    <md-list-item class="md-2-line" ng-repeat="scene in scenes" ng-click="closeAndEditScene($index, $event)">
+                        <div class="md-list-item-text" layout="column">
+                            <h3>{{ scene.start | time:scene.end }}s at {{ scene.start | minutes }}min</h3>
+                            <p>{{ scene.comment }}</p>
+                        </div>
+                        <!--<md-chips ng-model="scene.tags" readonly="true"></md-chips>-->
+                    </md-list-item>
+                </md-list>
+            </div>
+        </md-content>
+    </md-dialog-content>
+    <md-dialog-actions>
+        <md-button ng-click="newScene()" class="md-primary">Add Scene</md-button>
+    </md-dialog-actions>
+</md-dialog>

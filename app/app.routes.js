@@ -13,7 +13,7 @@ angular.module('app.routes', ['ngRoute'])
     .when('/chooseFilmTable', {
       templateUrl : './views/chooseFilmTable.html',
       controller  : 'ChooseFilmTableController',
-          controllerAs: 'set',
+      controllerAs: 'set',
     })
 
     .when('/film', {

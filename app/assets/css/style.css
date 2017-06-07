@@ -2,54 +2,56 @@
 	Select a movie styles
 */
 
-/*body div{
-	min-width: 100%;
-	min-height: 100%;
-	position: absolute;
-}*/
-
-#mainPage{
-	min-width: 100%;
-	min-height: 100%;
-	overflow-y: hidden;
-/*	padding: 0;*/
-	color: #fff;
+#mainPage {
+  min-width: 100%;
+  min-height: 100%;
+  overflow-y: hidden;
+  /*	padding: 0;*/
+  color: #fff;
   background: linear-gradient( rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../img/bg.jpg') no-repeat center center;
   background-size: cover;
 }
 
-.fullPage{
-	min-width: 100%;
-	min-height: 100%;
+.transparentFab {
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
 
-.takeFileLabel{
-	margin-left: 15%;
+.greyFab {
+  background-color: grey !important;
+  /*box-shadow: none !important;*/
 }
 
-.takeFileLabel:hover{
-	color: #66BB6A;
-	cursor:pointer;
+.fullPage {
+  min-width: 100%;
+  min-height: 100%;
 }
 
-.movieList{
-	min-width:40%;
+.takeFileLabel {
+  margin-left: 15%;
 }
 
-.movieList md-list{
-	height:300px;
-	overflow-y: auto;
+.takeFileLabel:hover {
+  color: #66BB6A;
+  cursor: pointer;
 }
 
-
-#movieInfo{
-	padding-top: 10%;
-	padding-right: 10%;
-	padding-left: 10%;
-	color: #fff;
+.movieList {
+  min-width: 40%;
 }
 
-#movieInfo #movieData{
-	margin-left: 5%;
+.movieList md-list {
+  height: 300px;
+  overflow-y: auto;
 }
 
+#movieInfo {
+  padding-top: 10%;
+  padding-right: 10%;
+  padding-left: 10%;
+  color: #fff;
+}
+
+#movieInfo #movieData {
+  margin-left: 5%;
+}

@@ -1,42 +1,30 @@
 <div id="mainPage" layout="column" md-theme="darkTheme" layout-align="start center">
-	
-	<section flex>
-		<h1 class="md-display-1">Personal Cinema</h1>
-	</section>
-
-	<section flex ng-controller="MainController as main">
-		<md-input-container>
-			<label>Search movie</label>
-			<input size="30" ng-model="main.searchQuery" ng-keyup="$event.keyCode == 13 && main.searchTitle()">
-		</md-input-container>
-		<md-button class="md-primary md-raised" aria-label="Select a movie" ng-click="main.searchTitle()" class="md-button">Search</md-button>
-		<br>
-	</section>
-
-	<section flex class="movieList" style="margin-top: -10%">
-    <md-list>
-	    <md-list-item class="md-2-line" ng-repeat="movie in set.movieData.list" ng-click="set.selected(movie.id)">
-	      <div class="md-list-item-text" layout="column">
-	        <h3>{{ movie.title }}</h3>
-	        <p>{{ movie.director }} - {{ movie.year }}</p>
-	      </div>
-	    </md-list-item>
-    </md-list>
-		<br>
-	</section>
-
-	<section flex>
-		<!--	&darr; Scroll down for more suggestions-->
-	</section>
-
-		<!--
-		<label for="input-file-id" ng-hide="main.processing" class="md-button md-raised md-hue-2 md-accent">Choose Files</label>
-		<div layout="row" ng-hide="!main.processing" layout-align="space-around">
-			<md-progress-circular md-mode="indeterminate" class="md-accent" md-diameter="30"></md-progress-circular>
-		</div>
-
-		<md-button aria-label="Select a movie" ng-click="main.test()" class="md-button">test</md-button>
-
-		<md-button aria-label="Select a movie" ng-click="main.netflix()" class="md-button">Netflix</md-button>
-		-->
+    <section flex>
+        <h1 class="md-display-1">Personal Cinema</h1>
+    </section>
+    <section flex ng-controller="MainController as main">
+        <md-input-container>
+            <label>Search movie</label>
+            <input size="30" ng-model="main.searchQuery" ng-keyup="$event.keyCode == 13 && main.searchTitle()">
+        </md-input-container>
+        <md-button class="md-primary md-raised" aria-label="Select a movie" ng-click="main.searchTitle()" class="md-button">Search</md-button>
+        <br>
+    </section>
+    <section flex class="movieList" style="margin-top: -10%">
+        <md-list>
+            <md-list-item class="md-2-line" ng-repeat="movie in set.movieData.list" ng-click="set.selected(movie.id)">
+                <div class="md-list-item-text" layout="column">
+                    <h3>{{ movie.title }}</h3>
+                    <p>{{ movie.director }} - {{ movie.year }}</p>
+                </div>
+            </md-list-item>
+        </md-list>
+        <br>
+    </section>
+    <section flex>
+        <!--  &darr; Scroll down for more suggestions-->
+    </section>
+    <md-button class="md-fab md-fab-top-right transparentFab" aria-label="Settings" ng-click="openSettings()">
+        <md-icon md-svg-src="./assets/img/config.svg" style="fill:white"></md-icon>
+    </md-button>
 </div>
