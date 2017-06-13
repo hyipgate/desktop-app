@@ -6,34 +6,8 @@ const ipcMain = electron.ipcMain
 const BrowserWindow = electron.BrowserWindow
 
 
-// You have to pass the filename of `widevinecdmadapter` here, it is
-// * `widevinecdmadapter.plugin` on macOS,
-// * `libwidevinecdmadapter.so` on Linux,
-// * `widevinecdmadapter.dll` on Windows.
-
-let pluginName, pluginVersion
-switch ( process.platform ) {
-    case 'win32':
-        pluginName = __dirname + '\\app\\widevine\\win_x64\\widevinecdmadapter.dll'
-        pluginVersion = '1.4.8.903'
-        break
-    case 'darwin':
-        pluginName = 'widevinecdmadapter.plugin'
-        pluginVersion = '1.4.8.903'
-        break
-    case 'linux':
-        pluginName = 'file:///' + __dirname + '/app/widevine/linux/libwidevinecdmadapter.so'
-        pluginVersion = '1.4.8.903'
-        break
-}
-
 const widevine = require( 'electron-widevinecdm' );
 widevine.load( app );
-
-console.log( pluginName, pluginVersion )
-    //app.commandLine.appendSwitch('widevine-cdm-path', pluginName)
-    // The version of plugin can be obtained from `chrome://plugins` page in Chrome.
-    //app.commandLine.appendSwitch('widevine-cdm-version', pluginVersion )
 
 
 // Keep a global reference of the window object, if you don't, the window will
