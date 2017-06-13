@@ -5,10 +5,9 @@
                 <md-list class="md-dense" flex>
                     <md-list-item class="md-2-line" ng-repeat="scene in scenes" ng-click="closeAndEditScene($index, $event)">
                         <div class="md-list-item-text" layout="column">
-                            <h3>{{ scene.start | time:scene.end }}s at {{ scene.start | minutes }}min</h3>
+                            <h3><b>{{ scene.tags | tags }}</b> <i>({{ scene.start | seconds:scene.end }})</i></h3>
                             <p>{{ scene.comment }}</p>
                         </div>
-                        <!--<md-chips ng-model="scene.tags" readonly="true"></md-chips>-->
                     </md-list-item>
                 </md-list>
             </div>

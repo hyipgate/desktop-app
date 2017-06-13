@@ -1,5 +1,5 @@
 /* Require libraries */
-const { remote } = require( 'electron' )
+const { remote, ipcRenderer } = require( 'electron' )
 
 
 //************************************************************************//
@@ -10,15 +10,11 @@ var currentUrl = ""
 
 function load_film( url, scenes, edit, ref ) {
     console.log( "loading film: ", url, scenes, edit, ref )
-    webview    = false
+    webview = false
     currentUrl = url
     load_skip_list( scenes );
     syncRef = ref
-    if ( edit ) {
-        start_editing()
-    } else {
-        watch_film()
-    }
+    setMode( edit ? "editor" : "user" )
 }
 
 
@@ -26,42 +22,37 @@ function load_film( url, scenes, edit, ref ) {
 function preview( start, end ) {
     console.log( "Starting preview of: ", start, "->", end )
     load_skip_list( [ { start: start, end: end } ] );
-    var u_start = guess_users_time( start )
+    var u_start = guess_users_time( 1000*start )
     hide_until( u_start - 3000 );
     mode_after_preview = mode
-    watch_film()
+    setMode( "user" )
 }
 var mode_after_preview
 
-/**
- * Watch film in user mode (skipping unwanted frames)
- */
-function watch_film() {
-    mode = "user";
-    initialize_stats()
-    if ( timer_id ) clearInterval( timer_id );
-    if ( syncRef.length < 1 ) {
-        console.log("No syncRef, avoid time wasted in capturing frames")
-    }
-    timer_id = setInterval( get_thumbail, 1000 );
-}
 
-/**
- * Watch film in editors mode (capturing frames and storing time-hash pairs)
- */
-function start_editing() {
-    mode = "editor";
-    if ( timer_id ) clearInterval( timer_id );
-    timer_id = setInterval( get_thumbail, 80 );
+function setMode( m ) {
+    mode = m;
+    if ( mode == "editor" ) {
+        setTimer( 80 )
+    } else {
+        setTimer( 1000 )
+    }
 }
 
 /**
  * Stop watching
  */
 function end_capture() {
-    print_stats()
+    //print_stats()
+    setTimer( false )
+}
+
+function setTimer( delay ) {
+    if ( timer_delay == delay ) return
     if ( timer_id ) clearInterval( timer_id );
-    timer_id = false;
+    console.log("setting timer every ", delay )
+    if ( delay ) timer_id = setInterval( get_thumbail, delay );
+    timer_delay = delay;
 }
 
 
@@ -75,7 +66,7 @@ function mark_current_time() {
         console.log( "Scene start marked at ", s_start )
     } else {
         var s_end = nearest_scene_change( video_time(), false )
-        var scene = { start: s_start/1000, end: s_end/1000, tags: [], comment: "" }
+        var scene = { start: s_start / 1000, end: s_end / 1000, tags: [], comment: "" }
         pause( true );
         webview.executeJavaScript( 'handpick.mute(false)' )
         console.log( "Scene added ", s_start, " -> ", s_end )
@@ -100,6 +91,17 @@ function load_webview() {
     }
     webview.loadURL( currentUrl ) // TODO: or return false
 
+    ipcRenderer.on('hash-ready', (event, arg) => {
+        parseFrame( arg )
+    })
+
+    ipcRenderer.on('improved-rect-ready', (event, arg) => {
+        console.log('improved-rect-ready', arg)
+        if ( rect.x == arg.rect.x ) { // TODO: check all properties
+            orect = arg.orect
+        }
+    })
+
     // Listen to events from player 
     webview.addEventListener( 'ipc-message', event => {
         if ( event.channel == "video_rect" ) {
@@ -107,7 +109,7 @@ function load_webview() {
             if ( r.width == 0 || r.height == 0 ) return;
             orect = r;
             rect = r;
-            improve_rect();
+            ipcRenderer.send('improve-rect', {orect:orect} )
         } else if ( event.channel == "currentTime" ) {
             time = 1000 * event.args[ 0 ];
             cpu_time = Date.now();
@@ -127,8 +129,10 @@ var orect = false;
 var time = 0;
 var mode = "user";
 var timer_id = false;
+var timer_delay = 0;
 var cpu_time = 0;
 var webview = false;
+initialize_stats()
 
 
 /**
@@ -166,63 +170,6 @@ function video_time() {
 
 
 
-/**
- * Improves the quality of the rect (croping black borders)
- */
-function improve_rect() {
-    console.log( "improve rect, don't do this too often" )
-    remote.getCurrentWindow().capturePage( function handleCapture( img ) {
-        var bitmap = img.getBitmap() // TODO: find out why this blocks the video
-        var columns = img.getSize().width
-        var rows = img.getSize().height
-        var j = orect.y;
-        for ( j = orect.y; j < orect.height + orect.y; j++ ) {
-            var sum = 0;
-            for ( var i = orect.x; i < orect.width + orect.x - 1; i++ ) {
-                var r = bitmap[ ( j * columns + i ) * 4 ]
-                var g = bitmap[ ( j * columns + i ) * 4 + 1 ]
-                var b = bitmap[ ( j * columns + i ) * 4 + 2 ]
-                sum += ( r + g + b ) + 10 * Math.abs( r - g ) + 10 * Math.abs( b - g )
-            }
-            console.log( sum / orect.width )
-            if ( sum / orect.width > 50 ) break;
-        }
-        var first = j - 1;
-
-        /*for ( j = orect.height+orect.y-1; j > orect.y; j--) {
-          var sum = 0;
-          for (var i = orect.x; i < orect.width+orect.x-1; i++) {
-            var r = bitmap[(j*columns+i)*4]
-            var g = bitmap[(j*columns+i)*4+1]
-            var b = bitmap[(j*columns+i)*4+2]
-            sum+= (r+g+b)+ 10*Math.abs(r-g)+10*Math.abs(b-g)
-          }
-          console.log(sum / orect.width)
-          if ( sum / orect.width > 50*1.5 ) break;
-        }
-        var last = j+1*/
-        var last = orect.height - first // do it symmetric
-        var usual_ratios = [ 1.33, 1.77, 1.85, 2.39 ]
-        var our = orect.width / ( last - first )
-        var dmin = Infinity;
-        var amin = 0;
-        for ( var i = 0; i < usual_ratios.length; i++ ) {
-            var d = Math.abs( usual_ratios[ i ] - our )
-            if ( d < dmin ) {
-                dmin = d;
-                amin = i;
-            }
-        }
-
-        console.log( usual_ratios[ amin ], our )
-        var crop = orect.height - orect.width / usual_ratios[ amin ];
-        rect.y = Math.round( orect.y + crop / 2 );
-        rect.height = Math.round( Math.min( orect.height, orect.width / usual_ratios[ amin ] ) );
-    } )
-}
-
-
-
 
 /**
  * Capture current frame, generate hash and skip/watch/store accordingly
@@ -232,22 +179,23 @@ function get_thumbail() {
     if ( !rect ) return;
     cb( "start" )
     var bef_time = video_time();
-    remote.getCurrentWindow().capturePage( function handleCapture( img ) {
-        var aft_time = video_time()
-        if ( bef_time > aft_time || aft_time > 50 + bef_time ) {
-            console.log( "DISCARDING FRAME. Unsure about time of captured frame. Uncertainty  ", Math.floor( ( aft_time - bef_time ) ) )
-            return;
-        }
-        img = img.crop( rect ).resize( { width: 16, height: 9, quality: "good" } ) // TODO check performance/improvement when using better resize quality
-        var hash = bitmap_to_hash( img.getBitmap() )
-        if ( mode == "editor" ) {
-            add_to_ref_list( hash, ( bef_time + aft_time ) / 2 )
-        } else {
-            want_to_see( hash, ( bef_time + aft_time ) / 2 )
-        }
-    } )
+    ipcRenderer.send('get-hash', {time:bef_time,rect:rect} )
 }
 
+function parseFrame( arg ) {
+    var hash     = arg.hash
+    var bef_time = arg.time
+    var aft_time = video_time()
+    if ( bef_time > aft_time || aft_time > 50 + bef_time ) {
+        console.log( "DISCARDING FRAME. Unsure about time of captured frame. Uncertainty  ", Math.floor( ( aft_time - bef_time ) ) )
+        return;
+    }
+    if ( mode == "editor" ) {
+        add_to_ref_list( hash, ( bef_time + aft_time ) / 2 )
+    } else {
+        want_to_see( hash, ( bef_time + aft_time ) / 2 )
+    }
+}
 
 
 
@@ -262,7 +210,7 @@ function add_to_ref_list( c_hash, c_time ) {
     if ( !syncRef[ block ] ) syncRef[ block ] = []
     var ms = Math.round( c_time - ( block ) * 1000 )
     syncRef[ block ].push( [ c_hash, ms ] )
-    //console.log( hash, block, ms )
+    console.log( c_hash, block, ms )
 }
 
 
@@ -274,13 +222,13 @@ function load_skip_list( scenes ) { // TODO: check this actually merge ovelaping
             }
         }
     }
-    
-    skip_list = []    
-    for (var i = 0; i < scenes.length; i++) {
-        skip_list[i] = {}
-        skip_list[i].start = scenes[i].start*1000
-        skip_list[i].end   = scenes[i].end  *1000
-        skip_list[i].skip  = scenes[i].skip
+
+    skip_list = []
+    for ( var i = 0; i < scenes.length; i++ ) {
+        skip_list[ i ] = {}
+        skip_list[ i ].start = scenes[ i ].start * 1000
+        skip_list[ i ].end = scenes[ i ].end * 1000
+        skip_list[ i ].skip = scenes[ i ].skip
     }
 }
 
@@ -315,7 +263,9 @@ function want_to_see( hash, time ) {
         setTimeout( function() { hide_until( next_end + video_time() ) }, next_start )
     } else if ( next_start < 4000 ) {
         cb( "Scene is close (", next_start, "ms) check again a bit later: " )
-        setTimeout( get_thumbail, 800 )
+        setTimer( 250 )
+    } else {
+        setTimer( 1000 )
     }
 }
 
@@ -490,16 +440,26 @@ function hide_until( time ) {
     if ( !webview ) return -1;
     console.log( "hide until ", time )
     if ( mode_after_preview ) {
-        mode = mode_after_preview;
+        setMode( mode_after_preview )
         mode_after_preview = false;
     }
     webview.executeJavaScript( 'handpick.hide_until(' + time / 1000 + ')' ) // TODO: this is the definition of unsecure!
+}
+
+function go_to_frame( time ) {
+    console.log("going to frame, at time ", time )
+    webview.executeJavaScript( 'handpick.go_to_frame(' + time + ')' ) // TODO: this is the definition of unsecure!
 }
 
 function pause( state ) {
     if ( !webview ) return;
     state = !!state
     webview.executeJavaScript( 'handpick.pause(' + state + ')' )
+    if ( state ) {
+        setTimer( 0 )
+    } else {
+        setMode( mode )
+    }
 }
 
 

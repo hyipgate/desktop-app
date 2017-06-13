@@ -2,14 +2,9 @@ angular.module( 'configCtrl', [ 'ngMaterial' ] )
 
 .controller( 'ConfigController', function( $rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog ) {
     var vm = this;
+    $scope.settings  = $rootScope.utils.get_settings() // this reads a file... store the value...
 
-    $scope.toppings = service.getTags()
-    vm.tags     = service.getTags()
-    $scope.settings = $rootScope.utils.get_settings() // this reads a file... store the value...
-    vm.unwanted_tags = $scope.settings.unwanted_tags // I honestly don't know why it works (or why it crashes when interface reads straight from $scope.settings )
-
-    vm.saveSettings = function() {
-        $scope.settings.unwanted_tags = vm.unwanted_tags
+    $rootScope.saveSettings = function() {
         console.log( "saving data ", $scope.settings )
         $rootScope.utils.set_settings( $scope.settings )
     }

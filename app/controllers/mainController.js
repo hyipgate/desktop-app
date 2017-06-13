@@ -16,6 +16,7 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
     };
 
     $scope.closeSettings = function() {
+        $rootScope.saveSettings()
         $location.path( vm.beforeConfig );
     }
 

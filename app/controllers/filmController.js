@@ -6,14 +6,6 @@ angular.module( 'filmCtrl', [ 'ngMaterial' ] )
     vm.getMovie = function() {
         vm.movieData = service.getSelectedFilm();
         vm.scenes = service.getScenes();
-        vm.movieData.providers = [] // TODO do this in the API
-        vm.providers = vm.movieData.providers
-        vm.providers.push( { name: "File/DVD", url: "file", icon: './assets/img/file.svg' } )
-        vm.providers.push( { name: "Amazon", url: "https://www.youtube.com/watch?v=VoIoEhNmfsM", icon: './assets/img/amazon-instant-video.jpe' } )
-        vm.providers.push( { name: "Netflix", url: "https://www.youtube.com/watch?v=VoIoEhNmfsM", icon: './assets/img/netflix.jpe' } )
-            //vm.providers.push( { name:"Itunes", url:"file", icon: './assets/img/apple-itunes.jpe'} )
-        vm.providers.push( { name: "Google Play", url: "https://www.youtube.com/watch?v=VoIoEhNmfsM", icon: './assets/img/google-play-movies.jpe' } )
-
         vm.movieData.tags = []
 
         if ( vm.movieData.images.backdrops[ 0 ] ) {
@@ -24,14 +16,28 @@ angular.module( 'filmCtrl', [ 'ngMaterial' ] )
         }
 
         $scope.settings   = $rootScope.utils.get_settings() // this reads a file... store the value...
-        console.log( "get_settings from film controller", $scope.settings )
+        console.log( "get_settings from film controller" )
+        var skip_tags = $scope.settings.tags.filter( function ( tag ) { return tag.skip })
+        var list_tags = $scope.settings.tags.filter( function ( tag ) { return tag.list })
+
         for (var i = 0; i < vm.scenes.length; i++) {
-          for (var j = 0; j < vm.scenes[i].tags.length; j++) {
-            if( $scope.settings.unwanted_tags.indexOf( vm.scenes[i].tags[j].name ) != -1 ){
-              vm.scenes[i].skip = true
-              break 
+            vm.scenes[i].skip = false
+            //console.log( "scene tags: ",vm.scenes[i].tags )
+            for (var j = 0; j < skip_tags.length; j++) {
+                //console.log( "check skip: ",skip_tags[j].name )
+                if( vm.scenes[i].tags.indexOf( skip_tags[j].name ) != -1 ){
+                  vm.scenes[i].skip = true; console.log( "yes");
+                  break  
+                } 
             }
-          }
+            vm.scenes[i].list = vm.scenes[i].skip
+            for (var j = 0; j < list_tags.length; j++) {
+                //console.log( "check list: ",list_tags[j].name )
+                if( vm.scenes[i].tags.indexOf( list_tags[j].name ) != -1 ){
+                    vm.scenes[i].list = true; console.log( "yes");
+                    break
+                }
+            }
         }
     }
 
@@ -42,32 +48,41 @@ angular.module( 'filmCtrl', [ 'ngMaterial' ] )
         $scope.alert = '';
         $mdBottomSheet.show( {
             templateUrl: 'views/bottom-sheet-list-template.html',
-            controller: 'FilmController as film'
-        } ).then( function( clickedItem ) {
-            console.log( clickedItem + ' clicked!' );
-        } );
-    };
+            locals: { scenes: vm.scenes },
+            controller: BottonSheetDialogController
+        } )
 
-    vm.playFile = function ( event ) {
-        var file = event.target.files;
-        $mdBottomSheet.hide( file[0].path );
-        $location.path( '/stream' );
-        load_film( "file:///"+file[0].path, vm.scenes, service.getMode(), service.getSyncRef() )
-    }
+        function BottonSheetDialogController( $scope, scenes, $mdDialog ) {
+            var vm = this
+            vm.movieData = service.getSelectedFilm();
+            $scope.providers = vm.movieData.providers
+            $scope.providers.push( { name: "Youtube", url: "https://www.youtube.com/watch?v=VoIoEhNmfsM", icon: 'google-play' } )
+            $scope.providers.push( { name: "File/DVD", url: "file", icon: 'file.svg' } )
+            
+            
+            $scope.playFile = function ( event ) {
+                var file = event.target.files;
+                $mdBottomSheet.hide( file[0].path );
+                $location.path( '/stream' );
+                load_film( "file:///"+file[0].path, scenes, service.getMode(), service.getSyncRef() )
+            }
 
-    vm.listItemClick = function( $index ) {
-        var clickedItem = vm.movieData.providers[ $index ]
-        if ( clickedItem.url == "file" ) {
-            var input = document.getElementById('fileInput')
-            input.onchange = vm.playFile
-            input.click()            
-            return;
+            $scope.listItemClick = function( $index ) {
+                console.log( $index )
+                var clickedItem = $scope.providers[ $index ]
+                if ( clickedItem.url == "file" ) {
+                    var input = document.getElementById('fileInput')
+                    input.onchange = vm.playFile
+                    input.click()            
+                    return;
+                }
+                $mdBottomSheet.hide( clickedItem.name );
+                $location.path( '/stream' );
+                //if (!$rootScope.$$phase) $rootScope.$apply();
+                load_film( clickedItem.url, scenes, service.getMode(), service.getSyncRef() )
+            };
         }
-        $mdBottomSheet.hide( clickedItem.name );
-        $location.path( '/stream' );
-        //if (!$rootScope.$$phase) $rootScope.$apply();
-        load_film( clickedItem.url, vm.scenes, service.getMode(), service.getSyncRef() )
-    };
+    }
 
     $scope.backToSearch = function( argument ) {
         $location.path( '/' );
@@ -92,9 +107,17 @@ angular.module( 'filmCtrl', [ 'ngMaterial' ] )
         input = input || 0;
         return Math.floor( input / 60 )
     };
-} ).filter( 'time', function() {
+} ).filter( 'seconds', function() {
     return function( start, end ) {
-        return Math.floor( end - start )
+        var len = Math.floor(end - start);
+        console.log( len )
+        if( len > 60 ){
+            var min = Math.floor(len/60)
+            var str = min+"min "+(len-60*min)+"s"
+        } else{
+            var str = len+"s"
+        }
+        return str
     };
 } ).filter( 'tags', function() {
     return function( input ) {

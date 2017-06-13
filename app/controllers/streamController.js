@@ -16,8 +16,13 @@ angular.module('streamCtrl', ['ngMaterial'])
   }
 
   $scope.backToFilm = function (argument) {
+    console.log("Closing stream controller")
+    end_capture()
     window.onkeyup = null
     $location.path('/film');
+    if ( service.getMode() ) {
+      $rootScope.utils.save_sync_ref( service.getSelectedFilm(), service.getSyncRef() )  
+    }
   }
 
 
@@ -47,17 +52,25 @@ angular.module('streamCtrl', ['ngMaterial'])
     }
   }
 
-}).filter('minutes', function() {
-  return function( input ) {
-    input = input || 0;
-    return Math.floor(input/60)
-  };
-}).filter('time', function() {
-  return function(start, end) {
-    return Math.floor(end-start)
-  };
-}).filter('tags', function() {
-  return function( input ) {
-    return input.join(", ")
-  };
-})
+}).filter( 'minutes', function() {
+    return function( input ) {
+        input = input || 0;
+        return Math.floor( input / 60 )
+    };
+} ).filter( 'seconds', function() {
+    return function( start, end ) {
+        var len = Math.floor(end - start);
+        console.log( len )
+        if( len > 60 ){
+            var min = Math.floor(len/60)
+            var str = min+"min "+(len-60*min)+"s"
+        } else{
+            var str = len+"s"
+        }
+        return str
+    };
+} ).filter( 'tags', function() {
+    return function( input ) {
+        return input.join( ", " )
+    };
+} )

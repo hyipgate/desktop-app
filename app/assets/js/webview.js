@@ -41,10 +41,7 @@ handpick = {
   },
 
   hide_until: function( time ) {
-    if( !handpick.isloaded() ){
-      console.log("unable to hide!! video not loaded")
-      return;
-    }
+    if( !handpick.isloaded() ) return;
     var video = handpick.video;
     var now   = video.currentTime
     console.log( "[webview] hiding from ",now," to ",time," using mode ", handpick.mode )
@@ -62,15 +59,24 @@ handpick = {
   },
 
   mute: function ( state ) {
+    if( !handpick.isloaded() ) return;
     handpick.video.muted = state;
   },
 
   pause: function ( state ) {
+    if( !handpick.isloaded() ) return;
     if ( state ) {
       handpick.video.pause();
     } else {
       handpick.video.play();
     }
+  },
+
+  go_to_frame: function ( time ) {
+    if( !handpick.isloaded() || !time ) return;
+    if ( handpick.mode != 3 ) {
+      handpick.video.currentTime = time
+    }    
   },
 
   toms : function( time, factor ){
@@ -130,6 +136,7 @@ handpick = {
   },
 
   draw_rect : function (h,t,l,w,v) {
+    if( !handpick.isloaded() ) return;
     handpick.div.style = "visibility:"+v+"; position: fixed; z-index: 998; top: "+(t-4)+"px; left: "+(l-4)+"px; width: "+w+"px; height: "+h+"px; border: 4px solid #73AD21;"
   },
 

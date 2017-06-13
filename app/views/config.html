@@ -2,15 +2,15 @@
   <section flex="15">
     <h1 class="md-display-1">Settings</h1>
   </section>
-  <section flex="60" layout="row" style="width: 80%">
+  <section flex="60" layout="row" style="width: 90%">
     <div flex="30">
       <h3>Violence</h3>
       <p> Skip | List | Tag </p>
-      <div style="overflow-y: auto; overflow-x: hidden; max-height: 400px">
+      <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
         <md-list class="md-dense">
-          <md-list-item class="md-1-line" ng-repeat="tag in config.tags | filter: {type: 'Violence' }">
+          <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Violence' }">
             <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
-            <md-checkbox ng-model="tag.show" aria-label="Show on scene list"></md-checkbox>
+            <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
             <div class="md-list-item-text" layout="column">{{tag.name}}</div>
           </md-list-item>
         </md-list>
@@ -19,24 +19,24 @@
     <div flex="30">
       <h3>Sex and Nudity</h3>
       <p> Skip | List | Tag </p>
-      <div style="overflow-y: auto; overflow-x: hidden; max-height: 400px">
+      <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
         <md-list class="md-dense">
-          <md-list-item class="md-1-line" ng-repeat="tag in config.tags | filter: {type: 'Sex' }">
+          <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Sex' }">
             <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
-            <md-checkbox ng-model="tag.show" aria-label="Show on scene list"></md-checkbox>
+            <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
             <div class="md-list-item-text" layout="column">{{tag.name}}</div>
           </md-list-item>
         </md-list>
       </div>
     </div>
     <div flex="30">
-      <h3>Profanity</h3>
+      <h3>Others</h3>
       <p> Skip | List | Tag </p>
-      <div style="overflow-y: auto; overflow-x: hidden; max-height: 400px">
+      <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
         <md-list class="md-dense">
-          <md-list-item class="md-1-line" ng-repeat="tag in config.tags | filter: {type: 'Profanity' }">
+          <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Others' }">
             <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
-            <md-checkbox ng-model="tag.show" aria-label="Show on scene list"></md-checkbox>
+            <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
             <div class="md-list-item-text" layout="column">{{tag.name}}</div>
           </md-list-item>
         </md-list>
@@ -48,12 +48,15 @@
         <h3>Advanced</h3>
     </div>
     <div layout="row">
-      <md-switch ng-model="settings.editors_view" aria-label="Editor mode" ng-change="config.saveSettings()">
+      <div>
+      <md-switch ng-model="settings.editors_view" aria-label="Editor mode">
         Show editor's options
       </md-switch>
+      </div><div>
       <md-button class="md-raised" ng-click="config.logIn($event)">Log In</md-button>
       <md-button class="md-raised" ng-click="config.newUser($event)">New user</md-button>
       <md-button class="md-raised" ng-click="config.newPass($event)">New password</md-button>
+    </div>
     </div>
   </section>
   <section flex></section>

@@ -3,11 +3,11 @@
         <md-content layout="row" layout-padding>
             <md-input-container flex="17">
                 <label>Start</label>
-                <input type="number" step=".04" ng-model="scene.start" placeholder="second" />
+                <input type="number" step=".04" ng-model="scene.start" placeholder="second" onchange="go_to_frame( this.value )" />
             </md-input-container>
             <md-input-container flex="17">
                 <label>End</label>
-                <input type="number" step=".04" ng-value="scene.end" placeholder="second" />
+                <input type="number" step=".04" ng-value="scene.end" placeholder="second" onchange="go_to_frame( this.value )" />
             </md-input-container>
             <md-input-container flex="66">
                 <label>Comment</label>

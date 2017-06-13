@@ -8,7 +8,7 @@ angular.module('MainService', ['ngCookies'])
   var scenes = [];
   var searchQuery;
   var mode = false;
-  var synRef = []
+  var syncRef = []
 
   function random_id () {
     var text     = ""
@@ -73,7 +73,7 @@ angular.module('MainService', ['ngCookies'])
 
   MainFactory.saveSelectedFilm = function(filmData){
     console.log("save film")
-  	synRef    = filmData.synRef || []
+  	syncRef   = filmData.syncRef || {} // important {} and not []
     data.film = filmData;
     if ( !filmData.scenes ) return
     scenes.splice( 0, scenes.length )
@@ -83,7 +83,11 @@ angular.module('MainService', ['ngCookies'])
   }
 
   MainFactory.getSyncRef = function () {
-    return synRef;
+    return syncRef;
+  }
+
+  MainFactory.setSyncRef = function ( ref ) {
+    syncRef = ref;
   }
 
   MainFactory.getSelectedFilm = function(){
