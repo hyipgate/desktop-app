@@ -12,7 +12,7 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
     $rootScope.utils = $rootScope.electron.remote.require( './app/assets/js/utils' );
 
     $rootScope.openToast = function( msg ) {
-        $mdToast.show($mdToast.simple().textContent( msg ).hideDelay(2000));
+        $mdToast.show( $mdToast.simple().textContent( msg ).hideDelay( 2000 ) );
     };
 
     $scope.closeSettings = function() {
@@ -93,32 +93,26 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
                 $scope.scene = service.getScenes()[ id ];
                 $scope.selectedItem = null;
                 $scope.searchText = null;
-                $scope.tags = loadTags();
+                var tags = service.getTags();
+                $scope.tagsSex = extractTags( tags, "Sex" )
+                $scope.tagsVio = extractTags( tags, "Violence" )
+                $scope.tagsOth = extractTags( tags, "Others" )
                 $scope.selectedTags = $scope.scene.tags;
 
-                /* Search tags */
-                $scope.querySearch = function( query ) {
-                    var results = query ? $scope.tags.filter( createFilterFor( query ) ) : [];
-                    return results;
+                function extractTags( all_tags, type ) {
+                    var filtered_tags = []
+                    for ( var i = 0; i < all_tags.length; i++ ) {
+                        if ( all_tags[i].type !== type ) continue
+                        filtered_tags.push( all_tags[ i ].name );
+                    }
+                    return filtered_tags
                 }
 
-                /* Create filter function for a query string */
-                function createFilterFor( query ) {
-                    var lowercaseQuery = angular.lowercase( query );
+                $scope.selectChanged = function () {
+                    console.log( "updating!")
 
-                    return function filterFn( tag ) {
-                        return ( tag._lowername.indexOf( lowercaseQuery ) === 0 ) ||
-                            ( tag._lowertype.indexOf( lowercaseQuery ) === 0 );
-                    };
-                }
+                    $scope.searchTerm = $scope.searchTerm=="nudity"? "" : "nudity"
 
-                function loadTags() {
-                    var tags = service.getTags()
-                    return tags.map( function( tag ) {
-                        tag._lowername = tag.name.toLowerCase();
-                        tag._lowertype = tag.type.toLowerCase();
-                        return tag;
-                    } );
                 }
 
                 $scope.closeDialog = function() {

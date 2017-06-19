@@ -11,6 +11,33 @@ handpick = {
 
   div: null,
 
+  listen: function() {
+      handpick.ipcRenderer.on( 'go-to-frame', function( event, data ) {
+          handpick.go_to_frame( data )
+      } );
+
+      handpick.ipcRenderer.on( 'mute', function( event, data ) {
+          handpick.mute( data )
+      } );
+
+      handpick.ipcRenderer.on( 'pause', function( event, data ) {
+          handpick.pause( data )
+      } );
+
+      handpick.ipcRenderer.on( 'get-rect', function( event, data ) {
+          handpick.get_rect()
+      } );
+
+      handpick.ipcRenderer.on( 'hide-until', function( event, data ) {
+          handpick.hide_until( data )
+      } );
+
+      handpick.ipcRenderer.on( 'draw-rect', function( event, data ) {
+          handpick.draw_rect( data.rect.height, data.rect.y, data.rect.x, data.rect.width, data.visibility )
+      } );
+
+  },
+
   load : function () {
     var video = document.getElementsByTagName("video")
     if ( video.length != 1 ){
@@ -100,7 +127,7 @@ handpick = {
     video.muted = true;
   },
 
-  focus_video2 : function(argument) {
+  focus_video2 : function() {
   // remove all video elements but ours (to make sure we are controlling the right one)
     var video_list =  document.getElementsByTagName("video")
     for (var i = video_list.length - 1; i >= 1; i--) {
@@ -175,3 +202,5 @@ handpick = {
   }
 
 }
+
+handpick.listen()

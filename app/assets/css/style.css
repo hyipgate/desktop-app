@@ -18,8 +18,8 @@
 }
 
 .greyFab {
-  background-color: grey !important;
-  /*box-shadow: none !important;*/
+  background-color: rgba(200, 200, 200, 0.6) !important;
+  box-shadow: none !important;
 }
 
 .fullPage {

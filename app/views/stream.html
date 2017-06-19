@@ -1,7 +1,7 @@
-<webview src="https://www.youtube.com" class="fullPage" preload="./assets/js/webview.js" plugins></webview>
-<md-button class="md-fab md-fab-top-left greyFab md-mini" aria-label="Back" ng-click="backToFilm()">
+<webview src="https://www.youtube.com" class="fullPage" preload="./assets/js/webview.js" plugins ng-mousemove="show_buttons()"></webview>
+<md-button class="md-fab md-fab-top-left greyFab md-mini" aria-label="Back" ng-click="backToFilm()" style="display:{{stream.show_menu}}">
     <md-icon md-svg-src="./assets/img/back.svg"></md-icon>
 </md-button>
-<md-button class="md-fab md-fab-top-right greyFab md-mini" aria-label="Edit" ng-click="sceneList()">
+<md-button class="md-fab md-fab-top-right greyFab md-mini" aria-label="Edit" ng-click="sceneList()" style="display:{{stream.show_menu}}">
     <md-icon md-svg-src="./assets/img/movie.svg"></md-icon>
 </md-button>

@@ -68,10 +68,10 @@ app.on( 'activate', function() {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 ipcMain.on( 'get-hash', ( event, arg ) => {
-    if ( !is_valid_rect( arg.rect ) ){
-      console.log("Unable to capture page (check rect)")
-      return
-    } 
+    if ( !is_valid_rect( arg.rect ) ) {
+        console.log( "Unable to capture page (check rect)" )
+        return
+    }
     mainWindow.capturePage( function handleCapture( img ) {
         img = img.crop( arg.rect ).resize( { width: 16, height: 9, quality: "good" } )
         var hash = bitmap_to_hash( img.getBitmap() )
@@ -100,62 +100,76 @@ function bitmap_to_hash( data ) {
  * Improves the quality of the rect (croping black borders)
  */
 ipcMain.on( 'improve-rect', ( event, arg ) => {
-    console.log('improve-rect',arg)
-    return
-    if ( !is_valid_rect( arg.orect ) ) return
+    if ( !is_valid_rect( arg.orect ) ) {
+        console.log( "improve-rect, but invaled rect...", arg )
+        return
+    }
+    return // fixme, please
+    console.log( 'improve-rect, got a valid rect...', arg )
     mainWindow.capturePage( function handleCapture( img ) {
-        console.log( "improve rect, don't do this too often" )
         var orect = arg.orect
-        img = img.crop( orect )//.resize( { width: Math.floor(orect.width/4), height: orect.height, quality: "good" } )
-        
+        var rect  = orect
         var bitmap = img.getBitmap()
         var columns = img.getSize().width
         var rows = img.getSize().height
-        console.log( columns, orect.width, rows, orect.height )
-        img = null
-        var j = 0;
-        for ( j = 0; j < rows; j++ ) {
+        var j = orect.y;
+        for ( j = orect.y; j < orect.height + orect.y; j++ ) {
             var sum = 0;
-            for ( var i = 1; i < columns - 1; i++ ) {
+            for ( var i = orect.x; i < orect.width + orect.x - 1; i++ ) {
                 var r = bitmap[ ( j * columns + i ) * 4 ]
                 var g = bitmap[ ( j * columns + i ) * 4 + 1 ]
                 var b = bitmap[ ( j * columns + i ) * 4 + 2 ]
                 sum += ( r + g + b ) + 10 * Math.abs( r - g ) + 10 * Math.abs( b - g )
             }
-            console.log( sum / columns )
-            if ( sum / columns > 5000 ) break;
+            console.log( sum / orect.width )
+            if ( sum / orect.width > 50 ) break;
         }
         var first = j - 1;
+
+        /*for ( j = orect.height+orect.y-1; j > orect.y; j--) {
+          var sum = 0;
+          for (var i = orect.x; i < orect.width+orect.x-1; i++) {
+            var r = bitmap[(j*columns+i)*4]
+            var g = bitmap[(j*columns+i)*4+1]
+            var b = bitmap[(j*columns+i)*4+2]
+            sum+= (r+g+b)+ 10*Math.abs(r-g)+10*Math.abs(b-g)
+          }
+          console.log(sum / orect.width)
+          if ( sum / orect.width > 50*1.5 ) break;
+        }
+        var last = j+1*/
+        var last = orect.height - first // do it symmetric
         var usual_ratios = [ 1.33, 1.77, 1.85, 2.39 ]
-        var our_ratio  = columns / ( rows - 2*first ) // assume symmetric
+        var our = orect.width / ( last - first )
         var dmin = Infinity;
-        var imin = 0;
+        var amin = 0;
         for ( var i = 0; i < usual_ratios.length; i++ ) {
-            var d = Math.abs( usual_ratios[ i ] - our_ratio )
+            var d = Math.abs( usual_ratios[ i ] - our )
             if ( d < dmin ) {
                 dmin = d;
-                imin = i;
+                amin = i;
             }
         }
-        var rect = {}
-        rect.height = Math.round( orect-(2*first) )
-        rect.width  = Math.round( rect.height*usual_ratios[ imin ] )
-        rect.y      = Math.round( orect.y + (orect.height-rect.height)/2 )
-        rect.x      = Math.round( orect.x + (orect.width-rect.width)/2 )
-        console.log( first, usual_ratios[ imin ], our_ratio )
+
+        console.log( usual_ratios[ amin ], our )
+        var crop = orect.height - orect.width / usual_ratios[ amin ];
+        rect.y = Math.round( orect.y + crop / 2 );
+        rect.height = Math.round( Math.min( orect.height, orect.width / usual_ratios[ amin ] ) );
+
         if ( is_valid_rect( rect ) ) {
-          event.sender.send( 'improved-rect-ready', { 'orect': orect, 'rect': rect } )  
+            console.log( "got new improved rect ", rect )
+            event.sender.send( 'improved-rect-ready', { 'orect': orect, 'rect': rect } )
         } else {
-          console.log("unable to get a valid a rect", rect )
+            console.log( "unable to get a valid a rect", rect )
         }
-        
+
     } )
 } )
 
 function is_valid_rect( rect ) {
-  if ( !rect.x || rect.x <=0 || !Number.isInteger(rect.x) ) return false
-  if ( !rect.y || rect.y <=0 || !Number.isInteger(rect.y) ) return false
-  if ( !rect.width || rect.width <=0 || !Number.isInteger(rect.width) ) return false
-  if ( !rect.height || rect.height <=0 || !Number.isInteger(rect.height) ) return false
-  return true
+    if ( rect.x === undefined || rect.x < 0 || !Number.isInteger( rect.x ) ) return false
+    if ( rect.y === undefined || rect.y < 0 || !Number.isInteger( rect.y ) ) return false
+    if ( !rect.width || rect.width <= 0 || !Number.isInteger( rect.width ) ) return false
+    if ( !rect.height || rect.height <= 0 || !Number.isInteger( rect.height ) ) return false
+    return true
 }

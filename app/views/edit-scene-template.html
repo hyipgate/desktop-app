@@ -16,14 +16,19 @@
             </md-input-container>
         </md-content>
         <md-content style="margin-top: -50px" layout="row" layout-padding>
-            <md-input-container flex="100">
-                <label>Tags</label>
-                <md-chips ng-model="selectedTags" md-autocomplete-snap md-require-match="true">
-                    <md-autocomplete md-selected-item="selectedItem" md-search-text="searchText" md-items="item in querySearch(searchText)" md-item-text="item.name" placeholder="Search for a tag or category">
-                        <span md-highlight-text="searchText">{{item.name}} ({{item.type}})</span>
-                    </md-autocomplete>
-                    <md-chip-template>{{$chip.name}}</md-chip-template>
-                </md-chips>
+            <label>Tags</label>
+            <md-input-container flex style="width: 100%">
+                <md-select ng-model="selectedTags" multiple ng-change="selectChanged()">
+                    <md-optgroup label="Sex">
+                        <md-option ng-value="tag" ng-repeat="tag in tagsSex |filter:searchTerm" aria-label="Select Tags">{{tag}}</md-option>
+                    </md-optgroup>
+                    <md-optgroup label="Violence">
+                        <md-option ng-value="tag" ng-repeat="tag in tagsVio |filter:searchTerm" aria-label="Select Tags">{{tag}}</md-option>
+                    </md-optgroup>
+                    <md-optgroup label="Others">
+                        <md-option ng-value="tag" ng-repeat="tag in tagsOth |filter:searchTerm" aria-label="Select Tags">{{tag}}</md-option>
+                    </md-optgroup>
+                </md-select>
             </md-input-container>
         </md-content>
     </md-dialog-content>

@@ -22,7 +22,7 @@ function load_film( url, scenes, edit, ref ) {
 function preview( start, end ) {
     console.log( "Starting preview of: ", start, "->", end )
     load_skip_list( [ { start: start, end: end } ] );
-    var u_start = guess_users_time( 1000*start )
+    var u_start = guess_users_time( 1000 * start )
     hide_until( u_start - 3000 );
     mode_after_preview = mode
     setMode( "user" )
@@ -50,10 +50,11 @@ function end_capture() {
 function setTimer( delay ) {
     if ( timer_delay == delay ) return
     if ( timer_id ) clearInterval( timer_id );
-    console.log("setting timer every ", delay )
+    console.log( "setting timer every ", delay )
     if ( delay ) timer_id = setInterval( get_thumbail, delay );
     timer_delay = delay;
 }
+
 
 
 /**
@@ -62,13 +63,13 @@ function setTimer( delay ) {
 function mark_current_time() {
     if ( !s_start ) {
         s_start = nearest_scene_change( video_time(), true )
-        webview.executeJavaScript( 'handpick.mute(true)' )
+        webview.send( 'mute', true )
         console.log( "Scene start marked at ", s_start )
     } else {
         var s_end = nearest_scene_change( video_time(), false )
         var scene = { start: s_start / 1000, end: s_end / 1000, tags: [], comment: "" }
         pause( true );
-        webview.executeJavaScript( 'handpick.mute(false)' )
+        webview.send( 'mute', false )
         console.log( "Scene added ", s_start, " -> ", s_end )
         s_start = null;
         return scene;
@@ -91,16 +92,18 @@ function load_webview() {
     }
     webview.loadURL( currentUrl ) // TODO: or return false
 
-    ipcRenderer.on('hash-ready', (event, arg) => {
+    ipcRenderer.on( 'hash-ready', ( event, arg ) => {
         parseFrame( arg )
-    })
+    } )
 
-    ipcRenderer.on('improved-rect-ready', (event, arg) => {
-        console.log('improved-rect-ready', arg)
-        if ( rect.x == arg.rect.x ) { // TODO: check all properties
-            orect = arg.orect
+    ipcRenderer.on( 'improved-rect-ready', ( event, arg ) => {
+        if ( orect.x == arg.orect.x ) { // TODO: check all properties
+            rect = arg.rect
+            console.log( 'improved-rect-ready got ', arg.rect )
+        } else {
+            console.log( "improved-rect-ready but weird, rects are different ", rect, " vs ", arg.rect )
         }
-    })
+    } )
 
     // Listen to events from player 
     webview.addEventListener( 'ipc-message', event => {
@@ -109,7 +112,7 @@ function load_webview() {
             if ( r.width == 0 || r.height == 0 ) return;
             orect = r;
             rect = r;
-            ipcRenderer.send('improve-rect', {orect:orect} )
+            ipcRenderer.send( 'improve-rect', { orect: orect } )
         } else if ( event.channel == "currentTime" ) {
             time = 1000 * event.args[ 0 ];
             cpu_time = Date.now();
@@ -141,7 +144,7 @@ initialize_stats()
 function get_rect() {
     if ( webview ) {
         if ( !rect || !last_rect || Math.abs( video_time() - last_rect ) > 5000 ) {
-            webview.executeJavaScript( 'handpick.get_rect()' )
+            webview.send( 'get-rect' )
             last_rect = video_time()
         }
     } else {
@@ -150,6 +153,7 @@ function get_rect() {
     }
 }
 var last_rect = 0
+
 
 
 
@@ -179,11 +183,11 @@ function get_thumbail() {
     if ( !rect ) return;
     cb( "start" )
     var bef_time = video_time();
-    ipcRenderer.send('get-hash', {time:bef_time,rect:rect} )
+    ipcRenderer.send( 'get-hash', { time: bef_time, rect: rect } )
 }
 
 function parseFrame( arg ) {
-    var hash     = arg.hash
+    var hash = arg.hash
     var bef_time = arg.time
     var aft_time = video_time()
     if ( bef_time > aft_time || aft_time > 50 + bef_time ) {
@@ -443,18 +447,18 @@ function hide_until( time ) {
         setMode( mode_after_preview )
         mode_after_preview = false;
     }
-    webview.executeJavaScript( 'handpick.hide_until(' + time / 1000 + ')' ) // TODO: this is the definition of unsecure!
+    webview.send( 'hide-until', time / 1000 )
 }
 
 function go_to_frame( time ) {
-    console.log("going to frame, at time ", time )
-    webview.executeJavaScript( 'handpick.go_to_frame(' + time + ')' ) // TODO: this is the definition of unsecure!
+    console.log( "going to frame, at time ", time )
+    webview.send( 'go-to-frame', time )
 }
 
 function pause( state ) {
     if ( !webview ) return;
     state = !!state
-    webview.executeJavaScript( 'handpick.pause(' + state + ')' )
+    webview.send( 'pause', state )
     if ( state ) {
         setTimer( 0 )
     } else {
@@ -548,8 +552,9 @@ function purge() {
 
 // Draw a rectangle around the rect (to check it has been detected properly)
 function draw( v ) {
-    webview.executeJavaScript( "handpick.draw_rect(" + rect.height + "," + rect.y + "," + rect.x + "," + rect.width + ",'" + v + "')" )
+    webview.send( 'draw-rect', { rect: rect, visibility: v } )
 }
+
 
 
 
