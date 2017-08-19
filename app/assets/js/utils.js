@@ -26,7 +26,7 @@ storage.init();
  */
 function search_film( file, title, url, imdbid ) {
     trace( "search_film", arguments )
-        // We got an id
+    // We got an id
     if ( imdbid ) {
         // Check online
         return call_online_api( { action: "search", imdb_code: imdbid } ).then( function( film ) {
@@ -36,7 +36,7 @@ function search_film( file, title, url, imdbid ) {
             }
             // In case of network error... check if we got a local copy
             film = get_local_data( imdbid )
-            if ( film[ "status" ] == 200 ) return merge_local_tags( { status: 205, data: film } )
+            if ( film[ "type" ] ) return merge_local_tags( { status: 205, data: film } )
                 // If we don't have anything
             return { status: 400, data: {} }
         } )
@@ -48,6 +48,7 @@ function search_film( file, title, url, imdbid ) {
         return parse_input_file( file ).then( function( stats ) {
             // Check if we have identified this file before
             var imdbid = get_local_data( stats.hash + "|" + stats.filesize )
+            console.log( imdbid )
             if ( imdbid ) return search_film( null, null, null, imdbid )
                 // If we haven't, ask the network
             return call_online_api( { action: "search", filename: stats.estimated_title, hash: stats.hash, bytesize: stats.filesize, url: url } ).then( function( film ) {
@@ -116,9 +117,9 @@ function who_am_i() {
  * @param {string} pass password eg. "idkfiaadsfa"
  * @returns {json} API response
  */
-function new_user( user, pass ) {
+function new_user( user, pass, email ) {
     trace( "new_user", arguments )
-    return call_online_api( { action: "newuser", username: user, password: pass } )
+    return call_online_api( { action: "newuser", username: user, password: pass, email: email } )
 }
 
 
@@ -145,7 +146,25 @@ function new_pass( user, pass, newpass ) {
  */
 function share_scenes( film ) {
     trace( "share_scenes", arguments )
-    film = encodeURIComponent( JSON.stringify( film ) )
+
+    var scenes = []
+    for (var i = film.scenes.length - 1; i >= 0; i--) {
+        scenes[i] = {}
+        scenes[i]['id'] = film.scenes[i]['id']
+        scenes[i]['tags'] = film.scenes[i]['tags']
+        scenes[i]['comment'] = film.scenes[i]['comment']
+        scenes[i]['start'] = film.scenes[i]['start']
+        scenes[i]['end'] = film.scenes[i]['end']
+    }
+
+    filtered_film = {
+        id : film.id,
+        scenes : scenes,
+        syncRef : film.syncRef
+    }
+
+    film = encodeURIComponent( JSON.stringify( filtered_film ) )
+
     return call_online_api( { action: "modify", data: film } )
 }
 
@@ -168,6 +187,7 @@ function save_edition( film, scenes ) {
  */
 function save_sync_ref( film, syncRef ) {
     trace( "save_sync_ref", arguments )
+    if ( syncRef.length == 0 ) return
     var imdbid = film[ "id" ][ "imdb" ]
     return set_local_data( imdbid + "_mysync", syncRef )
 }
@@ -217,6 +237,7 @@ function get_settings() {
 }
 
 var defaul_settings = {
+    language: "es_ES",
     username: "",
     editors_view: false,
     tags: [
@@ -264,7 +285,13 @@ function set_settings( settings ) {
 }
 
 
-
+function link_file_to_film( file, imdbid ) {
+    trace( "link_file_to_film", arguments )
+    file = file.replace( "file:///","")
+    return parse_input_file( file ).then( function( stats ) {
+        set_local_data( stats.hash + "|" + stats.filesize, imdbid )
+    });
+}
 
 
 
@@ -277,6 +304,7 @@ exports.save_edition  = save_edition;
 exports.save_sync_ref = save_sync_ref;
 exports.claim         = claim;
 exports.share_scenes  = share_scenes;
+exports.link_file_to_film = link_file_to_film;
 
 // Authentication functions
 exports.new_user = new_user;
@@ -287,9 +315,6 @@ exports.who_am_i = who_am_i;
 /*======================================================================*/
 //----------------------- INTERNAL FUNCTIONS ---------------------------//
 /*======================================================================*/
-
-
-
 
 
 
@@ -317,24 +342,41 @@ function call_online_api( params ) {
         // Set authentication token (if available)
     var token = get_local_data( "token" )
     if ( token ) params[ "token" ] = token;
+    console.log("we got a token ", token )
     // Create query
     var str = [];
     for ( var key in params )
         if ( params[ key ] ) str.push( key + "=" + params[ key ] );
-    var url = "http://fcinema.org/api?" + str.join( "&" )
+    var url = "https://www.fcinema.org/api?" + str.join( "&" )
         // Reject if query is invalid
     if ( str.length == 0 ) return Promise.reject( "Invalid parameters" );
     // Return promise with API result
     return new Promise( function( resolve, reject ) {
-        httpRequest( url, function( error, response, body ) {
+        console.log( "requesting: ", url )
+
+        var baseRequest = httpRequest.defaults({
+            /*pool: false,
+            agent: false,
+            jar: true,
+            json: true,*/
+            timeout: 3000,
+            /*gzip: true,
+            headers: {
+                'Content-Type': 'application/json'
+            }*/
+        });
+
+        baseRequest( url, function( error, response, body ) {
+            //console.log( "got response: ", error, response, body )
             if ( error ) {
                 resolve( { status: 400 } )
             } else {
-                var data = JSON.parse( body )
-                if ( data[ "token" ] ) set_local_data( "token", data[ "token" ] )
-                if ( data[ "username" ] ) set_local_data( "username", data[ "username" ] )
-                if ( data[ "permissions" ] ) set_local_data( "permissions", data[ "permissions" ] )
-                resolve( data )
+                var reply = JSON.parse( body )
+                console.log( reply )
+                if ( reply.data[ "token" ] ) set_local_data( "token", reply.data[ "token" ] )
+                if ( reply.data[ "username" ] ) set_local_data( "username", reply.data[ "username" ] )
+                if ( reply.data[ "permissions" ] ) set_local_data( "permissions", reply.data[ "permissions" ] )
+                resolve( reply )
             }
         } );
     } );

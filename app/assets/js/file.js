@@ -13,6 +13,17 @@ const which = require( 'which' )
 //----------------- EXTERNALLY CALLABLE FUNCTIONS ----------------------//
 /*======================================================================*/
 
+function dumpToFile( input, skip_list, output ) {
+    trace( "dumpToFile", arguments )
+    // Create skip filters
+    var vf = create_ffmpeg_filter( "vf", skip_list )
+    var af = create_ffmpeg_filter( "af", skip_list )
+
+    var ff = spawn( "ffmpeg", [ "-i", input, "-vf", vf, "-af", af, output ] );
+    ff.stderr.on( 'data', ffmpeg_console_update )
+    return 0;
+}
+
 /**
  * Play film
  * @param {string} player the media player we want to use (must be one from the list of available players)
@@ -21,6 +32,7 @@ const which = require( 'which' )
  * @returns {number} don't know yet
  */
 function play( player, skip_list, output ) {
+    trace( "play", arguments )
     // Create skip filters
     var vf = create_ffmpeg_filter( "vf", skip_list )
     var af = create_ffmpeg_filter( "af", skip_list )
@@ -169,6 +181,7 @@ function presync_scene( id ) {
 exports.presync_scene = presync_scene;
 exports.get_available_players = get_players;
 exports.play = play;
+exports.dumpToFile = dumpToFile;
 
 // Edition interface
 exports.estimate_scene_change = estimate_scene_change;
@@ -435,6 +448,7 @@ function pad( n, width, z ) {
 
 
 function ffmpeg_console_update( data ) {
+    console.log( "Got this update from ffplay/mpeg: ", data.toString() )
     var timeRegex = /^ +(\d+.\d+)/;
     var matched = timeRegex.exec( data.toString() )
     if ( matched ) {
@@ -442,4 +456,12 @@ function ffmpeg_console_update( data ) {
     } else {
         console.log( data.toString() )
     }
+}
+
+
+var appStartTime = null
+function trace( name, args ) {
+    if ( !appStartTime ) appStartTime = Date.now();
+    args = Array.from( args );
+    console.log( "[TRACE ", Date.now() - appStartTime, "]", name, args )
 }

@@ -1,66 +1,76 @@
 <div id="mainPage" layout="column" md-theme="darkTheme" layout-align="start center">
-  <section flex="15">
-    <h1 class="md-display-1">Settings</h1>
-  </section>
-  <section flex="60" layout="row" style="width: 90%">
-    <div flex="30">
-      <h3>Violence</h3>
-      <p> Skip | List | Tag </p>
-      <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
-        <md-list class="md-dense">
-          <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Violence' }">
-            <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
-            <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
-            <div class="md-list-item-text" layout="column">{{tag.name}}</div>
-          </md-list-item>
-        </md-list>
-      </div>
-    </div>
-    <div flex="30">
-      <h3>Sex and Nudity</h3>
-      <p> Skip | List | Tag </p>
-      <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
-        <md-list class="md-dense">
-          <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Sex' }">
-            <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
-            <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
-            <div class="md-list-item-text" layout="column">{{tag.name}}</div>
-          </md-list-item>
-        </md-list>
-      </div>
-    </div>
-    <div flex="30">
-      <h3>Others</h3>
-      <p> Skip | List | Tag </p>
-      <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
-        <md-list class="md-dense">
-          <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Others' }">
-            <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
-            <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
-            <div class="md-list-item-text" layout="column">{{tag.name}}</div>
-          </md-list-item>
-        </md-list>
-      </div>
-    </div>
-  </section>
-  <section flex="25" layout="column">
-    <div flex="50">
-        <h3>Advanced</h3>
-    </div>
-    <div layout="row">
-      <div>
-      <md-switch ng-model="settings.editors_view" aria-label="Editor mode">
-        Show editor's options
-      </md-switch>
-      </div><div>
-      <md-button class="md-raised" ng-click="config.logIn($event)">Log In</md-button>
-      <md-button class="md-raised" ng-click="config.newUser($event)">New user</md-button>
-      <md-button class="md-raised" ng-click="config.newPass($event)">New password</md-button>
-    </div>
-    </div>
-  </section>
-  <section flex></section>
-  <md-button class="md-fab md-fab-top-left transparentFab" aria-label="Settings" ng-click="closeSettings()">
-    <md-icon md-svg-src="./assets/img/back.svg" style="fill:white"></md-icon>
-  </md-button>
+    <section flex="15">
+        <h1 class="md-display-1">Settings</h1>
+    </section>
+    <section flex="60" layout="row" style="width: 90%">
+        <div flex="30">
+            <h3>Violence</h3>
+            <p> Skip | List | Tag </p>
+            <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
+                <md-list class="md-dense">
+                    <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Violence' }">
+                        <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
+                        <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
+                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
+                    </md-list-item>
+                </md-list>
+            </div>
+        </div>
+        <div flex="30">
+            <h3>Sex and Nudity</h3>
+            <p> Skip | List | Tag </p>
+            <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
+                <md-list class="md-dense">
+                    <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Sex' }">
+                        <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
+                        <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
+                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
+                    </md-list-item>
+                </md-list>
+            </div>
+        </div>
+        <div flex="30">
+            <h3>Others</h3>
+            <p> Skip | List | Tag </p>
+            <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
+                <md-list class="md-dense">
+                    <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Others' }">
+                        <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
+                        <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
+                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
+                    </md-list-item>
+                </md-list>
+            </div>
+        </div>
+    </section>
+    <section flex="25" layout="column">
+        <div flex="50">
+            <h3>Advanced</h3>
+        </div>
+        <div layout="row">
+            <div>
+                <md-switch ng-model="settings.editors_view" aria-label="Editor mode">
+                    Show editor's options
+                </md-switch>
+            </div>
+            <div>
+                <md-button class="md-raised" ng-click="config.logIn($event)">Log In</md-button>
+                <md-button class="md-raised" ng-click="config.newUser($event)">New user</md-button>
+                <md-button class="md-raised" ng-click="config.newPass($event)">New password</md-button>
+            </div>
+            <div>
+                <md-select ng-model="drink" placeholder="Region" class="md-no-underline">
+                    <md-option value="water"Water</md-option>
+                    <md-option value="juice">Juice</md-option>
+                    <md-option value="milk">Milk</md-option>
+                    <md-option value="wine">Wine</md-option>
+                    <md-option value="mead">Mead</md-option>
+                </md-select>
+            </div>
+        </div>
+    </section>
+    <section flex></section>
+    <md-button class="md-fab md-fab-top-left transparentFab" aria-label="Settings" ng-click="closeSettings()">
+        <md-icon md-svg-src="./assets/img/back.svg" style="fill:white"></md-icon>
+    </md-button>
 </div>

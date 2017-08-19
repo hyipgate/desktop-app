@@ -1,44 +1,45 @@
 <div id="mainPage" layout="column" md-theme="darkTheme" layout-align="center center" ng-style="film.css">
-  <div style="min-height: 20%"></div>
-  <div layout="row" layout-fill layout-margin style="max-height: 70%">
-    <div flex=10></div>
-    <div flex=40 layout="column" layout-align="center center">
-      <div flex>
-        <img ng-src="{{film.movieData.images.posters[0]}}" alt="Film Poster" height="450px">
-        <div layout="row" layout-align="center center">
-          <md-button class="md-raised" ng-click="showListBottomSheet(true)" style="display:{{settings.editors_view? 'block' : 'none'}}">Edit</md-button>
-          <md-button class="md-raised" ng-click="film.share()" style="display:{{settings.editors_view? 'block' : 'none'}}">Share</md-button>
-          <md-button class="md-primary md-raised" ng-click="showListBottomSheet(false)">Play</md-button>
-        </div>
-      </div>
-    </div>
-    <div layout="column" flex=40 style="height: 500px">
-      <div>
-        <div class="md-headline">{{film.movieData.metadata.title}}</div>
-        <br>
-        <div class="md-caption">{{film.movieData.metadata.released}} &bull; {{film.movieData.metadata.runtime}} &bull; {{film.movieData.metadata.genres}} &bull; {{film.movieData.metadata.imdbRating}}/10</div>
-        <p class="md-body-1">{{film.movieData.metadata.plot}}</p>
-      </div>
-      <div style="overflow-y: auto; overflow-x: hidden;">
-        <md-list class="md-dense">
-          <md-list-item class="md-2-line" ng-repeat="scene in film.scenes | filter: {list: 'true' }">
-            <md-checkbox ng-model="scene.skip"></md-checkbox>
-            <div class="md-list-item-text" layout="column">
-              <h3><b>{{ scene.tags | tags }}</b> <i>({{ scene.start | seconds:scene.end }})</i></h3>
-              <p>{{ scene.comment }}</p>
+    <div style="min-height: 20%"></div>
+    <div layout="row" layout-fill layout-margin style="max-height: 70%">
+        <div flex=10></div>
+        <div flex=40 layout="column" layout-align="center center">
+            <div flex>
+                <img ng-src="{{film.movieData.images.posters[0]}}" alt="Film Poster" height="450px">
+                <div layout="row" layout-align="center center">
+                    <md-button class="md-raised" ng-click="showListBottomSheet(true)" style="display:{{settings.editors_view? 'block' : 'none'}}">Edit</md-button>
+                    <md-button class="md-raised" ng-click="film.share()" style="display:{{settings.editors_view? 'block' : 'none'}}">Share</md-button>
+                    <md-button class="md-primary md-raised" ng-click="showListBottomSheet(false)">Play</md-button>
+                </div>
             </div>
-            <!-- at minute {{ scene.start | minutes }}<md-chips ng-model="scene.tags" readonly="true"></md-chips>-->
-          </md-list-item>
-        </md-list>
-      </div>
+        </div>
+        <div layout="column" flex=40 style="height: 500px">
+            <div>
+                <div class="md-headline">{{film.movieData.metadata.title}}</div>
+                <br>
+                <div class="md-caption">{{film.movieData.metadata.released}} &bull; {{film.movieData.metadata.runtime}} &bull; {{film.movieData.metadata.genres}} &bull; {{film.movieData.metadata.imdbRating}}/10 <span class="parentsGuide" ng-click="film.parentsGuide()">IMDB parents guide</span>
+                    <span class="parentsGuide" ng-click="film.kidsInMind()">Kids-In-Mind</span></div>
+                <p class="md-body-1">{{film.movieData.metadata.plot}}</p>
+            </div>
+            <div style="overflow-y: auto; overflow-x: hidden;">
+                <md-list class="md-dense">
+                    <md-list-item class="md-2-line" ng-repeat="scene in film.scenes | filter: {list: 'true' }">
+                        <md-checkbox ng-model="scene.skip"></md-checkbox>
+                        <div class="md-list-item-text" layout="column">
+                            <h3><b>{{ scene.tags | tags }}</b> <i>({{ scene.start | seconds:scene.end }})</i></h3>
+                            <p>{{ scene.comment }}</p>
+                        </div>
+                        <!-- at minute {{ scene.start | minutes }}<md-chips ng-model="scene.tags" readonly="true"></md-chips>-->
+                    </md-list-item>
+                </md-list>
+            </div>
+        </div>
+        <div flex=10></div>
     </div>
-    <div flex=10></div>
-  </div>
-  <md-button class="md-fab md-fab-top-left transparentFab" aria-label="Back" ng-click="backToSearch()">
-    <md-icon md-svg-src="./assets/img/back.svg"></md-icon>
-  </md-button>
-  <md-button class="md-fab md-fab-top-right transparentFab" aria-label="Settings" ng-click="openSettings()">
-    <md-icon md-svg-src="./assets/img/config.svg" style="fill:white"></md-icon>
-  </md-button>
-  <div flex></div>
+    <md-button class="md-fab md-fab-top-left transparentFab" aria-label="Back" ng-click="backToSearch()">
+        <md-icon md-svg-src="./assets/img/back.svg"></md-icon>
+    </md-button>
+    <md-button class="md-fab md-fab-top-right transparentFab" aria-label="Settings" ng-click="openSettings()">
+        <md-icon md-svg-src="./assets/img/config.svg" style="fill:white"></md-icon>
+    </md-button>
+    <div flex></div>
 </div>

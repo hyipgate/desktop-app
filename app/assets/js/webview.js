@@ -20,6 +20,10 @@ handpick = {
           handpick.mute( data )
       } );
 
+      handpick.ipcRenderer.on( 'unload', function( event, data ) {
+          handpick.unload()
+      } );
+
       handpick.ipcRenderer.on( 'pause', function( event, data ) {
           handpick.pause( data )
       } );
@@ -65,6 +69,10 @@ handpick = {
 
     handpick.div = document.createElement("div");
     document.body.appendChild(handpick.div)
+  },
+
+  unload : function(){
+    handpick.video = null
   },
 
   hide_until: function( time ) {

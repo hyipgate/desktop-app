@@ -5,19 +5,34 @@ const { remote, ipcRenderer } = require( 'electron' )
 //************************************************************************//
 //                       EXTERNAL FUNCTIONS                               //
 //************************************************************************//
+var film_loaded = false;
+function load_film( scenes, edit, ref ) {
+    console.log( "loading film: ", scenes, edit, ref )
+    set_globals( ref );
 
-var currentUrl = ""
-
-function load_film( url, scenes, edit, ref ) {
-    console.log( "loading film: ", url, scenes, edit, ref )
-    webview = false
-    currentUrl = url
-    load_skip_list( scenes );
-    syncRef = ref
+    load_skip_list( scenes );  
     setMode( edit ? "editor" : "user" )
+    film_loaded = true;
 }
 
+function set_globals( ref ) {
+    syncRef = ref
 
+    webview = false
+    rect = false
+    mode_after_preview = false
+    webview_loaded = false
+
+    s_start = false;
+
+    // stats
+    false_positive = 0
+    false_negative = 0
+    total = 0
+    error = 0
+    real_error = 0
+    abs_error = 0;
+}
 
 function preview( start, end ) {
     console.log( "Starting preview of: ", start, "->", end )
@@ -27,7 +42,6 @@ function preview( start, end ) {
     mode_after_preview = mode
     setMode( "user" )
 }
-var mode_after_preview
 
 
 function setMode( m ) {
@@ -45,6 +59,9 @@ function setMode( m ) {
 function end_capture() {
     //print_stats()
     setTimer( false )
+    if ( webview ) webview.send( "unload" )
+    webview = false
+    rect = false
 }
 
 function setTimer( delay ) {
@@ -75,8 +92,6 @@ function mark_current_time() {
         return scene;
     }
 }
-var skip_list = []
-var s_start = null;
 
 
 
@@ -85,12 +100,16 @@ var s_start = null;
 //************************************************************************//
 
 function load_webview() {
-    webview = document.getElementsByTagName( 'webview' )[ 0 ]
-    if ( !webview ) {
-        console.log( "webview not ready yet" )
+    if ( webview_loaded ){
+        console.log( "webview already loaded! ")
         return
     }
-    webview.loadURL( currentUrl ) // TODO: or return false
+
+    webview = document.getElementsByTagName( 'webview' )[ 0 ]
+    if ( !webview ) {
+        console.log( "webview not ready yet " )
+        return
+    }
 
     ipcRenderer.on( 'hash-ready', ( event, arg ) => {
         parseFrame( arg )
@@ -121,6 +140,8 @@ function load_webview() {
         }
     } )
 
+    webview_loaded = true
+
     return true;
 }
 
@@ -135,23 +156,27 @@ var timer_id = false;
 var timer_delay = 0;
 var cpu_time = 0;
 var webview = false;
-initialize_stats()
+var last_correct_sync = - Infinity
 
 
-/**
- * Listen to events from player
- */
-function get_rect() {
-    if ( webview ) {
-        if ( !rect || !last_rect || Math.abs( video_time() - last_rect ) > 5000 ) {
-            webview.send( 'get-rect' )
-            last_rect = video_time()
-        }
-    } else {
+function health_report () {
+    if ( !film_loaded ) return
+        
+    if ( !webview ) {
         console.log( "try to load webview!" )
-        load_webview()
+        if( !load_webview() ) return -1
     }
+
+    if ( !rect || Math.abs( video_time() - last_rect ) > 5000 ) {
+        webview.send( 'get-rect' )
+        last_rect = video_time()
+    }
+
+    var illness = (mode == "editor")? 0 : Math.floor( (video_time() - last_correct_sync)/2000 )
+    
+    return illness
 }
+
 var last_rect = 0
 
 
@@ -173,15 +198,11 @@ function video_time() {
 }
 
 
-
-
 /**
  * Capture current frame, generate hash and skip/watch/store accordingly
  */
 function get_thumbail() {
-    get_rect()
     if ( !rect ) return;
-    cb( "start" )
     var bef_time = video_time();
     ipcRenderer.send( 'get-hash', { time: bef_time, rect: rect } )
 }
@@ -259,14 +280,17 @@ function want_to_see( hash, time ) {
         }
     };
 
+    // Do not skip if we haven't been able to sync a single frame
+    if ( video_time() - last_correct_sync == Infinity ) return;
+
     if ( next_start < 60 ) {
-        cb( "Oops, we are ", -next_start, "ms in the middle of a scene. " )
+        console.log( "Oops, we are ", -next_start, "ms in the middle of a scene. " )
         hide_until( next_end + video_time() )
     } else if ( next_start < 300 ) {
-        cb( "Scene almost here, wait ", next_start, "ms and skip: " )
+        console.log( "Scene almost here, wait ", next_start, "ms and skip: " )
         setTimeout( function() { hide_until( next_end + video_time() ) }, next_start )
     } else if ( next_start < 4000 ) {
-        cb( "Scene is close (", next_start, "ms) check again a bit later: " )
+        console.log( "Scene is close (", next_start, "ms) check again a bit later: " )
         setTimer( 250 )
     } else {
         setTimer( 1000 )
@@ -378,6 +402,7 @@ function find_time_in_reference( c_hash, c_time ) {
     // Make history :)
     if ( !error_detected ) {
         span = Math.max( historic_sync.span - 10, 5 );
+        last_correct_sync = c_time;
     } else {
         console.log( "DETECTED AN ERROR ", d_min, t_min, t_bef, t_aft, n_blocks, c_time, d_arr )
         var elapsed_time = c_time - historic_sync.c_time;
@@ -460,7 +485,7 @@ function pause( state ) {
     state = !!state
     webview.send( 'pause', state )
     if ( state ) {
-        setTimer( 0 )
+        setTimer( false )
     } else {
         setMode( mode )
     }
@@ -520,15 +545,6 @@ function print_stats() {
 }
 
 
-function initialize_stats() {
-    false_positive = 0
-    false_negative = 0
-    total = 0
-    error = 0
-    real_error = 0
-    abs_error = 0;
-}
-
 
 // Check we don't have weird things
 function purge() {
@@ -563,7 +579,7 @@ function cb( what ) {
     if ( what == "start" ) {
         startScreenshoting = Date.now()
     } else {
-        //console.log( what,": ",Date.now() -startScreenshoting)
+        console.log( what,": ",Date.now() -startScreenshoting)
     }
 }
 var startScreenshoting;

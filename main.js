@@ -73,9 +73,10 @@ ipcMain.on( 'get-hash', ( event, arg ) => {
         return
     }
     mainWindow.capturePage( function handleCapture( img ) {
-        img = img.crop( arg.rect ).resize( { width: 16, height: 9, quality: "good" } )
-        var hash = bitmap_to_hash( img.getBitmap() )
+        var img2 = img.crop( arg.rect ).resize( { width: 16, height: 9, quality: "good" } )
         img = null
+        var hash = bitmap_to_hash( img2.getBitmap() )
+        img2 = null
         event.sender.send( 'hash-ready', { 'hash': hash, 'time': arg.time } )
     } )
 } )

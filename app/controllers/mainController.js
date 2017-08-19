@@ -111,7 +111,7 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
                 $scope.selectChanged = function () {
                     console.log( "updating!")
 
-                    $scope.searchTerm = $scope.searchTerm=="nudity"? "" : "nudity"
+                    //$scope.searchTerm = $scope.searchTerm=="nudity"? "" : "nudity"
 
                 }
 
