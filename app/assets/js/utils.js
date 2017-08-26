@@ -354,21 +354,12 @@ function call_online_api( params ) {
     return new Promise( function( resolve, reject ) {
         console.log( "requesting: ", url )
 
-        var baseRequest = httpRequest.defaults({
-            /*pool: false,
-            agent: false,
-            jar: true,
-            json: true,*/
-            timeout: 3000,
-            /*gzip: true,
-            headers: {
-                'Content-Type': 'application/json'
-            }*/
-        });
-
-        baseRequest( url, function( error, response, body ) {
-            //console.log( "got response: ", error, response, body )
-            if ( error ) {
+        httpRequest.post({
+          headers: {'content-type' : 'application/x-www-form-urlencoded'},
+          url:     url,
+          body:    str.join("&"),
+        }, function(error, response, body){
+                      if ( error ) {
                 resolve( { status: 400 } )
             } else {
                 var reply = JSON.parse( body )
