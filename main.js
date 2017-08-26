@@ -19,6 +19,8 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1190,
         height: 680,
+        minHeight: 610,
+        minWidth: 890,
         webPreferences: {
             // The `plugins` have to be enabled.
             plugins: true
