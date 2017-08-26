@@ -60,10 +60,10 @@ angular.module('filmCtrl', ['ngMaterial'])
                 controller: BottonSheetDialogController
             })
 
-            function BottonSheetDialogController($scope, scenes, $mdDialog) {
+            function BottonSheetDialogController($scope, settings, scenes, $mdDialog) {
                 var vm = this
                 vm.movieData = service.getSelectedFilm();
-                var lan = "ES"; //TODO: settings.language
+                var lan = settings.language;
                 if (vm.movieData.providers[lan]) $scope.providers = vm.movieData.providers[lan];
                 $scope.providers.push({ name: "Youtube", url: "https://www.youtube.com/watch?v=VoIoEhNmfsM" })
                 $scope.providers.push({ name: "File/DVD", url: "file", icon: 'file.svg' })

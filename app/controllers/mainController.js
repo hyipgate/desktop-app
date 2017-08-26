@@ -95,11 +95,12 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
                 $scope.scene = service.getScenes()[ id ];
                 $scope.selectedItem = null;
                 $scope.searchText = null;
-                var tags = service.getTags();
+                var tags = $rootScope.utils.get_settings().tags;
                 $scope.tagsSex = extractTags( tags, "Sex" )
                 $scope.tagsVio = extractTags( tags, "Violence" )
                 $scope.tagsOth = extractTags( tags, "Others" )
                 $scope.selectedTags = $scope.scene.tags;
+                console.log($scope.tagsVio);
 
                 function extractTags( all_tags, type ) {
                     var filtered_tags = []
