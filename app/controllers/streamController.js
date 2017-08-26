@@ -67,7 +67,7 @@ angular.module( 'streamCtrl', [ 'ngMaterial' ] )
         window.onkeyup = null
         $location.path( '/film' );
         if ( service.getMode() ) { // If we are on edit mode, save reference
-            $rootScope.utils.save_sync_ref( service.getSelectedFilm(), service.getSyncRef() )
+            $rootScope.utils.save_sync_ref( service.getSelectedFilm(), syncRef )
         }
     }
 
@@ -148,7 +148,7 @@ angular.module( 'streamCtrl', [ 'ngMaterial' ] )
     $sceDelegateProvider.resourceUrlWhitelist([
         'self',
         'https://**',
-        'http://**',
+        'http://www.kids-in-mind.com/**',
         'file:///**'
   ]);
 })

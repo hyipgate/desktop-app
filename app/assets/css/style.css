@@ -2,6 +2,11 @@
 	Select a movie styles
 */
 
+@font-face {
+    font-family: myFirstFont;
+    src: url(Vtks Blank.ttf);
+}
+
 #mainPage {
   min-width: 100%;
   min-height: 100%;
@@ -62,4 +67,8 @@
 
 #movieInfo #movieData {
   margin-left: 5%;
+}
+
+.myfont {
+    font-family: myFirstFont;
 }

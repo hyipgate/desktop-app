@@ -167,7 +167,7 @@ function health_report() {
     if (!webview && !load_webview()) return -1
         
     if (!rect || Math.abs(video_time() - last_rect) > 5000) {
-        webview.send('get-rect')
+        webview.send('get-rect', true ) // fixme, this true might force update too often
         last_rect = video_time()
     }
 
@@ -202,12 +202,16 @@ function video_time() {
  */
 function get_thumbail() {
     if (!rect) return;
-    ipcRenderer.send('get-hash', { time: video_time(), rect: rect })
+    var time = video_time();
+    if ( time == last_frame_time ) return console.log("[get_thumbail] Ignore get-hash, already parseFrame")
+    last_frame_time = time
+    ipcRenderer.send('get-hash', { time: time, rect: rect })
 }
+var last_frame_time = -Infinity
 
 function parseFrame(arg) {
     // Check we didn't talke too long to process the frame (if we did, we don't really know when was it captured)
-    var processing_time = arg.time - video_time()
+    var processing_time = video_time()-arg.time 
     if ( processing_time < 0 || processing_time > 50 ) {
         console.log("[parseFrame] (ERROR) Discarding frame, processing_time:  ", Math.floor(processing_time) )
         return;
@@ -481,11 +485,6 @@ function go_to_frame(time) {
 function pause(state) {
     if (!webview) return;
     webview.send('pause', !!state)
-    if (state) {
-        setTimer(false)
-    } else {
-        setMode(mode)
-    }
 }
 
 

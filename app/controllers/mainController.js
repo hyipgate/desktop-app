@@ -45,6 +45,7 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
                 }
             } )
         } else {
+            vm.processing = false
             console.log( 'ERROR' );
         }
     };
@@ -52,6 +53,7 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
     vm.searchTitle = function() {
         vm.processing = true;
         vm.search_film( null, vm.searchQuery ).then( function( film ) {
+            if ( vm.processing == false ) return // already loaded :)
             vm.processing = false;
             film = film[ "data" ];
             if ( film.type == "list" ) {

@@ -29,7 +29,7 @@ handpick = {
       } );
 
       handpick.ipcRenderer.on( 'get-rect', function( event, data ) {
-          handpick.get_rect()
+          handpick.get_rect( data )
       } );
 
       handpick.ipcRenderer.on( 'hide-until', function( event, data ) {
@@ -189,11 +189,11 @@ handpick = {
     handpick.hide_until( time )
   },
 
-  get_rect : function () {
+  get_rect : function ( force ) {
     if( !handpick.isloaded() ) return;
     var r = handpick.get_video_rect();
     var lr= handpick.last_rect;
-    if ( !lr || r.width != lr.width || r.height != lr.height || r.x != lr.x || r.y != lr.y) {
+    if ( force || !lr || r.width != lr.width || r.height != lr.height || r.x != lr.x || r.y != lr.y) {
       handpick.ipcRenderer.sendToHost( "video_rect", r )
       handpick.last_rect = r
     }
