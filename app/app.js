@@ -19,10 +19,11 @@ angular.module('familyCinema', ['ngAnimate', 'ngMessages', 'app.routes', 'MainSe
       'hue-1': '100',
       'hue-2': '700',
     })
-    .accentPalette('indigo', {
+    .accentPalette('green', {
       'default': '500',
       'hue-1': '100',
       'hue-2': '700',
+      'hue-3': '600',
     })
     .dark();
 })
