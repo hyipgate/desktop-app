@@ -147,8 +147,6 @@ angular.module( 'streamCtrl', [ 'ngMaterial' ] )
 } ).config(function($sceDelegateProvider) {
     $sceDelegateProvider.resourceUrlWhitelist([
         'self',
-        'https://**',
-        'http://www.kids-in-mind.com/**',
-        'file:///**'
+        '**'
   ]);
 })

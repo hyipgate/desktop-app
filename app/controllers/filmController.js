@@ -1,6 +1,6 @@
 angular.module('filmCtrl', ['ngMaterial'])
 
-    .controller('FilmController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog) {
+    .controller('FilmController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog ) {
         var vm = this;
 
 
@@ -26,8 +26,8 @@ angular.module('filmCtrl', ['ngMaterial'])
 
 
             /* Apply user's default filter settings on film tags */
-            var skip_tags = $scope.settings.tags.filter(function(tag) { return tag.skip })
-            var list_tags = $scope.settings.tags.filter(function(tag) { return tag.list })
+            var skip_tags = $scope.settings.tags.filter(function(tag) { return tag.action == false })
+            var list_tags = $scope.settings.tags.filter(function(tag) { return tag.action != true  })
 
             for (var i = 0; i < vm.scenes.length; i++) {
                 // Decide wheter to skip scene or not
@@ -65,12 +65,13 @@ angular.module('filmCtrl', ['ngMaterial'])
                 vm.movieData = service.getSelectedFilm();
                 var lan = "ES"; //TODO: settings.language
                 if (vm.movieData.providers[lan]) $scope.providers = vm.movieData.providers[lan];
-                $scope.providers.push({ name: "Youtube", url: "https://www.youtube.com/watch?v=VoIoEhNmfsM" })
+                //$scope.providers.push({ name: "Youtube", url: "https://www.youtube.com/watch?v=VoIoEhNmfsM" })
                 $scope.providers.push({ name: "File/DVD", url: "file", icon: 'file.svg' })
                 $scope.providers.push({ name: "Custom URL", url: "custom", icon: 'add.svg' })
 
                 vm.forceHttps = function(url) {
-                    return 'https://' + url.replace(/^https?:\/\//, "");
+                    return url // some providers fail
+                    //return 'https://' + url.replace(/^https?:\/\//, "");
                 }
 
 
@@ -150,6 +151,8 @@ angular.module('filmCtrl', ['ngMaterial'])
             $location.path('/stream');
         }
 
+
+
     }).filter('minutes', function() {
         return function(input) {
             input = input || 0;
@@ -172,17 +175,32 @@ angular.module('filmCtrl', ['ngMaterial'])
             return input.join(", ")
         };
     }).filter('provider', function() {
+
+        function firstUp(string) {
+            if ( !string ) return ""
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        function allUp( string ) {
+            if ( !string ) return ""
+            return string.toUpperCase();
+        }
+
+        function money( ammount, currency ) {
+            if (!ammount ) return ""
+            var currencies = { "EUR": "€", "USD":"$", "GBP": "£" }
+            var symbol = currencies[currency]? currencies[currency] : ""
+            if ( currency = "GBP" ) return symbol+ammount
+            return ammount+symbol
+        }
+
         return function(provider) {
-            if (!provider.price) return ""
-            if (!provider.price[0]) return provider.price[2]
-            return provider.price[2] + " " + provider.price[0]
+            if (!provider.price) return provider.name
+            return firstUp(provider.price[2]) + " " + allUp(provider.price[3]) + " " + money(provider.price[0], provider.price[1])
         };
     }).filter('icon', function() {
         return function(provider) {
             if (provider.icon) return provider.icon
-            var icons = ["hulu", "shudder", "amc", "realeyz", "starz", "atres-player", "fxnow", "crackle", "britbox", "google-play", "amazon-prime-video", "epix", "apple-itunes", "the-cw", "filmstruck", "mubi", "aande", "google-play-movies", "vudu", "yahoo-view", "hbo", "tubi-tv", "netflix", "filmin", "hbo-now", "cbs", "hbo-go", "acorn-tv", "playstation", "history", "showtime", "amazon-prime-instant-video", "microsoft-store", "guidedoc", "netflix-kids", "hollyoaks", "nbc", "fandangonow", "lifetime", "rakuten-tv", "filmin-plus", "movistar-plus", "fandor", "abc", "sundance-now", "amazon-instant", "max-go"];
-            var n = icons.indexOf(provider.name.toLowerCase())
-            if (n != -1) return icons[n] + ".jpe"
             return "ondemand.svg"
         };
     })
