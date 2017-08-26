@@ -1,35 +1,36 @@
 {
-    "name": "desktop-app",
-    "version": "0.0.1",
-    "description": "To be included",
-    "homepage": "wwww.fcinema.org",
-    "main": "main.js",
-    "author": "",
-    "license": "ISC",
-    "build": {
-        "appId": "org.fcinema",
-        "mac": {
-            "category": "your.app.category.type"
-        }
-    },
-    "dependencies": {
-        "@ffmpeg-installer/ffmpeg": "^1.0.1",
-        "electron": "^1.4.0",
-        "electron-builder": "^19.5.1",
-        "electron-widevinecdm": "^1.0.2",
-        "express": "^4.14.0",
-        "file-bytes": "^2.0.3",
-        "fs": "0.0.1-security",
-        "get-pixels": "^3.3.0",
-        "node-persist": "^2.0.7",
-        "opensubtitles": "0.0.4",
-        "request": "^2.75.0",
-        "tmp": "0.0.29",
-        "which": "^1.2.11"
-    },
-    "scripts": {
-        "pack": "build --dir",
-        "dist": "build"
-    },
-    "postinstall": "install-app-deps"
+  "name": "desktop-app",
+  "version": "0.0.1",
+  "description": "To be included",
+  "homepage": "wwww.fcinema.org",
+  "main": "main.js",
+  "author": "",
+  "license": "ISC",
+  "build": {
+    "appId": "org.fcinema",
+    "mac": {
+      "category": "your.app.category.type"
+    }
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.0.1",
+    "angular-three-state-checkbox": "^1.1.0",
+    "electron": "^1.4.0",
+    "electron-builder": "^19.5.1",
+    "electron-widevinecdm": "^1.0.2",
+    "express": "^4.14.0",
+    "file-bytes": "^2.0.3",
+    "fs": "0.0.1-security",
+    "get-pixels": "^3.3.0",
+    "node-persist": "^2.0.7",
+    "opensubtitles": "0.0.4",
+    "request": "^2.75.0",
+    "tmp": "0.0.29",
+    "which": "^1.2.11"
+  },
+  "scripts": {
+    "pack": "build --dir",
+    "dist": "build"
+  },
+  "postinstall": "install-app-deps"
 }

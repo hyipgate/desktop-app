@@ -237,44 +237,44 @@ function get_settings() {
 }
 
 var defaul_settings = {
-    language: "es_ES",
+    language: "ES",
     username: "",
     editors_view: false,
     tags: [
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'rape' },
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'pornographic magazine' },
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'art nudity' },
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'topless male' },
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'topless female' },
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'full nudity male' },
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'full nudity female' },
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'explicit sex' },
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'implied sex' },
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'kissing peck' },
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'kissing passionate' },
-        { 'skip': false, 'list': true, 'type': 'Sex', 'name': 'sexually charged scene' },
+        { 'action': null, 'list': true, 'type': 'Sex', 'name': 'rape' },
+        { 'action': null, 'type': 'Sex', 'name': 'pornographic magazine' },
+        { 'action': null, 'type': 'Sex', 'name': 'art nudity' },
+        { 'action': null, 'type': 'Sex', 'name': 'topless male' },
+        { 'action': null, 'type': 'Sex', 'name': 'topless female' },
+        { 'action': null, 'type': 'Sex', 'name': 'full nudity male' },
+        { 'action': null, 'type': 'Sex', 'name': 'full nudity female' },
+        { 'action': null, 'type': 'Sex', 'name': 'explicit sex' },
+        { 'action': null, 'type': 'Sex', 'name': 'implied sex' },
+        { 'action': null, 'type': 'Sex', 'name': 'kissing peck' },
+        { 'action': null, 'type': 'Sex', 'name': 'kissing passionate' },
+        { 'action': null, 'type': 'Sex', 'name': 'sexually charged scene' },
 
-        { 'skip': false, 'list': true, 'type': 'Violence', 'name': 'punching' },
-        { 'skip': false, 'list': true, 'type': 'Violence', 'name': 'torture' },
-        { 'skip': false, 'list': true, 'type': 'Violence', 'name': 'violent accident' },
-        { 'skip': false, 'list': true, 'type': 'Violence', 'name': 'open wounds' },
-        { 'skip': false, 'list': true, 'type': 'Violence', 'name': 'killing' },
-        { 'skip': false, 'list': true, 'type': 'Violence', 'name': 'hand gesture' },
-        { 'skip': false, 'list': true, 'type': 'Violence', 'name': 'explosion' },
-        { 'skip': false, 'list': true, 'type': 'Violence', 'name': 'battle' },
-        { 'skip': false, 'list': true, 'type': 'Violence', 'name': 'agony' },
-        { 'skip': false, 'list': true, 'type': 'Violence', 'name': 'dead body' },
-        { 'skip': false, 'list': true, 'type': 'Violence', 'name': 'bulliying' },
+        { 'action': null, 'type': 'Violence', 'name': 'punching' },
+        { 'action': null, 'type': 'Violence', 'name': 'torture' },
+        { 'action': null, 'type': 'Violence', 'name': 'violent accident' },
+        { 'action': null, 'type': 'Violence', 'name': 'open wounds' },
+        { 'action': null, 'type': 'Violence', 'name': 'killing' },
+        { 'action': null, 'type': 'Violence', 'name': 'hand gesture' },
+        { 'action': null, 'type': 'Violence', 'name': 'explosion' },
+        { 'action': null, 'type': 'Violence', 'name': 'battle' },
+        { 'action': null, 'type': 'Violence', 'name': 'agony' },
+        { 'action': null, 'type': 'Violence', 'name': 'dead body' },
+        { 'action': null, 'type': 'Violence', 'name': 'bulliying' },
 
-        { 'skip': false, 'list': true, 'type': 'Others', 'name': 'initial/closing credings' },
-        { 'skip': false, 'list': true, 'type': 'Others', 'name': 'euphemized profanities' },
-        { 'skip': false, 'list': true, 'type': 'Others', 'name': 'deity improper use' },
-        { 'skip': false, 'list': true, 'type': 'Others', 'name': 'deity insult' },
-        { 'skip': false, 'list': true, 'type': 'Others', 'name': 'alcohol' },
-        { 'skip': false, 'list': true, 'type': 'Others', 'name': 'smoking' },
-        { 'skip': false, 'list': true, 'type': 'Others', 'name': 'smoking illegal drug' },
-        { 'skip': false, 'list': true, 'type': 'Others', 'name': 'drug injection' },
-        { 'skip': false, 'list': true, 'type': 'Others', 'name': 'frightening/startling scene/event' },
+        { 'action': null, 'type': 'Others', 'name': 'initial/closing credings' },
+        { 'action': null, 'type': 'Others', 'name': 'euphemized profanities' },
+        { 'action': null, 'type': 'Others', 'name': 'deity improper use' },
+        { 'action': null, 'type': 'Others', 'name': 'deity insult' },
+        { 'action': null, 'type': 'Others', 'name': 'alcohol' },
+        { 'action': null, 'type': 'Others', 'name': 'smoking' },
+        { 'action': null, 'type': 'Others', 'name': 'smoking illegal drug' },
+        { 'action': null, 'type': 'Others', 'name': 'drug injection' },
+        { 'action': null, 'type': 'Others', 'name': 'frightening/startling scene/event' },
     ]
 }
 
@@ -347,28 +347,19 @@ function call_online_api( params ) {
     var str = [];
     for ( var key in params )
         if ( params[ key ] ) str.push( key + "=" + params[ key ] );
-    var url = "https://www.fcinema.org/api?" + str.join( "&" )
+    var url = "https://www.fcinema.org/api";// + str.join( "&" )
         // Reject if query is invalid
     if ( str.length == 0 ) return Promise.reject( "Invalid parameters" );
     // Return promise with API result
     return new Promise( function( resolve, reject ) {
         console.log( "requesting: ", url )
 
-        var baseRequest = httpRequest.defaults({
-            /*pool: false,
-            agent: false,
-            jar: true,
-            json: true,*/
-            timeout: 3000,
-            /*gzip: true,
-            headers: {
-                'Content-Type': 'application/json'
-            }*/
-        });
-
-        baseRequest( url, function( error, response, body ) {
-            //console.log( "got response: ", error, response, body )
-            if ( error ) {
+        httpRequest.post({
+          headers: {'content-type' : 'application/x-www-form-urlencoded'},
+          url:     url,
+          body:    str.join("&"),
+        }, function(error, response, body){
+                      if ( error ) {
                 resolve( { status: 400 } )
             } else {
                 var reply = JSON.parse( body )
@@ -378,7 +369,8 @@ function call_online_api( params ) {
                 if ( reply.data[ "permissions" ] ) set_local_data( "permissions", reply.data[ "permissions" ] )
                 resolve( reply )
             }
-        } );
+        });
+
     } );
 }
 
