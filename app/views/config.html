@@ -1,75 +1,95 @@
 <div id="mainPage" layout="column" md-theme="darkTheme" layout-align="start center">
-    <section flex="15">
+    <section>
         <h1 class="md-display-1">Settings</h1>
     </section>
-    <section flex="60" layout="row" style="width: 90%">
-        <div flex="30">
-            <h3>Violence</h3>
-            <p> Skip | List | Tag </p>
-            <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
-                <md-list class="md-dense">
-                    <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Violence' }">
-                        <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
-                        <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
+    <md-content layout="row" style="width:70%">
+    <md-tabs md-dynamic-height md-border-bottom flex="100">
+      <md-tab label="Violence">
+        <md-content class="md-padding" layout="row">
+                <md-list class="md-dense" layout="column">
+                    <md-list-item ng-if="$even" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Violence' }">
+                        <span three-state-checkbox ng-model="tag.action"></span>
                         <div class="md-list-item-text" layout="column">{{tag.name}}</div>
                     </md-list-item>
                 </md-list>
-            </div>
-        </div>
-        <div flex="30">
-            <h3>Sex and Nudity</h3>
-            <p> Skip | List | Tag </p>
-            <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
-                <md-list class="md-dense">
-                    <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Sex' }">
-                        <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
-                        <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
+                <flex flex="20"></flex>
+                <md-list class="md-dense" layout="column">
+                    <md-list-item ng-if="$odd" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Violence' }">
+                        <span three-state-checkbox ng-model="tag.action"></span>
                         <div class="md-list-item-text" layout="column">{{tag.name}}</div>
                     </md-list-item>
                 </md-list>
-            </div>
-        </div>
-        <div flex="30">
-            <h3>Others</h3>
-            <p> Skip | List | Tag </p>
-            <div style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
-                <md-list class="md-dense">
-                    <md-list-item class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Others' }">
-                        <md-checkbox ng-model="tag.skip" aria-label="Skip by default"></md-checkbox>
-                        <md-checkbox ng-model="tag.list" aria-label="Show on scene list"></md-checkbox>
+        </md-content>
+      </md-tab>
+      <md-tab label="Sex and Nudity">
+        <md-content class="md-padding" layout="row">
+               <md-list class="md-dense" layout="column">
+                    <md-list-item ng-if="$even" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Sex' }">
+                        <span three-state-checkbox ng-model="tag.action"></span>
                         <div class="md-list-item-text" layout="column">{{tag.name}}</div>
                     </md-list-item>
                 </md-list>
-            </div>
+                <flex flex="20"></flex>
+               <md-list class="md-dense" layout="column">
+                    <md-list-item ng-if="$odd" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Sex' }">
+                        <span three-state-checkbox ng-model="tag.action"></span>
+                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
+                    </md-list-item>
+                </md-list>
+        </md-content>
+      </md-tab>
+      <md-tab label="Others">
+        <md-content class="md-padding" layout="row">
+                <md-list class="md-dense" layout="column">
+                    <md-list-item ng-if="$even" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Others' }">
+                        <span three-state-checkbox ng-model="tag.action"></span>
+                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
+                    </md-list-item>
+                    <md-list-item></md-list-item>
+                </md-list>
+                <flex flex="20"></flex>
+                <md-list class="md-dense" layout="column">
+                    <md-list-item ng-if="$odd" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Others' }">
+                        <span three-state-checkbox ng-model="tag.action"></span>
+                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
+                    </md-list-item>
+                    <md-list-item></md-list-item>
+                    <md-list-item></md-list-item>
+                </md-list>
+        </md-content>
+      </md-tab>
+    </md-tabs>       
+    </md-content>
+    <md-content style="width:70%; padding-bottom: 6px;" layout="row" layout-align="space-around center">
+        <div><span three-state-checkbox ng-model="true" ></span>Do not skip nor list scenes</div>
+        <div><span three-state-checkbox ng-model="false"></span>List and skip scenes</div>
+        <div><span three-state-checkbox ng-model="null"></span>List the scenes</div>
+    </md-content>
+    <flex flex="5"></flex>
+
+    <section flex style="width:70%" layout="row" layout-align="space-between center">
+        <md-input-container>
+            <label>Region</label>
+            <md-select ng-model="settings.language">
+                <md-option ng-repeat="region in config.possibleRegions" value="{{region.identifier}}">
+                    {{region.name}}
+                </md-option>
+            </md-select>
+        </md-input-container>
+
+        <md-switch ng-model="settings.editors_view" aria-label="Editor mode">
+            Editor's mode
+        </md-switch>
+
+        <div>
+            <md-button class="md-raised md-primary md-hue-2" ng-click="config.logIn($event)">Log In</md-button>
+            <md-button class="md-raised md-primary md-hue-2" ng-click="config.newUser($event)">New user</md-button>
+            <md-button class="md-raised md-primary md-hue-2" ng-click="config.newPass($event)">New password</md-button>
         </div>
     </section>
-    <section flex="25" layout="column">
-        <div flex="50">
-            <h3>Advanced</h3>
-        </div>
-        <div layout="row">
-            <div>
-                <md-switch ng-model="settings.editors_view" aria-label="Editor mode">
-                    Show editor's options
-                </md-switch>
-            </div>
-            <div>
-                <md-button class="md-raised" ng-click="config.logIn($event)">Log In</md-button>
-                <md-button class="md-raised" ng-click="config.newUser($event)">New user</md-button>
-                <md-button class="md-raised" ng-click="config.newPass($event)">New password</md-button>
-            </div>
-            <div>
-                <md-select ng-model="drink" placeholder="Region" class="md-no-underline">
-                    <md-option value="water"Water</md-option>
-                    <md-option value="juice">Juice</md-option>
-                    <md-option value="milk">Milk</md-option>
-                    <md-option value="wine">Wine</md-option>
-                    <md-option value="mead">Mead</md-option>
-                </md-select>
-            </div>
-        </div>
-    </section>
+
     <section flex></section>
+
     <md-button class="md-fab md-fab-top-left transparentFab" aria-label="Settings" ng-click="closeSettings()">
         <md-icon md-svg-src="./assets/img/back.svg" style="fill:white"></md-icon>
     </md-button>
