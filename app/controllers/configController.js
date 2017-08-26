@@ -138,5 +138,131 @@ angular.module( 'configCtrl', [ 'ngMaterial' ] )
         }
     }
 
+    vm.possibleRegions = [
+        {
+            'name': 'Australia',
+            'identifier': 'AU',
+        },
+        {
+            'name': 'Austria',
+            'identifier': 'AT',
+        },
+        {
+            'name': 'Brazil',
+            'identifier': 'BR',
+        },
+        {
+            'name': 'Canada',
+            'identifier': 'CA',
+        },
+        {
+            'name': 'Denmark',
+            'identifier': 'DK',
+        },
+        {
+            'name': 'Estonia',
+            'identifier': 'EE',
+        },
+        {
+            'name': 'Finland',
+            'identifier': 'FI',
+        },
+        {
+            'name': 'France',
+            'identifier': 'FR',
+        },
+        {
+            'name': 'Germany',
+            'identifier': 'DE',
+        },
+        {
+            'name': 'India',
+            'identifier': 'IN',
+        },
+        {
+            'name': 'Ireland',
+            'identifier': 'IE',
+        },
+        {
+            'name': 'Italy',
+            'identifier': 'IT',
+        },
+        {
+            'name': 'Japan',
+            'identifier': 'JP',
+        },
+        {
+            'name': 'Latvia',
+            'identifier': 'LV',
+        },
+        {
+            'name': 'Lithuania',
+            'identifier': 'LT',
+        },
+        {
+            'name': 'Malaysia',
+            'identifier': 'MY',
+        },
+        {
+            'name': 'Mexico',
+            'identifier': 'MX',
+        },
+        {
+            'name': 'Netherlands',
+            'identifier': 'NL',
+        },
+        {
+            'name': 'New Zealand',
+            'identifier': 'NZ',
+        },
+        {
+            'name': 'Norway',
+            'identifier': 'NO',
+        },
+        {
+            'name': 'Philippines',
+            'identifier': 'PH',
+        },
+        {
+            'name': 'Russia',
+            'identifier': 'RU',
+        },
+        {
+            'name': 'Singapore',
+            'identifier': 'SG',
+        },
+        {
+            'name': 'South Africa',
+            'identifier': 'ZA',
+        },
+        {
+            'name': 'South Korea',
+            'identifier': 'KR',
+        },
+        {
+            'name': 'Spain',
+            'identifier': 'ES',
+        },
+        {
+            'name': 'Sweden',
+            'identifier': 'SE',
+        },
+        {
+            'name': 'Switzerland',
+            'identifier': 'CH',
+        },
+        {
+            'name': 'Thailand',
+            'identifier': 'TH',
+        },
+        {
+            'name': 'United Kingdom',
+            'identifier': 'UK',
+        },
+        {
+            'name': 'USA',
+            'identifier': 'US',
+        },
+    ];
 
 } )
