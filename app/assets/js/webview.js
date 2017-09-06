@@ -53,7 +53,7 @@ handpick = {
             console.log("[webview] loading fail, more/less than one video, ie. ", video.length)
             return;
         }
-        if (video[0].readyState < 1 || !video[0].currentTime || video[0].currentTime < 1) {
+        if (video[0].readyState < 1 || !video[0].currentTime || video[0].currentTime < 0.1) {
             console.log("[webview] too early to tell if this is the video, ie. ", video[0].currentTime)
             return;
         }

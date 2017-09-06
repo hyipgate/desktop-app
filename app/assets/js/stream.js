@@ -165,14 +165,14 @@ var last_correct_sync = -Infinity
 function health_report() {
     if (!film_loaded) return
 
-    if (!webview && !load_webview()) return -1
+    if (!webview && !load_webview()) return 1e6
 
     if (!rect || Math.abs(video_time() - last_rect) > 5000) {
         webview.send('get-rect', true) // fixme, this true might force update too often
         last_rect = video_time()
     }
 
-    var illness = (mode == "editor") ? 0 : Math.floor((video_time() - last_correct_sync) / 2000)
+    var illness = (mode == "editor") ? 0 : Math.floor((video_time() - last_correct_sync))
 
     return illness
 }
@@ -396,7 +396,7 @@ function find_time_in_reference(c_hash, c_time) {
     }
 
     var time_offset = parseInt(m_offset) * 80
-    console.log("[find_time_in_reference] Best offset is ", time_offset / 1000, " with ", 100 * max, "%. Last d_min was ", d_min)
+    console.log("[find_time_in_reference] Best offset is ", time_offset / 1000, " with ", Math.round(100 * max), "%. Last d_min was ", d_min)
     historic_sync = { t_bef: c_time + time_offset - 80, t_min: c_time + time_offset, t_aft: c_time + time_offset + 80, c_time: c_time, span: 10, confidence: 0 }
     return historic_sync;
 }
