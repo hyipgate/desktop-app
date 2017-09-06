@@ -62,13 +62,14 @@ angular.module( 'streamCtrl', [ 'ngMaterial' ] )
 /////////////////////////////////////////////////// 
     $scope.backToFilm = function( argument ) {
         console.log( "Closing stream controller" )
-        end_capture()
+    // Stop timers...
         clearInterval( interval_id );
         window.onkeyup = null
+        var sref562 = end_capture()
+    // If we are on edit mode, save reference
+        if ( sref562 ) $rootScope.utils.save_sync_ref( service.getSelectedFilm()[ "id" ][ "imdb" ], sref562 )
+    // Go back to film view
         $location.path( '/film' );
-        if ( service.getMode() ) { // If we are on edit mode, save reference
-            $rootScope.utils.save_sync_ref( service.getSelectedFilm(), syncRef )
-        }
     }
 
 

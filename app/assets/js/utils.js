@@ -32,7 +32,9 @@ function search_film( file, title, url, imdbid ) {
         return call_online_api( { action: "search", imdb_code: imdbid } ).then( function( film ) {
             if ( film[ "status" ] == 200 ) {
                 set_local_data( imdbid, film[ "data" ] )
-                return merge_local_tags( film );
+                film = merge_local_tags( film );
+                console.log( "merged local data ", film )
+                return film;
             }
             // In case of network error... check if we got a local copy
             film = get_local_data( imdbid )
@@ -185,11 +187,12 @@ function save_edition( film, scenes ) {
  * Save scenes editions localy
  * @returns {something}
  */
-function save_sync_ref( film, syncRef ) {
+function save_sync_ref( imdbid, sync_data ) {
     trace( "save_sync_ref", arguments )
-    if ( syncRef.length == 0 ) return
-    var imdbid = film[ "id" ][ "imdb" ]
-    return set_local_data( imdbid + "_mysync", syncRef )
+    if ( sync_data.length == 0 ) return
+    console.log( sync_data )
+    //var imdbid = film[ "id" ][ "imdb" ]
+    return set_local_data( imdbid + "_mysync", sync_data )
 }
 
 
@@ -209,8 +212,10 @@ function merge_local_tags( film ) {
   // TODO: this should be smarter
     if ( !film.data.syncRef ) {
       var syncRef = get_local_data( imdbid + "_mysync" )
+      console.log( "ge got previous syncRef ", syncRef )
       if ( syncRef ) film.data.syncRef = syncRef
     }
+
     
     return film;
 }
@@ -343,6 +348,9 @@ function call_online_api( params ) {
     var token = get_local_data( "token" )
     if ( token ) params[ "token" ] = token;
     console.log("we got a token ", token )
+    // Add region (if available)
+    var region = get_settings().language
+    if ( region ) params["region"] = region;
     // Create query
     var str = [];
     for ( var key in params )
@@ -352,7 +360,7 @@ function call_online_api( params ) {
     if ( str.length == 0 ) return Promise.reject( "Invalid parameters" );
     // Return promise with API result
     return new Promise( function( resolve, reject ) {
-        console.log( "requesting: ", url )
+        console.log( "requesting: ", url, str.join("&") )
 
         httpRequest.post({
           headers: {'content-type' : 'application/x-www-form-urlencoded'},

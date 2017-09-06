@@ -64,14 +64,19 @@ angular.module('filmCtrl', ['ngMaterial'])
                 var vm = this
                 vm.movieData = service.getSelectedFilm();
                 var lan = settings.language;
+                $scope.providers = [];
                 if (vm.movieData.providers[lan]) $scope.providers = vm.movieData.providers[lan];
                 //$scope.providers.push({ name: "Youtube", url: "https://www.youtube.com/watch?v=VoIoEhNmfsM" })
                 $scope.providers.push({ name: "File/DVD", url: "file", icon: 'file.svg' })
                 $scope.providers.push({ name: "Custom URL", url: "custom", icon: 'add.svg' })
 
                 vm.forceHttps = function(url) {
-                    return url // some providers fail
-                    //return 'https://' + url.replace(/^https?:\/\//, "");
+                    // somre provider fail on https... add https only when missing protocol
+                     //return 'https://' + url.replace(/^https?:\/\//, "");
+                    if ( url.indexOf("http") == 0 ) return url
+                    return 'https://' + url
+
+                    
                 }
 
 
@@ -190,7 +195,7 @@ angular.module('filmCtrl', ['ngMaterial'])
             if (!ammount ) return ""
             var currencies = { "EUR": "€", "USD":"$", "GBP": "£" }
             var symbol = currencies[currency]? currencies[currency] : ""
-            if ( currency = "GBP" ) return symbol+ammount
+            if ( currency == "GBP" ) return symbol+ammount
             return ammount+symbol
         }
 

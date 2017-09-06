@@ -51,6 +51,7 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
     };
 
     vm.searchTitle = function() {
+        if ( !vm.searchQuery ) return console.log("[searchTitle] undefined searchQuery");
         vm.processing = true;
         vm.search_film( null, vm.searchQuery ).then( function( film ) {
             if ( vm.processing == false ) return // already loaded :)
@@ -74,7 +75,6 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
 
     vm.selected = function( imdbid ) {
         $rootScope.utils.search_film( null, null, null, imdbid ).then( function( film ) {
-            console.log( film );
             service.saveSelectedFilm( film.data );
             $location.path( '/film' );
             if ( !$rootScope.$$phase ) $rootScope.$apply();
@@ -82,7 +82,6 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
     }
 
     vm.search_film = function( filepath, title ) {
-        //return $rootScope.utils.search_film(text);
         return $rootScope.utils.search_film( filepath, title, null, null );
     }
 
@@ -92,7 +91,8 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
             templateUrl: 'views/edit-scene-template.html',
             locals: { id: id },
             controller: [ '$scope', 'id', function( $scope, id ) {
-                $scope.scene = service.getScenes()[ id ];
+                $scope.scene = service.getScenes()[ id ]
+
                 $scope.selectedItem = null;
                 $scope.searchText = null;
                 var tags = $rootScope.utils.get_settings().tags;
@@ -116,6 +116,16 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
 
                     //$scope.searchTerm = $scope.searchTerm=="nudity"? "" : "nudity"
 
+                }
+
+                $scope.timeChanged = function ( time, what ) {
+                    console.log( "timeChanged ", time )
+                    if ( what == "start" ) {
+                        $scope.start = time
+                    } else {
+                        $scope.end = time
+                    }                    
+                    go_to_frame( time )
                 }
 
                 $scope.closeDialog = function() {

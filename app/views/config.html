@@ -61,15 +61,15 @@
     </md-tabs>       
     </md-content>
     <md-content style="width:70%; padding-bottom: 6px;" layout="row" layout-align="space-around center">
-        <div><span three-state-checkbox ng-model="true" ></span>Do not skip nor list scenes</div>
-        <div><span three-state-checkbox ng-model="false"></span>List and skip scenes</div>
-        <div><span three-state-checkbox ng-model="null"></span>List the scenes</div>
+        <div><span three-state-checkbox ng-model="true" ></span>I'm OK with this. Ignore tag</div>
+        <div><span three-state-checkbox ng-model="false"></span>I don't like it. Skip by default</div>
+        <div><span three-state-checkbox ng-model="null"></span>Warn me, but don't skip by default</div>
     </md-content>
     <flex flex="5"></flex>
 
     <section flex style="width:70%" layout="row" layout-align="space-between center">
         <md-input-container>
-            <label>Region</label>
+            <label>Country</label>
             <md-select ng-model="settings.language">
                 <md-option ng-repeat="region in config.possibleRegions" value="{{region.identifier}}">
                     {{region.name}}
@@ -84,7 +84,7 @@
         <div>
             <md-button class="md-raised md-primary md-hue-2" ng-click="config.logIn($event)">Log In</md-button>
             <md-button class="md-raised md-primary md-hue-2" ng-click="config.newUser($event)">New user</md-button>
-            <md-button class="md-raised md-primary md-hue-2" ng-click="config.newPass($event)">New password</md-button>
+            <md-button class="md-raised md-primary md-hue-2" ng-click="config.newPass($event)">Change password</md-button>
         </div>
     </section>
 

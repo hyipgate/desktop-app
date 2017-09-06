@@ -39,7 +39,7 @@ function preview(start, end) {
     console.log("Starting preview of: ", start, "->", end)
     load_skip_list([{ start: start, end: end }]);
     var u_start = guess_users_time(1000 * start)
-    hide_until(u_start - 3000);
+    seek_time(u_start - 5000);
     mode_after_preview = mode
     setMode("user")
 }
@@ -63,6 +63,7 @@ function end_capture() {
     if (webview) webview.send("unload")
     webview = false
     rect = false
+    if (mode == "editor") return get_purged_sync_data()
 }
 
 /**
@@ -149,7 +150,7 @@ function load_webview() {
 
 
 /* Define some global variables */
-var historic_sync = { t_bef: -1, t_min: -1, t_aft: -1, c_time: -1, span: 5, confidence: 0 }
+var historic_sync = { t_bef: -1, t_min: -1, t_aft: -1, c_time: -1, span: 5 }
 var rect = false;
 var orect = false;
 var time = 0;
@@ -165,9 +166,9 @@ function health_report() {
     if (!film_loaded) return
 
     if (!webview && !load_webview()) return -1
-        
+
     if (!rect || Math.abs(video_time() - last_rect) > 5000) {
-        webview.send('get-rect', true ) // fixme, this true might force update too often
+        webview.send('get-rect', true) // fixme, this true might force update too often
         last_rect = video_time()
     }
 
@@ -203,7 +204,7 @@ function video_time() {
 function get_thumbail() {
     if (!rect) return;
     var time = video_time();
-    if ( time == last_frame_time ) return console.log("[get_thumbail] Ignore get-hash, already parseFrame")
+    if (time == last_frame_time) return console.log("[get_thumbail] Ignore get-hash, already parseFrame")
     last_frame_time = time
     ipcRenderer.send('get-hash', { time: time, rect: rect })
 }
@@ -211,9 +212,9 @@ var last_frame_time = -Infinity
 
 function parseFrame(arg) {
     // Check we didn't talke too long to process the frame (if we did, we don't really know when was it captured)
-    var processing_time = video_time()-arg.time 
-    if ( processing_time < 0 || processing_time > 50 ) {
-        console.log("[parseFrame] (ERROR) Discarding frame, processing_time:  ", Math.floor(processing_time) )
+    var processing_time = video_time() - arg.time
+    if (processing_time < 0 || processing_time > 50) {
+        //TODO console.log("[parseFrame] (ERROR) Discarding frame, processing_time:  ", Math.floor(processing_time))
         return;
     }
     // Act according to mode "editor" or "user"
@@ -237,7 +238,7 @@ function add_to_ref_list(c_hash, c_time) {
     if (!syncRef[block]) syncRef[block] = []
     var ms = Math.round(c_time - (block) * 1000)
     syncRef[block].push([c_hash, ms])
-    console.log(c_hash, block, ms)
+    console.log("[add_to_ref_list] ", c_hash, block, ms)
 }
 
 
@@ -283,14 +284,12 @@ function want_to_see(hash, time) {
     };
 
     // Do not skip if we haven't been able to sync a single frame
-    if (video_time() - last_correct_sync == Infinity) return;
+    if (video_time() - last_correct_sync == Infinity) return console.log("[want_to_see] (ERROR) We don't where we are!");
 
-    if (next_start < 60) {
-        console.log("Oops, we are ", -next_start, "ms in the middle of a scene. ")
-        hide_until(next_end + video_time())
-    } else if (next_start < 300) {
+    if (next_start < 300) {
         console.log("Scene almost here, wait ", next_start, "ms and skip: ")
-        setTimeout(function() { hide_until(next_end + video_time()) }, next_start)
+        skip_scene(next_start + time, next_end + time)
+        setTimer(1000)
     } else if (next_start < 4000) {
         console.log("Scene is close (", next_start, "ms) check again a bit later: ")
         setTimer(250)
@@ -321,8 +320,86 @@ function guess_users_time(r_time) {
     return (historic_sync.c_time - historic_sync.t_min + r_time)
 }
 
+var h_offset = {}
+var sync = {
+    induced_error: 0,
+    min_probability: 0.001,
+    lost_timer: false
+}
+
+function find_time_in_reference(c_hash, c_time) {
+
+    c_time += 1000 * sync.induced_error
+    // Check we have the data we need
+    if (!c_hash || !c_time) return console.log("[find_time_in_reference] Missing c_time || c_hash");
+
+    // Prepare data
+    var guessed_time = guess_ref_time(c_time);
+    var guessed_block = Math.floor(guessed_time / 1000);
+    var span = historic_sync.span;
+
+    // Compare user's frame with reference's frames in "span" blocks around the "guessed_time"
+    var d_arr = {};
+    var d_min = Infinity;
+    for (var block = guessed_block - span; block <= guessed_block + span; block++) {
+        var ref_data = syncRef[block + ""];
+        if (!ref_data) continue;
+        for (var r = 0; r < ref_data.length; r++) {
+            // Calculate how different the frames are
+            var d = hamming_distance(ref_data[r][0], c_hash)
+            var offset = "" + Math.round((ref_data[r][1] + block * 1000 - c_time) / 80)
+            if (d < d_min) d_min = d;
+            // Store value in array
+            d_arr[offset] = d;
+        }
+    }
+
+    for (var offset in d_arr) {
+        if (!d_arr.hasOwnProperty(offset)) continue;
+        if (!h_offset[offset] || h_offset[offset] < sync.min_probability) h_offset[offset] = sync.min_probability
+        var evidence = (d_min + 8) / (d_arr[offset] + 2)
+        h_offset[offset] = h_offset[offset] * evidence
+    }
+
+    // Normalize h_offset
+    var sum = 0
+    for (var offset in h_offset) {
+        if (!h_offset.hasOwnProperty(offset)) continue;
+        sum += h_offset[offset]
+    }
+    for (var offset in h_offset) {
+        if (!h_offset.hasOwnProperty(offset)) continue;
+        h_offset[offset] = h_offset[offset] / sum
+    }
 
 
+    // Find item with maximum
+    var max = -Infinity;
+    var m_offset = "0"
+    for (var offset in h_offset) {
+        if (!h_offset.hasOwnProperty(offset)) continue;
+        if (h_offset[offset] > max) {
+            max = h_offset[offset]
+            m_offset = offset
+        }
+    }
+
+    // detect possible error (eg flat probability)
+    if (max > 0.5) {
+        last_correct_sync = c_time;
+        if (sync.lost_timer) {
+            clearInterval(sync.lost_timer)
+            sync.lost_timer = false;
+        }
+    } else if (!sync.lost_timer) {
+        sync.lost_timer = setInterval(get_thumbail, 300);
+    }
+
+    var time_offset = parseInt(m_offset) * 80
+    console.log("[find_time_in_reference] Best offset is ", time_offset / 1000, " with ", 100 * max, "%. Last d_min was ", d_min)
+    historic_sync = { t_bef: c_time + time_offset - 80, t_min: c_time + time_offset, t_aft: c_time + time_offset + 80, c_time: c_time, span: 10, confidence: 0 }
+    return historic_sync;
+}
 
 /* *
  * Locates the specified time in the reference film.
@@ -330,7 +407,7 @@ function guess_users_time(r_time) {
  * @param {number} c_time time (users) of the frame we want to find (to speed up a bit the search...)
  * @returns {json} { min: earliest possible point, center: most probable time, max: latest possible time}
  */
-function find_time_in_reference(c_hash, c_time) {
+function find_time_in_reference2(c_hash, c_time) {
 
     // Check we have the data we need
     if (!c_hash || !c_time) return;
@@ -386,10 +463,13 @@ function find_time_in_reference(c_hash, c_time) {
     }
 
     // Detect/guess/bet wheter we have an error or not
-    var error_detected = (d_min > 40 || Math.abs(t_aft - t_bef) > 400 || n_blocks < 5 || !syncRef[guessed_block + ""])
+    var badness = detect_error(d_min, Math.abs(t_aft - t_bef), n_blocks, !syncRef[guessed_block + ""])
+    //var error_detected = (d_min > 40 || Math.abs(t_aft - t_bef) > 600 || n_blocks < 5 || !syncRef[guessed_block + ""])
+    total++;
 
     // Some stats (useful when we knew the time offset in advance and want to check the sync accuracy)
-    var error_th = 150; // Error threshold for stats only
+
+    /*var error_th = 150; // Error threshold for stats only
     var offset = 0; // Known offset
     total++
     if (Math.abs(c_time - t_min + offset) > error_th) {
@@ -398,29 +478,42 @@ function find_time_in_reference(c_hash, c_time) {
     } else {
         if (error_detected) false_positive++;
     }
-    console.log(historic_sync, c_time - t_min + offset)
+    console.log(historic_sync, c_time - t_min + offset)*/
 
 
     // Make history :)
-    if (!error_detected) {
-        span = Math.max(historic_sync.span - 10, 5);
+    if (badness == 0) {
+        console.log("[find_time_in_reference] Looks like we got the right sync. Offset around: ", t_min - c_time)
+        span = Math.max(historic_sync.span - 20, 5);
         last_correct_sync = c_time;
     } else {
-        console.log("[Unable to sync frame] (ERROR) ", d_min, t_min, t_bef, t_aft, n_blocks, c_time, d_arr)
+        error++;
         var elapsed_time = c_time - historic_sync.c_time;
         t_bef = historic_sync.t_bef + elapsed_time;
         t_aft = historic_sync.t_aft + elapsed_time;
         t_min = historic_sync.t_min + elapsed_time;
-        span = Math.min(historic_sync.span + 10, 300);
+        span = Math.min(historic_sync.span + badness, 300);
+        console.log("[find_time_in_reference] Using historic_sync. Badness: " + badness + ". Offset was around: ", t_min - c_time)
     }
     historic_sync = { t_bef: t_bef, t_min: t_min, t_aft: t_aft, c_time: c_time, span: Math.round(span) };
 
     // More stats after corrections
-    abs_error += Math.abs(c_time - t_min + offset)
-    if (Math.abs(c_time - t_min + offset) > error_th) real_error++;
+    /*abs_error += Math.abs(c_time - t_min + offset)
+    if (Math.abs(c_time - t_min + offset) > error_th) real_error++;*/
 
     // Return
     return historic_sync;
+
+}
+
+function detect_error(d_min, possible_error, n_blocks, missing_block) {
+    if (missing_block) return 4
+    if (d_min < 10) return 0
+    if (d_min < 20 && possible_error < 2000) return 1
+    if (d_min < 30 && possible_error < 1000) return 2
+    if (d_min < 40 && possible_error < 500) return 3
+    console.log("[detect_error] looks like we are lost...")
+    return 5
 
 }
 
@@ -467,14 +560,19 @@ function nearest_scene_change(t_pressed, start) {
 //                        HELPER FUNCTIONS                                //
 //************************************************************************//
 
-function hide_until(time) {
-    if (!webview) return console.log("[hide_until] (ERROR) Trying to hide, but we don't have a webview!");
-    console.log("[hide_until] hiding until ", time)
+function seek_time(time) {
+    if (!webview) return console.log("[seek_time] (ERROR) Trying to skip, but we don't have a webview!");
+    webview.send('seek-time', time/1000)
+}
+
+function skip_scene(start, end) {
+    if (!webview) return console.log("[skip_scene] (ERROR) Trying to skip, but we don't have a webview!");
+    console.log("[skip_scene] skipping ", start, " -> ", end)
     if (mode_after_preview) {
         setMode(mode_after_preview)
         mode_after_preview = false;
     }
-    webview.send('hide-until', time / 1000)
+    webview.send('skip-scene', { start: start, end: end })
 }
 
 function go_to_frame(time) {
@@ -543,21 +641,24 @@ function print_stats() {
 
 
 // Check we don't have weird things
-function purge() {
-    for (var i = 200; i >= 0; i--) {
-        if (!syncRef[i]) continue;
-        var block = syncRef[i]
-        var last_h = ""
-        var last_t = -5;
-        for (var j = block.length - 1; j >= 0; j--) {
-            if (block[j][1] == last_t && block[j][0] != last_h) {
-                console.log("disssarter! at ", i, j)
-                syncRef[i] = null
+function get_purged_sync_data() {
+    var purged_ref = {}
+    last_t = -Infinity
+    for (var seconds in syncRef) {
+        if (!syncRef.hasOwnProperty(seconds)) continue;
+        var block = syncRef[seconds]
+        purged_ref[seconds] = []
+        for (var i = 0; i < block.length; i++) {
+            if (Math.abs(block[i][1] - last_t) < 50) {
+                console.log("discarding frame! at ", seconds, i)
+                continue
             }
-            last_t = block[j][1]
-            last_h = block[j][0]
+            last_t = block[i][1]
+            purged_ref[seconds].push([block[i][0], block[i][1]])
         }
     }
+    console.log("purged_ref; ", purged_ref)
+    return purged_ref
 }
 
 

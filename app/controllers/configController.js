@@ -257,7 +257,7 @@ angular.module( 'configCtrl', [ 'ngMaterial' ] )
         },
         {
             'name': 'United Kingdom',
-            'identifier': 'UK',
+            'identifier': 'GB',
         },
         {
             'name': 'USA',

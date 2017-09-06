@@ -14,7 +14,7 @@ angular.module('chooseFilmCtrl', ['ngMaterial'])
   vm.selected = function(imdbid){
     vm.processing = true;
     $rootScope.utils.search_film(null,null,null,imdbid).then(function(film){
-      if (vm.processing == false ) return
+      if (vm.processing == false ) return console.log("[selected] reply already parsed...")
       vm.processing = false;
       service.saveSelectedFilm(film.data);
       $location.path('/film');
