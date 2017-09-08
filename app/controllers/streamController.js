@@ -111,12 +111,12 @@ angular.module('streamCtrl', ['ngMaterial'])
 
                         var skip_list = []
                         for (var i = 0; i < $scope.scenes.length; i++) {
-                            if ($scope.scenes[i].skip) skip_list.push($scope.scenes[i])
+                            var scene = $scope.scenes[i]
+                            if (scene.skip) skip_list.push({start:scene.start-0.08,end:scene.end+0.08})
                         }
                         var input = $rootScope.file
-                        //var output = input.replace(/\.([^.]+)$/g, "_CUSTOM.$1")
 
-                        console.log(input, skip_list, output)
+                        console.log("[dumpToFile] ",input, skip_list, output)
 
                         file.dumpToFile(input, skip_list, output)
 

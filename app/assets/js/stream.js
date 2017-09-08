@@ -202,7 +202,7 @@ function video_time() {
  * Capture current frame, generate hash and skip/watch/store accordingly
  */
 function get_thumbail() {
-    if (!rect) return;
+    if (!rect) return; //todo add get rect/load webview
     var time = video_time();
     if (time == last_frame_time) return console.log("[get_thumbail] Ignore get-hash, already parseFrame")
     last_frame_time = time
