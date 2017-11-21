@@ -51,7 +51,7 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
     };
 
     vm.searchTitle = function() {
-        if ( !vm.searchQuery ) return console.log("[searchTitle] undefined searchQuery");
+        if ( !vm.searchQuery ) return console.log("[searchTitle] error, got undefined searchQuery");
         vm.processing = true;
         vm.search_film( null, vm.searchQuery ).then( function( film ) {
             if ( vm.processing == false ) return // already loaded :)

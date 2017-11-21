@@ -348,9 +348,10 @@ function call_online_api( params ) {
     var token = get_local_data( "token" )
     if ( token ) params[ "token" ] = token;
     console.log("we got a token ", token )
-    // Add region (if available)
+    // Add region (if available) and version
     var region = get_settings().language
     if ( region ) params["region"] = region;
+    params["version"] = "0.1";  // MODIFY VERSION IN THIS LINE
     // Create query
     var str = [];
     for ( var key in params )
@@ -367,7 +368,7 @@ function call_online_api( params ) {
           url:     url,
           body:    str.join("&"),
         }, function(error, response, body){
-                      if ( error ) {
+            if ( error ) {
                 resolve( { status: 400 } )
             } else {
                 var reply = JSON.parse( body )
@@ -375,6 +376,13 @@ function call_online_api( params ) {
                 if ( reply.data[ "token" ] ) set_local_data( "token", reply.data[ "token" ] )
                 if ( reply.data[ "username" ] ) set_local_data( "username", reply.data[ "username" ] )
                 if ( reply.data[ "permissions" ] ) set_local_data( "permissions", reply.data[ "permissions" ] )
+                if ( reply.data[ "update"] != "force" ) {
+                    const {dialog,shell} = require('electron')
+                    console.log(dialog.showMessageBox({"type":"info","title":"Newversionavailable","message":"We got new exiting features for you!","buttons":["Try them"]}, function (argument) {
+                        shell.openExternal("www.fcinema.org/updates");
+                    }))
+                    resolve( { status: 400 } )
+                }
                 resolve( reply )
             }
         });
