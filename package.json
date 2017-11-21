@@ -1,10 +1,11 @@
 {
-  "name": "desktop-app",
-  "version": "0.0.1",
-  "description": "To be included",
-  "homepage": "wwww.fcinema.org",
+  "name": "liberty-cinema",
+  "productName": "Liberty Cinema",
+  "version": "0.0.3",
+  "description": "Decide what you watch. Unleash your personality",
+  "homepage": "https://wwww.fcinema.org",
   "main": "main.js",
-  "author": "",
+  "author": "Liberty Cinema",
   "license": "ISC",
   "build": {
     "appId": "org.fcinema",
@@ -12,11 +13,13 @@
       "category": "your.app.category.type"
     }
   },
+  "devDependencies": {
+    "electron": "^1.4.3",
+    "electron-builder": "^19.45.5"
+  },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.0.1",
     "angular-three-state-checkbox": "^1.1.0",
-    "electron": "^1.4.0",
-    "electron-builder": "^19.5.1",
     "electron-widevinecdm": "^1.0.2",
     "express": "^4.14.0",
     "file-bytes": "^2.0.3",
@@ -29,8 +32,11 @@
     "which": "^1.2.11"
   },
   "scripts": {
-    "pack": "build --dir",
-    "dist": "build"
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
-  "postinstall": "install-app-deps"
+  "postinstall": "install-app-deps",
+  "devDependencies": {
+    "electron-winstaller": "^2.6.3"
+  }
 }
