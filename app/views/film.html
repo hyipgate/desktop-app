@@ -6,7 +6,6 @@
             <div flex>
                 <img ng-src="{{film.movieData.images.posters[0]}}" alt="Film Poster" height="450px">
                 <div layout="row" layout-align="center center">
-                    <md-button class="md-raised" ng-click="showListBottomSheet(true)" style="display:{{settings.editors_view? 'block' : 'none'}}">Edit</md-button>
                     <md-button class="md-raised" ng-click="film.share()" style="display:{{settings.editors_view? 'block' : 'none'}}">Share</md-button>
                     <md-button class="md-primary md-raised" ng-click="showListBottomSheet(false)">Play</md-button>
                 </div>

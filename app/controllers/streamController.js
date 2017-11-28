@@ -13,6 +13,7 @@ angular.module('streamCtrl', ['ngMaterial'])
 
         vm.show_menu = "none"
         vm.health_color = "rgba(200, 200, 200, 0.6)"
+        $scope.webview_opacity = 1
 
         $scope.show_buttons = function(argument) {
             vm.show_menu = "block"
@@ -22,7 +23,7 @@ angular.module('streamCtrl', ['ngMaterial'])
         // Check periodically to: (1) hide controls if unactive, (2) show controls in red if film is out of sync
         function check() {
             // Check we are on sync
-            var illness = health_report()
+            var illness = sync.health_report()
             if (illness > 5000) {
                 vm.show_menu = "block"
                 var red = Math.min(255, Math.floor(illness / 100)) // Red color
@@ -48,12 +49,18 @@ angular.module('streamCtrl', ['ngMaterial'])
         ///////////////////////////////////////////////////
         window.onkeyup = function(e) {
             var key = e.keyCode ? e.keyCode : e.which;
-            if (key == 110) {
-                var scene = mark_current_time()
-                if (scene) {
-                    var index = service.addScene(scene.start, scene.end)
-                    $scope.main.editScene(index)
-                }
+            if (key == 110) $scope.$apply( $scope.markTime() )
+        }
+
+        $scope.markTime = function() {
+            var scene = mark_current_time()
+            if (scene) {
+                var index = service.addScene(scene.start, scene.end)
+                $scope.main.editScene(index)
+                $scope.webview_opacity = 1
+            } else {
+                $scope.webview_opacity = 0.2
+                // background: repeating-linear-gradient(45deg,gray,gray 10px,white 10px, white 20px )"
             }
         }
 
@@ -66,8 +73,15 @@ angular.module('streamCtrl', ['ngMaterial'])
             clearInterval(interval_id);
             window.onkeyup = null
             var sref562 = end_capture()
+            console.log("sref562 length: ",sref562)
             // If we are on edit mode, save reference
-            if (sref562) $rootScope.utils.save_sync_ref(service.getSelectedFilm()["id"]["imdb"], sref562)
+            if (sref562){
+                console.log( "We got new sync data")
+                var a = JSON.stringify(sref562)
+            console.log(a)
+              $rootScope.utils.save_sync_ref(service.getSelectedFilm()["id"]["imdb"], a)
+              service.setSyncRef(sref562)
+            } 
             // Go back to film view
             $location.path('/film');
         }
@@ -106,21 +120,21 @@ angular.module('streamCtrl', ['ngMaterial'])
                 $scope.dumpToFile = function() {
                     var file = $rootScope.electron.remote.require('./app/assets/js/file');
                     $mdDialog.hide()
-                    const {dialog} = require('electron').remote;
+                    const { dialog } = require('electron').remote;
                     dialog.showSaveDialog((output) => {
 
                         var skip_list = []
                         for (var i = 0; i < $scope.scenes.length; i++) {
                             var scene = $scope.scenes[i]
-                            if (scene.skip) skip_list.push({start:scene.start-0.08,end:scene.end+0.08})
+                            if (scene.skip) skip_list.push({ start: scene.start - 0.08, end: scene.end + 0.08 })
                         }
                         var input = $rootScope.file
 
-                        console.log("[dumpToFile] ",input, skip_list, output)
+                        console.log("[dumpToFile] ", input, skip_list, output)
 
                         file.dumpToFile(input, skip_list, output)
 
-                        $rootScope.openToast( "Creating file on the background" )
+                        $rootScope.openToast("Creating file on the background")
                     })
 
                 }

@@ -7,7 +7,6 @@ angular.module('MainService', ['ngCookies'])
   var data = {};
   var scenes = [];
   var searchQuery;
-  var mode = false;
   var syncRef = {};
 
   function random_id () {
@@ -17,14 +16,6 @@ angular.module('MainService', ['ngCookies'])
       text += possible.charAt( Math.floor( Math.random() * possible.length ));
     };
     return text;
-  }
-
-  MainFactory.setMode = function(new_mode){
-    mode = new_mode;
-  }
-
-  MainFactory.getMode = function(){
-    return mode;
   }
 
   MainFactory.removeScene = function ( id ) {

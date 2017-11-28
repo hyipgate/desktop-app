@@ -140,10 +140,10 @@ angular.module( 'mainCtrl', [ 'ngMaterial' ] )
                     if ( $location.path != '/stream' ) {
                         $location.path( '/stream' );
                     } else {
-                        console.log( "will previw again ", id )
+                        console.log( "will preview again ", id )
                         setTimeout( function() { vm.editScene( id ) }, 5000 );
                     }
-                    preview( $scope.scene.start, $scope.scene.end )
+                    skip.preview( $scope.scene.start, $scope.scene.end )
                     $scope.closeDialog()
                 }
 
