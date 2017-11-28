@@ -14,8 +14,7 @@
     }
   },
   "devDependencies": {
-    "electron": "^1.4.3",
-    "electron-builder": "^19.45.5"
+    "electron-winstaller": "^2.6.3"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.0.1",
@@ -28,6 +27,7 @@
     "node-persist": "^2.0.7",
     "opensubtitles": "0.0.4",
     "request": "^2.75.0",
+    "sharp": "^0.18.4",
     "tmp": "0.0.29",
     "which": "^1.2.11"
   },
@@ -35,8 +35,5 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },
-  "postinstall": "install-app-deps",
-  "devDependencies": {
-    "electron-winstaller": "^2.6.3"
-  }
+  "postinstall": "install-app-deps"
 }
