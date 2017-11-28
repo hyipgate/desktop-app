@@ -187,12 +187,12 @@ function save_edition(film, scenes) {
  * Save scenes editions localy
  * @returns {something}
  */
-function save_sync_ref(imdbid, sync_data) {
+function save_sync_ref(imdbid, sync_data5234) {
     trace("save_sync_ref", arguments)
-    if (sync_data.length == 0) return
-    console.log(sync_data)
+    //if (sync_data.length == 0) return
+    var b = JSON.parse(sync_data5234)
     //var imdbid = film[ "id" ][ "imdb" ]
-    return set_local_data(imdbid + "_mysync", sync_data)
+    return set_local_data(imdbid + "_mysync", b )
 }
 
 
@@ -310,6 +310,7 @@ exports.save_sync_ref = save_sync_ref;
 exports.claim = claim;
 exports.share_scenes = share_scenes;
 exports.link_file_to_film = link_file_to_film;
+exports.merge_local_tags = merge_local_tags
 
 // Authentication functions
 exports.new_user = new_user;

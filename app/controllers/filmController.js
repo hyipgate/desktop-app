@@ -1,6 +1,6 @@
 angular.module('filmCtrl', ['ngMaterial'])
 
-    .controller('FilmController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog ) {
+    .controller('FilmController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog) {
         var vm = this;
 
 
@@ -27,7 +27,7 @@ angular.module('filmCtrl', ['ngMaterial'])
 
             /* Apply user's default filter settings on film tags */
             var skip_tags = $scope.settings.tags.filter(function(tag) { return tag.action == false })
-            var list_tags = $scope.settings.tags.filter(function(tag) { return tag.action != true  })
+            var list_tags = $scope.settings.tags.filter(function(tag) { return tag.action != true })
 
             for (var i = 0; i < vm.scenes.length; i++) {
                 // Decide wheter to skip scene or not
@@ -52,7 +52,6 @@ angular.module('filmCtrl', ['ngMaterial'])
         vm.getMovie();
 
         $scope.showListBottomSheet = function(mode) {
-            service.setMode(mode)
             $scope.alert = '';
             $mdBottomSheet.show({
                 templateUrl: 'views/bottom-sheet-list-template.html',
@@ -63,20 +62,27 @@ angular.module('filmCtrl', ['ngMaterial'])
             function BottonSheetDialogController($scope, settings, scenes, $mdDialog) {
                 var vm = this
                 vm.movieData = service.getSelectedFilm();
-                var lan = settings.language;
-                $scope.providers = [];
-                if (vm.movieData.providers[lan]) $scope.providers = vm.movieData.providers[lan];
-                //$scope.providers.push({ name: "Youtube", url: "https://www.youtube.com/watch?v=VoIoEhNmfsM" })
-                $scope.providers.push({ name: "File/DVD", url: "file", icon: 'file.svg' })
-                $scope.providers.push({ name: "Custom URL", url: "custom", icon: 'add.svg' })
+
+                vm.getProviders = function(lan) {
+                    var playable = [];
+                    if (vm.movieData.providers[lan]) {
+                        var providers = vm.movieData.providers[lan] 
+                        for (var i = 0; i < providers.length; i++) {
+                            if ( providers[i].name === "movistar-plus" || providers[i].name === "apple-itunes") continue
+                            playable.push( providers[i] )
+                        }
+                    }
+                    playable.push({ name: "File/DVD", url: "file", icon: 'file.svg' })
+                    playable.push({ name: "Custom URL", url: "custom", icon: 'add.svg' })
+                    return playable
+                }
+                $scope.providers = vm.getProviders(settings.language);
 
                 vm.forceHttps = function(url) {
                     // somre provider fail on https... add https only when missing protocol
-                     //return 'https://' + url.replace(/^https?:\/\//, "");
-                    if ( url.indexOf("http") == 0 ) return url
+                    //return 'https://' + url.replace(/^https?:\/\//, "");
+                    if (url.indexOf("http") == 0) return url
                     return 'https://' + url
-
-                    
                 }
 
 
@@ -87,7 +93,7 @@ angular.module('filmCtrl', ['ngMaterial'])
                     $rootScope.file = "file:///" + file[0].path
                     $location.path('/stream');
                     $rootScope.utils.link_file_to_film($rootScope.file, vm.movieData.id.imdb)
-                    load_film(scenes, service.getMode(), service.getSyncRef())
+                    load_film(scenes, $rootScope.file, service.getSyncRef())
                 }
 
                 vm.showPrompt = function(ev) {
@@ -105,7 +111,7 @@ angular.module('filmCtrl', ['ngMaterial'])
                         $mdBottomSheet.hide(custom_url);
                         $rootScope.file = custom_url
                         $location.path('/stream');
-                        load_film(scenes, service.getMode(), service.getSyncRef())
+                        load_film(scenes, $rootScope.file, service.getSyncRef())
                     }, function() {
                         $scope.status = 'You didn\'t name your dog.';
                     });
@@ -126,7 +132,7 @@ angular.module('filmCtrl', ['ngMaterial'])
                     $mdBottomSheet.hide(clickedItem.name);
                     $rootScope.file = vm.forceHttps(clickedItem.url)
                     $location.path('/stream');
-                    load_film(scenes, service.getMode(), service.getSyncRef())
+                    load_film(scenes, $rootScope.file, service.getSyncRef())
                 };
             }
         }
@@ -182,21 +188,21 @@ angular.module('filmCtrl', ['ngMaterial'])
     }).filter('provider', function() {
 
         function firstUp(string) {
-            if ( !string ) return ""
+            if (!string) return ""
             return string.charAt(0).toUpperCase() + string.slice(1);
         }
 
-        function allUp( string ) {
-            if ( !string ) return ""
+        function allUp(string) {
+            if (!string) return ""
             return string.toUpperCase();
         }
 
-        function money( ammount, currency ) {
-            if (!ammount ) return ""
-            var currencies = { "EUR": "€", "USD":"$", "GBP": "£" }
-            var symbol = currencies[currency]? currencies[currency] : ""
-            if ( currency == "GBP" ) return symbol+ammount
-            return ammount+symbol
+        function money(ammount, currency) {
+            if (!ammount) return ""
+            var currencies = { "EUR": "€", "USD": "$", "GBP": "£" }
+            var symbol = currencies[currency] ? currencies[currency] : ""
+            if (currency == "GBP") return symbol + ammount
+            return ammount + symbol
         }
 
         return function(provider) {

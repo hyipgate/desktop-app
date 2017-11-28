@@ -87,6 +87,11 @@ ipcMain.on('get-hash', (event, arg) => {
 })
 
 
+ipcMain.on('exit-fullscreen', (event, arg) => {
+    if( mainWindow.isFullScreen() ) mainWindow.setFullScreen( false );
+})
+
+
 /**
  * Improves the quality of the rect (croping black borders)
  */

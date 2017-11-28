@@ -5,7 +5,6 @@ angular.module('chooseFilmCtrl', ['ngMaterial'])
   vm.processing = false;
 
   $rootScope.electron = require('electron');
-  $rootScope.utils = $rootScope.electron.remote.require('./app/assets/js/utils');
 
   vm.getMovie = function(){
     vm.movieData = service.getSelectedFilm();
