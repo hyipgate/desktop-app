@@ -3,11 +3,10 @@
 <md-button class="md-fab md-fab-top-left greyFab md-mini" aria-label="Back" ng-click="backToFilm()" style="display:{{stream.show_menu}}; background-color: {{stream.health_color}} !important;">
     <md-icon md-svg-src="./assets/img/back.svg"></md-icon>
 </md-button>
-<md-button class="md-fab md-fab-top-right greyFab md-mini" aria-label="Edit" ng-click="sceneList()" style="display:{{stream.show_menu}}; background-color: {{stream.health_color}} !important;">
+<md-button class="md-fab md-fab-top-right greyFab md-mini" aria-label="Edit" ng-click="sceneList()" style="display:{{settings.editors_view? stream.show_menu : 'none'}}; background-color: {{stream.health_color}} !important;">
     <md-icon md-svg-src="./assets/img/movie.svg"></md-icon>
 </md-button>
 
-
-<md-button class="md-fab md-fab-top-right greyFab md-mini" aria-label="Edit" ng-click="markTime()" style="display:{{stream.show_menu}}; background-color: {{stream.health_color}} !important; margin-right: 60px;">
+<md-button class="md-fab md-fab-top-right greyFab md-mini" aria-label="Edit" ng-click="markTime()" style="display:{{settings.editors_view? stream.show_menu : 'none'}}; background-color: {{stream.health_color}} !important; margin-right: 60px;">
     <md-icon md-svg-src="./assets/img/cut.svg"></md-icon>
 </md-button>

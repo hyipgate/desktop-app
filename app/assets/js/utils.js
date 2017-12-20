@@ -52,7 +52,7 @@ function search_film(file, title, url, imdbid) {
             var imdbid = get_local_data(stats.hash + "|" + stats.filesize)
             console.log(imdbid)
             if (imdbid) return search_film(null, null, null, imdbid)
-            // If we haven't, ask the network
+            // If we haven't identified this file before, ask the network
             return call_online_api({ action: "search", filename: stats.estimated_title, hash: stats.hash, bytesize: stats.filesize, url: url }).then(function(film) {
                 if (film["status"] == 200 && film["data"]["type"] != "list") {
                     var imdbid = film["data"]["id"]["imdb"]
@@ -140,7 +140,18 @@ function new_pass(user, pass, newpass) {
 }
 
 
-
+function clean_scenes(old) {
+    var scenes = []
+    for (var i = old.length - 1; i >= 0; i--) {
+        scenes[i] = {}
+        scenes[i]['id'] = old[i]['id']
+        scenes[i]['tags'] = old[i]['tags']
+        scenes[i]['comment'] = old[i]['comment']
+        scenes[i]['start'] = old[i]['start']
+        scenes[i]['end'] = old[i]['end']
+    }
+    return scenes
+}
 
 /**
  * Share local scenes editions with online database (doesn't matter if we are "agents" or normal users)
@@ -149,19 +160,9 @@ function new_pass(user, pass, newpass) {
 function share_scenes(film) {
     trace("share_scenes", arguments)
 
-    var scenes = []
-    for (var i = film.scenes.length - 1; i >= 0; i--) {
-        scenes[i] = {}
-        scenes[i]['id'] = film.scenes[i]['id']
-        scenes[i]['tags'] = film.scenes[i]['tags']
-        scenes[i]['comment'] = film.scenes[i]['comment']
-        scenes[i]['start'] = film.scenes[i]['start']
-        scenes[i]['end'] = film.scenes[i]['end']
-    }
-
-    filtered_film = {
+    var filtered_film = {
         id: film.id,
-        scenes: scenes,
+        scenes: clean_scenes(film.scenes),
         syncRef: film.syncRef
     }
 
@@ -177,10 +178,11 @@ function share_scenes(film) {
  * Save scenes editions localy
  * @returns {something}
  */
-function save_edition(film, scenes) {
+function save_edition(film) {
     trace("save_edition", arguments)
     var imdbid = film["id"]["imdb"]
-    return set_local_data(imdbid + "_mytags", scenes)
+    var scenes = clean_scenes(film.scenes)
+    return set_local_data(imdbid + "_mytags", film.scenes)
 }
 
 /**
@@ -192,7 +194,7 @@ function save_sync_ref(imdbid, sync_data5234) {
     //if (sync_data.length == 0) return
     var b = JSON.parse(sync_data5234)
     //var imdbid = film[ "id" ][ "imdb" ]
-    return set_local_data(imdbid + "_mysync", b )
+    return set_local_data(imdbid + "_mysync", b)
 }
 
 
@@ -206,13 +208,22 @@ function merge_local_tags(film) {
     var imdbid = film.data["id"]["imdb"]
 
     var scenes = get_local_data(imdbid + "_mytags")
-    if (scenes) {
-        film.data.scenes = scenes
+    if (!scenes) {
+        set_local_data(imdbid + "_mytags", film.data.scenes)
+        scenes = film.data.scenes
     }
+    film.data.online_scenes = film.data.scenes
+
+    for (var i = 0; i < scenes.length; i++) {
+        scenes[i].diffTag = get_diff_tag(scenes[i], film.data.online_scenes)
+        scenes[i].edited = edited(scenes[i], film.data.online_scenes)
+    }
+    film.data.scenes = scenes
+
     // TODO: this should be smarter
     if (!film.data.syncRef) {
         var syncRef = get_local_data(imdbid + "_mysync")
-        console.log("ge got previous syncRef ", syncRef)
+        console.log("we got previous syncRef ", syncRef)
         if (syncRef) film.data.syncRef = syncRef
     }
 
@@ -220,8 +231,54 @@ function merge_local_tags(film) {
     return film;
 }
 
+function edited(scene, online) {
+    for (var i = 0; i < online.length; i++) {
+        if (online[i].id == scene.id) {
+            return (JSON.stringify(scene) !== JSON.stringify(online[i]))
+        }
+    }
+    return true
+}
 
+function get_diff_tag(scene, online) {
+    for (var i = 0; i < online.length; i++) {
+        if (online[i].id == scene.id) {
+            return compare_arrays(scene.tags, online[i].tags)
+        }
+    }
+    return compare_arrays(scene.tags, [])
+}
 
+//https://stackoverflow.com/a/1723783/3766869
+function compare_arrays(a, b) {
+    if (!a) a = [];
+    if (!b) b = [];
+    // create arrays
+    var added = []
+    var same = []
+    var removed = []
+    // Get hash to speed up lookup
+    var hash = {};
+    for (var i = 0; i < b.length; i++) hash[b[i]] = true;
+    // Iterate over array
+    for (var i = 0; i < a.length; i++) {
+        var value = a[i]
+        if (hash[value]) {
+            same.push(value)
+        } else {
+            added.push(value);
+        }
+        hash[value] = false
+    }
+    // left values
+    for (const value in hash) {
+        if (hash[value] && hash.hasOwnProperty(value)) {
+            removed.push(value)
+        }
+    }
+    // return
+    return { added: added, same: same, removed: removed }
+}
 
 
 
@@ -311,6 +368,7 @@ exports.claim = claim;
 exports.share_scenes = share_scenes;
 exports.link_file_to_film = link_file_to_film;
 exports.merge_local_tags = merge_local_tags
+exports.get_diff_tag = get_diff_tag
 
 // Authentication functions
 exports.new_user = new_user;

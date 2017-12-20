@@ -34,6 +34,13 @@ angular.module('app.routes', ['ngRoute'])
       controllerAs: 'config',
     })
 
+    .when('/community', {
+      templateUrl : './views/community.html',
+      controller  : 'CommunityController',
+      controllerAs: 'community',
+    })
+
+
     .otherwise({ redirectTo: '/'})
 
 });

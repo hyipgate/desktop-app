@@ -8,8 +8,8 @@ angular.module('filmCtrl', ['ngMaterial'])
         //-------------- Load Film Metadata...  ---------//
         /////////////////////////////////////////////////// 
         vm.getMovie = function() {
-            vm.movieData = service.getSelectedFilm();
-            vm.scenes = service.getScenes();
+            vm.movieData = $rootScope.movieData //service.getSelectedFilm();
+            vm.scenes = vm.movieData.scenes//service.getScenes();
             vm.movieData.tags = []
 
             console.log(vm.movieData)
@@ -61,7 +61,7 @@ angular.module('filmCtrl', ['ngMaterial'])
 
             function BottonSheetDialogController($scope, settings, scenes, $mdDialog) {
                 var vm = this
-                vm.movieData = service.getSelectedFilm();
+                vm.movieData = $rootScope.movieData// service.getSelectedFilm();
 
                 vm.getProviders = function(lan) {
                     var playable = [];
@@ -141,13 +141,8 @@ angular.module('filmCtrl', ['ngMaterial'])
             $location.path('/');
         }
 
-        vm.newScene = function(argument) {
-            var index = service.addScene()
-            $scope.main.editScene(index)
-        }
-
         vm.share = function() {
-            $rootScope.utils.share_scenes(service.getSelectedFilm()).then(function(answer) {
+            $rootScope.utils.share_scenes($rootScope.movieData).then(function(answer) {
                 $rootScope.openToast(answer.data)
             })
         }

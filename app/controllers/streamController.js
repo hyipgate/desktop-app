@@ -3,6 +3,8 @@ angular.module('streamCtrl', ['ngMaterial'])
     .controller('StreamController', function($rootScope, $scope, service, $location, $mdDialog) {
         var vm = this;
         vm.src = $rootScope.file
+        $scope.settings = $rootScope.utils.get_settings()
+        $scope.scenes = $rootScope.movieData.scenes
 
         ///////////////////////////////////////////////////
         //-------- Control buttons over player ----------//
@@ -39,6 +41,8 @@ angular.module('streamCtrl', ['ngMaterial'])
                 vm.health_color = "rgba(200, 200, 200, 0.6)"
                 $rootScope.$apply();
             }
+
+            if (skip.openPreview) editScene($index)
         }
         var interval_id = setInterval(check, 2500);
 
@@ -49,7 +53,7 @@ angular.module('streamCtrl', ['ngMaterial'])
         ///////////////////////////////////////////////////
         window.onkeyup = function(e) {
             var key = e.keyCode ? e.keyCode : e.which;
-            if (key == 110) $scope.$apply( $scope.markTime() )
+            if (key == 110) $scope.$apply($scope.markTime())
         }
 
         $scope.markTime = function() {
@@ -73,18 +77,21 @@ angular.module('streamCtrl', ['ngMaterial'])
             clearInterval(interval_id);
             window.onkeyup = null
             var sref562 = end_capture()
-            console.log("sref562 length: ",sref562)
+            console.log("sref562 length: ", sref562)
             // If we are on edit mode, save reference
-            if (sref562){
-                console.log( "We got new sync data")
+            if (sref562) {
+                console.log("We got new sync data")
                 var a = JSON.stringify(sref562)
-            console.log(a)
-              $rootScope.utils.save_sync_ref(service.getSelectedFilm()["id"]["imdb"], a)
-              service.setSyncRef(sref562)
-            } 
+                console.log(a)
+                $rootScope.utils.save_sync_ref($rootScope.movieData["id"]["imdb"], a)
+                service.setSyncRef(sref562)
+            }
             // Go back to film view
             $location.path('/film');
         }
+
+
+
 
 
 
@@ -95,26 +102,40 @@ angular.module('streamCtrl', ['ngMaterial'])
             pause(true)
             $mdDialog.show({
                 targetEvent: $event,
-                locals: { editScene: $scope.main.editScene, isDumpable: vm.isDumpable },
+                locals: {
+                    editScene: $scope.main.editScene,
+                    isDumpable: vm.isDumpable,
+                    sceneList: $scope.sceneList,
+                },
                 templateUrl: 'views/scene-list-template.html',
                 controller: sceneListController
             })
 
-            function sceneListController($scope, $mdDialog, editScene, isDumpable) {
+            function sceneListController($scope, $mdDialog, editScene, isDumpable, sceneList) {
 
                 $scope.isDumpable = isDumpable
+                $scope.scenes = $rootScope.movieData.scenes
+                console.log($scope.scenes)
                 console.log(isDumpable)
-
-                $scope.scenes = service.getScenes();
 
                 $scope.closeAndEditScene = function($index, $event) {
                     $mdDialog.hide()
                     editScene($index)
                 }
 
-                $scope.newScene = function() {
-                    var index = service.addScene()
-                    editScene(index)
+                $scope.shareScene = function($index, $event) {
+                    var scene = $rootScope.movieData.scenes[$index]
+                    $rootScope.utils.share_scenes($rootScope.movieData).then(function(answer) {
+                        $rootScope.openToast(answer.data)
+                        scene.edited = false
+                    })
+                }
+
+                $scope.previewScene = function($index, $event) {
+                    var scene = $rootScope.movieData.scenes[$index]
+                    skip.preview(scene.start, scene.end, "menu")
+                    setTimeout(function() { sceneList() }, 5000);
+                    $mdDialog.hide()
                 }
 
                 $scope.dumpToFile = function() {
@@ -122,10 +143,10 @@ angular.module('streamCtrl', ['ngMaterial'])
                     $mdDialog.hide()
                     const { dialog } = require('electron').remote;
                     dialog.showSaveDialog((output) => {
-
+                        var scenes = $rootScope.movieData.scenes
                         var skip_list = []
-                        for (var i = 0; i < $scope.scenes.length; i++) {
-                            var scene = $scope.scenes[i]
+                        for (var i = 0; i < scenes.length; i++) {
+                            var scene = scenes[i]
                             if (scene.skip) skip_list.push({ start: scene.start - 0.08, end: scene.end + 0.08 })
                         }
                         var input = $rootScope.file
@@ -140,6 +161,8 @@ angular.module('streamCtrl', ['ngMaterial'])
                 }
             }
         }
+
+        $rootScope.showSceneList = $scope.sceneList
 
 
         // Some filters

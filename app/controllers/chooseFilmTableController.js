@@ -7,7 +7,7 @@ angular.module('chooseFilmCtrl', ['ngMaterial'])
   $rootScope.electron = require('electron');
 
   vm.getMovie = function(){
-    vm.movieData = service.getSelectedFilm();
+    vm.movieData = $rootScope.movieData//service.getSelectedFilm();
   }
 
   vm.selected = function(imdbid){
@@ -15,7 +15,7 @@ angular.module('chooseFilmCtrl', ['ngMaterial'])
     $rootScope.utils.search_film(null,null,null,imdbid).then(function(film){
       if (vm.processing == false ) return console.log("[selected] reply already parsed...")
       vm.processing = false;
-      service.saveSelectedFilm(film.data);
+      $rootScope.setFilm(film.data);
       $location.path('/film');
       if (!$rootScope.$$phase) $rootScope.$apply();
     });

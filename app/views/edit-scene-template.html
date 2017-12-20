@@ -18,7 +18,7 @@
         <md-content style="margin-top: -50px" layout="row" layout-padding>
             <label>Tags</label>
             <md-input-container flex style="width: 100%">
-                <md-select ng-model="selectedTags" multiple ng-change="selectChanged()">
+                <md-select ng-model="selectedTags" multiple>
                     <md-optgroup label="Sex">
                         <md-option ng-value="tag" ng-repeat="tag in tagsSex |filter:searchTerm" aria-label="Select Tags">{{tag}}</md-option>
                     </md-optgroup>
@@ -33,7 +33,10 @@
         </md-content>
     </md-dialog-content>
     <md-dialog-actions>
+        <md-button ng-click="backToList()">Back</md-button>
+        <span style="flex: 1 1 auto"></span>
         <md-button ng-click="remove()">Delete</md-button>
+        <md-button ng-click="shareEditedScene()">Share</md-button>
         <md-button ng-click="preview()">Preview</md-button>
         <md-button ng-click="closeDialog()" class="md-primary">Save</md-button>
     </md-dialog-actions>

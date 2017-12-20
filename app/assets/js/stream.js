@@ -177,12 +177,9 @@ var wc = {
 
 
 
-
-
-
-
-
-
+/*
+    Skip bits
+*/
 var skip = {
 
     list: [],
@@ -211,6 +208,7 @@ var skip = {
         skip.load_list([{ start: start, end: end }]);
         var u_start = sync.to_users_time(1000 * start)
         wc.send('seek-time', u_start / 1000 - 3)
+        wc.send('pause', false)
     },
 
     want_to_see: function() {
@@ -289,6 +287,7 @@ var sync = {
         if (reference.on_master) return false
         if (sync.confidence < 0.8) return true
         if (Math.abs(video_time() - sync.last_correct_sync) > 500) return true
+        if (sync.last_was_weird) return true
         //if ( skip.next_start - video_time() < ) return true
     },
 
@@ -335,7 +334,7 @@ var sync = {
         for (var offset in d_arr) {
             if (!d_arr.hasOwnProperty(offset)) continue;
             if (!histogram[offset] || histogram[offset] < min_prob) histogram[offset] = min_prob
-            var evidence = 2*(d_min + 8) / (d_arr[offset] + 2)
+            var evidence = 2 * (d_min + 8) / (d_arr[offset] + 2)
             histogram[offset] = histogram[offset] * evidence
         }
 
@@ -370,8 +369,9 @@ var sync = {
             sync.last_correct_sync = c_time; // detect possible error (eg flat probability)
             sync.offset = parseInt(m_offset) * 80
         }
+        sync.last_was_weird = (d_arr[m_offset] - d_min > 5) // check if current minimum match historic minimum
 
-        console.log("[update_sync] Now is ", Math.floor(c_time / 1000), "s we are using ", sync.offset / 1000, "s offset. Last sync gave ", parseInt(m_offset) * 80 / 1000, "s offset with ", Math.round(100 * max), "% and d_min ", d_min, " adding ", sum )
+        console.log("[update_sync] Now is ", Math.floor(c_time / 1000), "s we are using ", sync.offset / 1000, "s offset. Last sync gave ", parseInt(m_offset) * 80 / 1000, "s offset with ", Math.round(100 * max), "% and d_min ", d_min, "(", d_arr[m_offset], ") adding ", sum)
 
     },
 
