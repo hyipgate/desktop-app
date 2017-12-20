@@ -1,4 +1,4 @@
-<webview src={{stream.src}} class="fullPage" preload="./assets/js/webview.js" style="opacity: {{webview_opacity}};" plugins ng-mousemove="show_buttons()"></webview>
+<webview src={{stream.src}} class="fullPage" preload="./assets/js/webview.js" style="filter: blur({{webview_blur}}px);" plugins ng-mousemove="show_buttons()"></webview>
 
 <md-button class="md-fab md-fab-top-left greyFab md-mini" aria-label="Back" ng-click="backToFilm()" style="display:{{stream.show_menu}}; background-color: {{stream.health_color}} !important;">
     <md-icon md-svg-src="./assets/img/back.svg"></md-icon>

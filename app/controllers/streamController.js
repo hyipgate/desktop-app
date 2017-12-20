@@ -15,7 +15,7 @@ angular.module('streamCtrl', ['ngMaterial'])
 
         vm.show_menu = "none"
         vm.health_color = "rgba(200, 200, 200, 0.6)"
-        $scope.webview_opacity = 1
+        $scope.webview_blur = 0;
 
         $scope.show_buttons = function(argument) {
             vm.show_menu = "block"
@@ -61,9 +61,9 @@ angular.module('streamCtrl', ['ngMaterial'])
             if (scene) {
                 var index = $rootScope.addScene(scene.start, scene.end)
                 $scope.main.editScene(index)
-                $scope.webview_opacity = 1
+                $scope.webview_blur = 0;
             } else {
-                $scope.webview_opacity = 0.2
+                $scope.webview_blur = 20;
                 // background: repeating-linear-gradient(45deg,gray,gray 10px,white 10px, white 20px )"
             }
         }
@@ -184,6 +184,7 @@ angular.module('streamCtrl', ['ngMaterial'])
         };
     }).filter('tags', function() {
         return function(input) {
+            input = input || []
             return input.join(", ")
         };
     }).config(function($sceDelegateProvider) {
