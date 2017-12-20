@@ -7,6 +7,11 @@
   "main": "main.js",
   "author": "Liberty Cinema",
   "license": "ISC",
+  "scripts": {
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "start": "electron ."
+  },
   "build": {
     "appId": "org.fcinema",
     "mac": {
@@ -19,6 +24,7 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.0.1",
     "angular-three-state-checkbox": "^1.1.0",
+    "electron": "1.4.15",
     "electron-widevinecdm": "^1.0.2",
     "express": "^4.14.0",
     "file-bytes": "^2.0.3",
@@ -30,10 +36,6 @@
     "sharp": "^0.18.4",
     "tmp": "0.0.29",
     "which": "^1.2.11"
-  },
-  "scripts": {
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
   },
   "postinstall": "install-app-deps"
 }
