@@ -49,12 +49,9 @@ angular.module('mainCtrl', ['ngMaterial'])
                 start: start,
                 end: end
             }
-            console.log( $rootScope.movieData.scenes )
             var scenes = angular.copy($rootScope.movieData.scenes);
             scenes.push(scene)
             $rootScope.movieData.scenes = scenes
-
-            console.log( $rootScope.movieData.scenes )
             return (scenes.length - 1)
         }
 
