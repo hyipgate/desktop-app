@@ -40,6 +40,33 @@ angular.module('mainCtrl', ['ngMaterial'])
             $rootScope.movieData = film
         }
 
+        $rootScope.addScene = function(start = -1, end = -1, tags = [], comment = "") {
+            console.log("[add scene] ",arguments)
+            var scene = {
+                id: random_id(),
+                tags: tags,
+                comment: comment,
+                start: start,
+                end: end
+            }
+            console.log( $rootScope.movieData.scenes )
+            var scenes = angular.copy($rootScope.movieData.scenes);
+            scenes.push(scene)
+            $rootScope.movieData.scenes = scenes
+
+            console.log( $rootScope.movieData.scenes )
+            return (scenes.length - 1)
+        }
+
+        function random_id() {
+            var text = ""
+            var possible = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
+            for (var i = 0; i < 10; i++) {
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+            };
+            return text;
+        }
+
         vm.getFile = function(event) {
             vm.processing = true;
             var file = event.target.files;

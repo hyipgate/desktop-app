@@ -59,7 +59,7 @@ angular.module('streamCtrl', ['ngMaterial'])
         $scope.markTime = function() {
             var scene = mark_current_time()
             if (scene) {
-                var index = service.addScene(scene.start, scene.end)
+                var index = $rootScope.addScene(scene.start, scene.end)
                 $scope.main.editScene(index)
                 $scope.webview_opacity = 1
             } else {
