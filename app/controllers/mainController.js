@@ -172,20 +172,62 @@ angular.module('mainCtrl', ['ngMaterial'])
                         $scope.closeDialog()
                     }
 
-                    $scope.shareEditedScene = function() {
-                        var scene = $rootScope.movieData.scenes[id]
-                        $rootScope.utils.share_scenes($rootScope.movieData).then(function(answer) {
-                            $rootScope.openToast(answer.data)
-                            scene.edited = false
-                        })
+                    $scope.shareEditedScene = function($event) {
+                        $mdDialog.hide()
+                        $rootScope.uploadContent(id,$event)
                     }
 
                     $scope.remove = function() {
                         $mdDialog.hide();
-                        $rootScope.movieData.scenes.splice(id, 1)
+                        console.log("[remove] deleting scene")
+                        var scenes = angular.copy($rootScope.movieData.scenes);
+                        scenes.splice(id, 1)
+                        $rootScope.movieData.scenes = scenes
                         $rootScope.utils.save_edition($rootScope.movieData)
                         pause(false)
                     }
+
+                }]
+            })
+        }
+
+
+
+        $rootScope.uploadContent = function( id,$event) {
+            pause(true)
+            $mdDialog.show({
+                targetEvent: $event,
+                templateUrl: 'views/scene-share-template.html',
+                locals: { id: id },
+                controller: ['$scope', 'id', function($scope, id, editScene) {
+                    //$scope.scene = service.getScenes()[ id ]
+                    $scope.tagStatus = $rootScope.movieData.tagStatus
+
+                    /*$scope.tagsSex = extractTags(tags, "Sex")
+                    $scope.tagsVio = extractTags(tags, "Violence")
+                    $scope.tagsOth = extractTags(tags, "Others")
+
+                    function extractTags(all_tags, type) {
+                        var filtered_tags = []
+                        for (var i = 0; i < all_tags.length; i++) {
+                            if (all_tags[i].type !== type) continue
+                            filtered_tags.push(all_tags[i].name);
+                        }
+                        return filtered_tags
+                    }*/
+
+                    $scope.share = function(id) {
+                        //var scene = $rootScope.movieData.scenes[id]
+                        $rootScope.utils.share_scenes($rootScope.movieData).then(function(answer) {
+                            $rootScope.openToast(answer.data)
+                            if ( answer.status == 500 ) return
+                            for (var i = 0; i < $rootScope.movieData.scenes.length; i++) {
+                                $rootScope.movieData.scenes[i].edited = false
+                            }
+                        })
+                    }
+                    
+                    
 
                 }]
             })

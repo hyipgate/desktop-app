@@ -9,7 +9,7 @@ angular.module('filmCtrl', ['ngMaterial'])
         /////////////////////////////////////////////////// 
         vm.getMovie = function() {
             vm.movieData = $rootScope.movieData //service.getSelectedFilm();
-            vm.scenes = vm.movieData.scenes//service.getScenes();
+            vm.scenes = vm.movieData.scenes //service.getScenes();
             vm.movieData.tags = []
 
             console.log(vm.movieData)
@@ -47,6 +47,21 @@ angular.module('filmCtrl', ['ngMaterial'])
                     }
                 }
             }
+
+            var tagStatus = $rootScope.movieData.tagStatus
+            var missingTags = []
+            for (var i = 0; i < $scope.settings.tags.length; i++) {
+                for (var j = 0; j < tagStatus.length; j++) {
+                    if (tagStatus[j].name == $scope.settings.tags[i].name) {
+                        if (!tagStatus[j].done && $scope.settings.tags[i].action !== true) {
+                            missingTags.push(tagStatus[j].name)
+                        }
+                        break
+                    }
+                }
+
+            }
+            $scope.missingTags = missingTags.join(", ")
         }
 
         vm.getMovie();
@@ -61,15 +76,15 @@ angular.module('filmCtrl', ['ngMaterial'])
 
             function BottonSheetDialogController($scope, settings, scenes, $mdDialog) {
                 var vm = this
-                vm.movieData = $rootScope.movieData// service.getSelectedFilm();
+                vm.movieData = $rootScope.movieData // service.getSelectedFilm();
 
                 vm.getProviders = function(lan) {
                     var playable = [];
                     if (vm.movieData.providers[lan]) {
-                        var providers = vm.movieData.providers[lan] 
+                        var providers = vm.movieData.providers[lan]
                         for (var i = 0; i < providers.length; i++) {
-                            if ( providers[i].name === "movistar-plus" || providers[i].name === "apple-itunes") continue
-                            playable.push( providers[i] )
+                            if (providers[i].name === "movistar-plus" || providers[i].name === "apple-itunes") continue
+                            playable.push(providers[i])
                         }
                     }
                     playable.push({ name: "File/DVD", url: "file", icon: 'file.svg' })

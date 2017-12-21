@@ -12,7 +12,7 @@
                                 <i>({{ scene.start | seconds:scene.end }})</i></h3>
                             <p>{{ scene.comment }}</p>
                         </div>
-                        <md-icon class="md-secondary" ng-show="scene.edited" ng-click="shareScene($index,$event)" aria-label="Share" md-svg-icon="./assets/img/upload.svg"></md-icon>
+                        <md-icon class="md-secondary" ng-show="scene.edited" ng-click="uploadContent($index,$event)" aria-label="Share" md-svg-icon="./assets/img/upload.svg"></md-icon>
                         <md-icon class="md-secondary" ng-click="previewScene($index,$event)" aria-label="Preview" md-svg-icon="./assets/img/preview.svg"></md-icon>
                         <md-icon class="md-secondary" ng-click="closeAndEditScene($index, $event)" aria-label="Edit" md-svg-icon="./assets/img/edit.svg"></md-icon>
                     </md-list-item>

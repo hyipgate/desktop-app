@@ -20,6 +20,7 @@
                 <p class="md-body-1">{{film.movieData.metadata.plot}}</p>
             </div>
             <div style="overflow-y: auto; overflow-x: hidden;">
+                <p class="md-body-2">This movie might content untagged scenes of {{missingTags}}</p>
                 <md-list class="md-dense">
                     <md-list-item class="md-2-line" ng-repeat="scene in film.scenes | filter: {list: 'true' }">
                         <md-checkbox ng-model="scene.skip"></md-checkbox>

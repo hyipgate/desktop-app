@@ -123,14 +123,6 @@ angular.module('streamCtrl', ['ngMaterial'])
                     editScene($index)
                 }
 
-                $scope.shareScene = function($index, $event) {
-                    var scene = $rootScope.movieData.scenes[$index]
-                    $rootScope.utils.share_scenes($rootScope.movieData).then(function(answer) {
-                        $rootScope.openToast(answer.data)
-                        scene.edited = false
-                    })
-                }
-
                 $scope.previewScene = function($index, $event) {
                     var scene = $rootScope.movieData.scenes[$index]
                     skip.preview(scene.start, scene.end, "menu")

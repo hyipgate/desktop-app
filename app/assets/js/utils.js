@@ -32,9 +32,7 @@ function search_film(file, title, url, imdbid) {
         return call_online_api({ action: "search", imdb_code: imdbid }).then(function(film) {
             if (film["status"] == 200) {
                 set_local_data(imdbid, film["data"])
-                film = merge_local_tags(film);
-                console.log("merged local data ", film)
-                return film;
+                return merge_local_tags(film);
             }
             // In case of network error... check if we got a local copy
             film = get_local_data(imdbid)
@@ -163,6 +161,7 @@ function share_scenes(film) {
     var filtered_film = {
         id: film.id,
         scenes: clean_scenes(film.scenes),
+        tagStatus: film.tagStatus,
         syncRef: film.syncRef
     }
 
@@ -205,6 +204,7 @@ function save_sync_ref(imdbid, sync_data5234) {
 function merge_local_tags(film) {
     trace("merge_local_tags", arguments)
     if (film.status == 400 || !film.data["id"] || !film.data["id"]["imdb"]) return film
+
     var imdbid = film.data["id"]["imdb"]
 
     var scenes = get_local_data(imdbid + "_mytags")
@@ -227,6 +227,15 @@ function merge_local_tags(film) {
         if (syncRef) film.data.syncRef = syncRef
     }
 
+
+    if (!film.data.tagStatus) {
+        var tags = get_settings().tags;
+        var tagStatus = []
+        for (var i = 0; i < tags.length; i++) {
+            tagStatus[i] = { name: tags[i].name, done: false }
+        }
+        film.data.tagStatus = tagStatus
+    }
 
     return film;
 }
