@@ -1,11 +1,11 @@
-const electron = require('electron')
+const {app, autoUpdater, dialog, electron} = require('electron')
 // Module to control application life.
-const app = electron.app
-const ipcMain = electron.ipcMain
+const app = electron.app;
+const autoUpdater = electron.autoUpdater;
+const dialog = electron.dialog;
+const ipcMain = electron.ipcMain;
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
-
-const {app, autoUpdater, dialog} = require('electron');
 
 const appVersion = require('./package.json').version;
 const os = require('os').platform();
