@@ -1,15 +1,15 @@
 {
   "name": "liberty-cinema",
   "productName": "Liberty Cinema",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Decide what you watch. Unleash your personality",
   "homepage": "https://wwww.fcinema.org",
   "main": "main.js",
   "author": "Liberty Cinema",
   "license": "ISC",
   "scripts": {
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder",
+    "build-mac": "electron-packager . fCinema --ignore=node_modules/electron-* && cp icon.icns fCinema-darwin-x64/fCinema.app/Contents/Resources/electron.icns",
+    "build-win": "electron-packager . fCinema --ignore=node_modules/electron-* --platform=win32 --arch=ia32",
     "start": "electron ."
   },
   "build": {
@@ -25,6 +25,8 @@
     "@ffmpeg-installer/ffmpeg": "^1.0.1",
     "angular-three-state-checkbox": "^1.1.0",
     "electron": "1.4.15",
+    "electron-is-dev": "^0.3.0",
+    "electron-packager": "^10.1.0",
     "electron-widevinecdm": "^1.0.2",
     "express": "^4.14.0",
     "file-bytes": "^2.0.3",

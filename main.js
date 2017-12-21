@@ -5,10 +5,44 @@ const ipcMain = electron.ipcMain
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 
+const {app, autoUpdater, dialog} = require('electron');
+
+const appVersion = require('./package.json').version;
+const os = require('os').platform();
+
+const isDev = require('electron-is-dev');
+
 
 const widevine = require('electron-widevinecdm');
 widevine.load(app);
 
+if (!isDev) {
+    const server = 'https://hazel-server-omngoodbmi.now.sh'
+    const feed = `${server}/update/${process.platform}/${app.getVersion()}`
+    autoUpdater.setFeedURL(feed)
+    setInterval(() => {
+      autoUpdater.checkForUpdates()
+    }, 60000)
+}
+
+autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
+  const dialogOpts = {
+    type: 'info',
+    buttons: ['Restart', 'Later'],
+    title: 'Application Update',
+    message: process.platform === 'win32' ? releaseNotes : releaseName,
+    detail: 'A new version has been downloaded. Restart the application to apply the updates.'
+  }
+
+  dialog.showMessageBox(dialogOpts, (response) => {
+    if (response === 0) autoUpdater.quitAndInstall()
+  })
+})
+
+autoUpdater.on('error', message => {
+  console.error('There was a problem updating the application')
+  console.error(message)
+})
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -33,8 +67,10 @@ function createWindow() {
     // and load the index.html of the app.
     mainWindow.loadURL('file://' + __dirname + '/app/index.html')
 
-    // Open the DevTools.
-    mainWindow.webContents.openDevTools({ detach: true })
+    // Open the DevTools in development version
+    if (isDev) {
+        mainWindow.webContents.openDevTools({ detach: true });
+    }
 
     // Emitted when the window is closed.
     mainWindow.on('closed', function() {
