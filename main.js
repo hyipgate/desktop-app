@@ -1,4 +1,4 @@
-const {app, autoUpdater, dialog, electron} = require('electron')
+const electron = require('electron')
 // Module to control application life.
 const app = electron.app;
 const autoUpdater = electron.autoUpdater;
