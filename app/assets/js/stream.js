@@ -207,7 +207,7 @@ var skip = {
         console.log("Starting preview of: ", start, "->", end)
         skip.load_list([{ start: start, end: end }]);
         var u_start = sync.to_users_time(1000 * start)
-        wc.send('seek-time', u_start / 1000 - 3)
+        wc.send('seek-time', u_start / 1000 - 2.5)
         wc.send('pause', false)
     },
 

@@ -44,7 +44,7 @@ angular.module('streamCtrl', ['ngMaterial'])
 
             if (skip.openPreview) editScene($index)
         }
-        var interval_id = setInterval(check, 2500);
+        var interval_id = setInterval(check, 1000);
 
 
 
@@ -125,8 +125,8 @@ angular.module('streamCtrl', ['ngMaterial'])
 
                 $scope.previewScene = function($index, $event) {
                     var scene = $rootScope.movieData.scenes[$index]
-                    skip.preview(scene.start, scene.end, "menu")
-                    setTimeout(function() { sceneList() }, 5000);
+                    skip.preview(scene.start, scene.end )
+                    setTimeout(function() { sceneList() }, 4000);
                     $mdDialog.hide()
                 }
 

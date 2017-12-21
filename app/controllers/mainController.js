@@ -168,7 +168,7 @@ angular.module('mainCtrl', ['ngMaterial'])
 
                     $scope.preview = function() {
                         skip.preview($scope.scene.start, $scope.scene.end)
-                        setTimeout(function() { editScene(id) }, 5000);
+                        setTimeout(function() { editScene(id) }, 4000);
                         $scope.closeDialog()
                     }
 

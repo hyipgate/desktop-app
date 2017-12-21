@@ -6,7 +6,7 @@
             <div flex>
                 <img ng-src="{{film.movieData.images.posters[0]}}" alt="Film Poster" height="450px">
                 <div layout="row" layout-align="center center">
-                    <md-button class="md-raised" ng-click="film.share()" style="display:{{settings.editors_view? 'block' : 'none'}}">Share</md-button>
+                    <md-button class="md-raised" ng-click="film.share()" style="display:{{share_button? 'block' : 'none'}}">Share</md-button>
                     <md-button class="md-primary md-raised" ng-click="showListBottomSheet(false)">Play</md-button>
                 </div>
             </div>
@@ -20,7 +20,6 @@
                 <p class="md-body-1">{{film.movieData.metadata.plot}}</p>
             </div>
             <div style="overflow-y: auto; overflow-x: hidden;">
-                <p class="md-body-2">This movie might content untagged scenes of {{missingTags}}</p>
                 <md-list class="md-dense">
                     <md-list-item class="md-2-line" ng-repeat="scene in film.scenes | filter: {list: 'true' }">
                         <md-checkbox ng-model="scene.skip"></md-checkbox>
@@ -31,6 +30,7 @@
                         <!-- at minute {{ scene.start | minutes }}<md-chips ng-model="scene.tags" readonly="true"></md-chips>-->
                     </md-list-item>
                 </md-list>
+                <p style="color: #b11;" class="md-caption"><b>{{missingTags}}</b></p>
             </div>
         </div>
         <div flex=10></div>

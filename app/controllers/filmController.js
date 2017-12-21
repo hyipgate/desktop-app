@@ -61,7 +61,24 @@ angular.module('filmCtrl', ['ngMaterial'])
                 }
 
             }
-            $scope.missingTags = missingTags.join(", ")
+            if (missingTags.length == 0) {
+                $scope.missingTags = ""
+            } else if (missingTags.length < 6) {
+                $scope.missingTags = "This movie might content untagged scenes of " + missingTags.join(", ")
+            } else {
+                $scope.missingTags = "This movie might content untagged scenes of varios types."
+            }
+
+
+
+            $scope.share_button = false
+            for (var i = 0; i < vm.scenes.length; i++) {
+                if (vm.scenes[i].edited) {
+                    $scope.share_button = true
+                    break
+                }
+            }
+
         }
 
         vm.getMovie();
