@@ -50,13 +50,13 @@
                 <md-input-container flex style="width: 100%">
                     <md-select ng-model="selectedTags" multiple>
                         <md-optgroup label="Sex">
-                            <md-option ng-value="tag" ng-repeat="tag in tagsSex |filter:searchTerm" aria-label="Select Tags">{{tag}}</md-option>
+                            <md-option ng-value="tag" ng-repeat="tag in tagsSex" aria-label="Select Tags">{{tag}}</md-option>
                         </md-optgroup>
                         <md-optgroup label="Violence">
-                            <md-option ng-value="tag" ng-repeat="tag in tagsVio |filter:searchTerm" aria-label="Select Tags">{{tag}}</md-option>
+                            <md-option ng-value="tag" ng-repeat="tag in tagsVio" aria-label="Select Tags">{{tag}}</md-option>
                         </md-optgroup>
                         <md-optgroup label="Others">
-                            <md-option ng-value="tag" ng-repeat="tag in tagsOth |filter:searchTerm" aria-label="Select Tags">{{tag}}</md-option>
+                            <md-option ng-value="tag" ng-repeat="tag in tagsOth" aria-label="Select Tags">{{tag}}</md-option>
                         </md-optgroup>
                     </md-select>
                 </md-input-container>
@@ -73,24 +73,35 @@
     </div>
     <div ng-show="menu==2">
         <md-dialog-content>
-            <md-content layout="row" layout-padding>
-                <div style="width: 100%">
-                    <h3>Are all scenes tagged?</h3>
-                    <md-list class="md-dense" flex>
-                        <md-list-item class="md-2-line" ng-repeat="tag in tagStatus">
-                            <div class="md-list-item-text" layout="column">
-                                <b>{{ tag.name }}</b>
-                            </div>
-                            <md-checkbox ng-model="tag.done"></md-checkbox>
-                        </md-list-item>
-                    </md-list>
-                </div>
+            <md-content layout="row" class="md-padding">
+                <md-list class="md-dense" layout="column" flex=33>
+                    <h4>Tagged Sex</h4>
+                    <md-list-item ng-repeat="tag in tagStatus | filter: { type: 'Sex' }">
+                        <md-checkbox aria-label="tagStatus" ng-model="tag.done"></md-checkbox>
+                        <b class="md-list-item-text">{{ tag.name }}</b>
+                    </md-list-item>
+                </md-list>
+                <md-list class="md-dense" layout="column" flex=33>
+                    <h4>Tagged Violence</h4>
+                    <md-list-item ng-repeat="tag in tagStatus | filter: { type: 'Violence' }">
+                        <md-checkbox aria-label="tagStatus" ng-model="tag.done"></md-checkbox>
+                        <b class="md-list-item-text">{{ tag.name }}</b>
+                    </md-list-item>
+                </md-list>
+                <md-list class="md-dense" layout="column" flex=33>
+                    <h4>Tagged Others</h4>
+                    <md-list-item ng-repeat="tag in tagStatus | filter: { type: 'Others' }">
+                        <md-checkbox aria-label="tagStatus" ng-model="tag.done"></md-checkbox>
+                        <b class="md-list-item-text">{{ tag.name }}</b>
+                    </md-list-item>
+                </md-list>
             </md-content>
         </md-dialog-content>
         <md-dialog-actions>
-            <md-button ng-click="hideDialog()">Close</md-button>
+            <md-button aria-label="Close" ng-click="hideDialog()">Close</md-button>
             <span style="flex: 1 1 auto"></span>
-            <md-button ng-click="uploadScenes()">Share</md-button>
+            <md-button aria-label="logIn" ng-click="logIn($event)">Log In</md-button>
+            <md-button aria-label="uploadScenes" ng-click="uploadScenes()" class="md-primary">Share</md-button>
         </md-dialog-actions>
     </div>
 </md-dialog>

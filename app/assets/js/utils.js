@@ -232,7 +232,7 @@ function merge_local_tags(film) {
         var tags = get_settings().tags;
         var tagStatus = []
         for (var i = 0; i < tags.length; i++) {
-            tagStatus[i] = { name: tags[i].name, done: false }
+            tagStatus[i] = { name: tags[i].name, done: false, type: tags[i].type  }
         }
         film.data.tagStatus = tagStatus
     }
@@ -312,40 +312,29 @@ var defaul_settings = {
     username: "",
     editors_view: false,
     tags: [
-        { 'action': null, 'list': true, 'type': 'Sex', 'name': 'rape' },
-        { 'action': null, 'type': 'Sex', 'name': 'pornographic magazine' },
-        { 'action': null, 'type': 'Sex', 'name': 'art nudity' },
-        { 'action': null, 'type': 'Sex', 'name': 'topless male' },
-        { 'action': null, 'type': 'Sex', 'name': 'topless female' },
-        { 'action': null, 'type': 'Sex', 'name': 'full nudity male' },
-        { 'action': null, 'type': 'Sex', 'name': 'full nudity female' },
+        { 'action': null, 'type': 'Sex', 'name': 'rape' },
+        { 'action': null, 'type': 'Sex', 'name': 'topless' },
+        { 'action': null, 'type': 'Sex', 'name': 'full nudity' },
         { 'action': null, 'type': 'Sex', 'name': 'explicit sex' },
-        { 'action': null, 'type': 'Sex', 'name': 'implied sex' },
-        { 'action': null, 'type': 'Sex', 'name': 'kissing peck' },
-        { 'action': null, 'type': 'Sex', 'name': 'kissing passionate' },
-        { 'action': null, 'type': 'Sex', 'name': 'sexually charged scene' },
+        { 'action': null, 'type': 'Sex', 'name': 'implicit sex' },
+        { 'action': null, 'type': 'Sex', 'name': 'kissing' },
+        { 'action': null, 'type': 'Sex', 'name': 'sensual scene' },
 
-        { 'action': null, 'type': 'Violence', 'name': 'punching' },
         { 'action': null, 'type': 'Violence', 'name': 'torture' },
-        { 'action': null, 'type': 'Violence', 'name': 'violent accident' },
-        { 'action': null, 'type': 'Violence', 'name': 'open wounds' },
+        { 'action': null, 'type': 'Violence', 'name': 'accident' },
         { 'action': null, 'type': 'Violence', 'name': 'killing' },
         { 'action': null, 'type': 'Violence', 'name': 'hand gesture' },
         { 'action': null, 'type': 'Violence', 'name': 'explosion' },
         { 'action': null, 'type': 'Violence', 'name': 'battle' },
-        { 'action': null, 'type': 'Violence', 'name': 'agony' },
-        { 'action': null, 'type': 'Violence', 'name': 'dead body' },
-        { 'action': null, 'type': 'Violence', 'name': 'bulliying' },
+        { 'action': null, 'type': 'Violence', 'name': 'corpse' },
 
-        { 'action': null, 'type': 'Others', 'name': 'initial/closing credings' },
-        { 'action': null, 'type': 'Others', 'name': 'euphemized profanities' },
+        { 'action': null, 'type': 'Others', 'name': 'credits' },
+        { 'action': null, 'type': 'Others', 'name': 'profanities' },
         { 'action': null, 'type': 'Others', 'name': 'deity improper use' },
         { 'action': null, 'type': 'Others', 'name': 'deity insult' },
-        { 'action': null, 'type': 'Others', 'name': 'alcohol' },
-        { 'action': null, 'type': 'Others', 'name': 'smoking' },
-        { 'action': null, 'type': 'Others', 'name': 'smoking illegal drug' },
-        { 'action': null, 'type': 'Others', 'name': 'drug injection' },
-        { 'action': null, 'type': 'Others', 'name': 'frightening/startling scene/event' },
+        { 'action': null, 'type': 'Others', 'name': 'alcohol/tobacco' },
+        { 'action': null, 'type': 'Others', 'name': 'ilegal drug' },
+        { 'action': null, 'type': 'Others', 'name': 'frightening scene' },
     ]
 }
 
