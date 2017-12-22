@@ -66,7 +66,7 @@ angular.module('filmCtrl', ['ngMaterial'])
             } else if (missingTags.length < 6) {
                 $scope.missingTags = "This movie might content untagged scenes of " + missingTags.join(", ")
             } else {
-                $scope.missingTags = "This movie might content untagged scenes of varios types."
+                $scope.missingTags = "This movie is not fully edited yet and might content unwanted scenes."
             }
 
 

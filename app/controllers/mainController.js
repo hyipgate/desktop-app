@@ -47,6 +47,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                 tags: tags,
                 comment: comment,
                 start: start,
+                edited: true,
                 end: end
             }
             var scenes = angular.copy($rootScope.movieData.scenes);
