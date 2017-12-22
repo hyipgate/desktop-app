@@ -10,7 +10,6 @@ angular.module('streamCtrl', ['ngMaterial'])
         //-------- Control buttons over player ----------//
         ///////////////////////////////////////////////////
 
-        vm.isDumpable = ((vm.src).indexOf("file:///") == 0) ? "block" : "none";
         console.log(vm.src, vm.isDumpable)
 
         vm.show_menu = "none"
@@ -41,8 +40,6 @@ angular.module('streamCtrl', ['ngMaterial'])
                 vm.health_color = "rgba(200, 200, 200, 0.6)"
                 $rootScope.$apply();
             }
-
-            if (skip.openPreview) editScene($index)
         }
         var interval_id = setInterval(check, 1000);
 
@@ -56,15 +53,14 @@ angular.module('streamCtrl', ['ngMaterial'])
             if (key == 110) $scope.$apply($scope.markTime())
         }
 
-        $scope.markTime = function() {
+        $scope.markTime = function($event) {
             var scene = mark_current_time()
             if (scene) {
                 var index = $rootScope.addScene(scene.start, scene.end)
-                $scope.main.editScene(index)
+                $rootScope.editScene($event,"edit",index)
                 $scope.webview_blur = 0;
             } else {
                 $scope.webview_blur = 20;
-                // background: repeating-linear-gradient(45deg,gray,gray 10px,white 10px, white 20px )"
             }
         }
 
@@ -89,73 +85,6 @@ angular.module('streamCtrl', ['ngMaterial'])
             // Go back to film view
             $location.path('/film');
         }
-
-
-
-
-
-
-        ///////////////////////////////////////////////////
-        //-------------- Show Scene List Dialog ---------//
-        ///////////////////////////////////////////////////
-        $scope.sceneList = function($event) {
-            pause(true)
-            $mdDialog.show({
-                targetEvent: $event,
-                locals: {
-                    editScene: $scope.main.editScene,
-                    isDumpable: vm.isDumpable,
-                    sceneList: $scope.sceneList,
-                },
-                templateUrl: 'views/scene-list-template.html',
-                controller: sceneListController
-            })
-
-            function sceneListController($scope, $mdDialog, editScene, isDumpable, sceneList) {
-
-                $scope.isDumpable = isDumpable
-                $scope.scenes = $rootScope.movieData.scenes
-                console.log($scope.scenes)
-                console.log(isDumpable)
-
-                $scope.closeAndEditScene = function($index, $event) {
-                    $mdDialog.hide()
-                    editScene($index)
-                }
-
-                $scope.previewScene = function($index, $event) {
-                    var scene = $rootScope.movieData.scenes[$index]
-                    skip.preview(scene.start, scene.end )
-                    setTimeout(function() { sceneList() }, 4000);
-                    $mdDialog.hide()
-                }
-
-                $scope.dumpToFile = function() {
-                    var file = $rootScope.electron.remote.require('./app/assets/js/file');
-                    $mdDialog.hide()
-                    const { dialog } = require('electron').remote;
-                    dialog.showSaveDialog((output) => {
-                        var scenes = $rootScope.movieData.scenes
-                        var skip_list = []
-                        for (var i = 0; i < scenes.length; i++) {
-                            var scene = scenes[i]
-                            if (scene.skip) skip_list.push({ start: scene.start - 0.08, end: scene.end + 0.08 })
-                        }
-                        var input = $rootScope.file
-
-                        console.log("[dumpToFile] ", input, skip_list, output)
-
-                        file.dumpToFile(input, skip_list, output)
-
-                        $rootScope.openToast("Creating file on the background")
-                    })
-
-                }
-            }
-        }
-
-        $rootScope.showSceneList = $scope.sceneList
-
 
         // Some filters
     }).filter('minutes', function() {
