@@ -188,7 +188,10 @@ angular.module('mainCtrl', ['ngMaterial'])
 
                     $scope.openEditDialog = function(index, $event) {
                         $scope.scene = $rootScope.movieData.scenes[index]
-                        $scope.selectedTags = $scope.scene.tags;
+                        $scope.startTime = new Date($scope.scene.start * 1000)
+                        $scope.endTime = new Date($scope.scene.end * 1000)
+                        $scope.selectedTags = angular.copy($scope.scene.tags);
+                        $scope.comment = angular.copy($scope.scene.comment);
                         $scope.id = index
                         $scope.menu = 1
                     }
@@ -228,7 +231,12 @@ angular.module('mainCtrl', ['ngMaterial'])
                     }
 
                     $scope.saveEdition = function() {
+                        if ($scope.selectedTags.length == 0 ) return $rootScope.openToast("Need at least one tag")
+                        if ($scope.comment.length < 5 ) return $rootScope.openToast("Need a brief comment")
                         $scope.scene.tags = $scope.selectedTags
+                        $scope.scene.start = $scope.startTime.getTime()/1000
+                        $scope.scene.end = $scope.endTime.getTime()/1000
+                        $scope.scene.comment = $scope.comment
                         $scope.scene.edited = true
                         $scope.scene.diffTag = $rootScope.utils.get_diff_tag($scope.scene, $rootScope.movieData.online_scenes)
                         $rootScope.utils.save_edition($rootScope.movieData)
@@ -239,6 +247,14 @@ angular.module('mainCtrl', ['ngMaterial'])
                         var scene = $rootScope.movieData.scenes[index]
                         skip.preview(scene.start, scene.end)
                         setTimeout(function() { $rootScope.editScene($event, menu, index) }, 4000);
+                        $scope.hideDialog()
+                    }
+
+                    $scope.previewCurrent = function ($event) {
+                        var start = $scope.startTime.getTime()/1000
+                        var end = $scope.endTime.getTime()/1000
+                        skip.preview(start, end)
+                        setTimeout(function() { $rootScope.editScene($event, "edit", id) }, 4000);
                         $scope.hideDialog()
                     }
 
@@ -265,6 +281,50 @@ angular.module('mainCtrl', ['ngMaterial'])
                         $rootScope.utils.save_edition($rootScope.movieData)
                         $scope.openListDialog()
                     }
+
+                    $scope.timeChanged = function(what) {
+                        if (what == "start") {
+                            var date = $scope.startTime
+                            var lastTime = lastStart
+                        } else {
+                            var date = $scope.endTime
+                            var lastTime = lastEnd
+                        }
+                        var time = [date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds()]
+                        console.log(time)
+                        var max = [6, 59, 59, 960]
+                        for (var i = time.length - 2; i >= 0; i--) {
+                            console.log(lastTime[i + 1], max[i + 1], time[i + 1])
+                            if (lastTime[i + 1] >= max[i + 1] && time[i + 1] == 0) {
+                                time[i] = time[i] + 1
+                                if (time[i] > max[i]) time[i] = 0
+                            } else if (lastTime[i + 1] == 0 && time[i + 1] >= max[i + 1]) {
+                                time[i] = time[i] - 1
+                                if (time[i] < 0) time[i] = max[i]
+                            }
+                        }
+                        if (time[0] > 5) time[0] = 5
+                        var ms = time[3] + 1000 * (time[2] + 60 * (time[1] + 60 * time[0]))
+                        console.log(time)
+                        var new_date = new Date(ms);
+                        if (what == "start") {
+                            lastStart = time
+                            if (date != new_date) $scope.startTime = new_date
+                        } else {
+                            lastEnd = time
+                            if (date != new_date) $scope.endTime = new_date
+                        }
+                        go_to_frame( ms / 1000 )
+                    }
+
+                    function pad(n, width, z) {
+                        z = z || '0';
+                        n = n + '';
+                        return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+                    }
+
+                    var lastStart = [5, 5, 5, 5]
+                    var lastEnd = [5, 5, 5, 5]
 
                     $scope.dumpToFile = function() {
                         var file = $rootScope.electron.remote.require('./app/assets/js/file');

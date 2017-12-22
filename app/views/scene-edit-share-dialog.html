@@ -33,15 +33,15 @@
             <md-content layout="row" layout-padding>
                 <md-input-container flex="17">
                     <label>Start</label>
-                    <input type="number" step=".04" ng-model="scene.start" placeholder="second" onchange="go_to_frame( this.value )" />
+                    <input type="time" step=".04" placeholder="second" ng-model="startTime" ng-change="timeChanged('start')" required/>
                 </md-input-container>
                 <md-input-container flex="17">
                     <label>End</label>
-                    <input type="number" step=".04" ng-model="scene.end" placeholder="second" onchange="go_to_frame( this.value )" />
+                    <input type="time" step=".04" placeholder="second" ng-model="endTime" ng-change="timeChanged('end')" required/>
                 </md-input-container>
                 <md-input-container flex="66">
                     <label>Comment</label>
-                    <input type="text" ng-model="scene.comment" placeholder="Short comment" />
+                    <input type="text" ng-model="comment" placeholder="Short comment" />
                     <br>
                 </md-input-container>
             </md-content>
@@ -49,13 +49,13 @@
                 <label>Tags</label>
                 <md-input-container flex style="width: 100%">
                     <md-select ng-model="selectedTags" multiple>
-                        <md-optgroup label="Sex">
+                        <md-optgroup label="Sex" style="width: 33%; float: left;">
                             <md-option ng-value="tag" ng-repeat="tag in tagsSex" aria-label="Select Tags">{{tag}}</md-option>
                         </md-optgroup>
-                        <md-optgroup label="Violence">
+                        <md-optgroup label="Violence" style="width: 33%; float: left;">
                             <md-option ng-value="tag" ng-repeat="tag in tagsVio" aria-label="Select Tags">{{tag}}</md-option>
                         </md-optgroup>
-                        <md-optgroup label="Others">
+                        <md-optgroup label="Others" style="width: 33%; float: left;">
                             <md-option ng-value="tag" ng-repeat="tag in tagsOth" aria-label="Select Tags">{{tag}}</md-option>
                         </md-optgroup>
                     </md-select>
@@ -63,12 +63,12 @@
             </md-content>
         </md-dialog-content>
         <md-dialog-actions>
-            <md-button ng-click="openListDialog()">Back</md-button>
+            <md-button ng-click="openListDialog()">Cancel</md-button>
             <span style="flex: 1 1 auto"></span>
             <md-button ng-click="removeScene()">Delete</md-button>
             <md-button ng-click="openShareDialog()">Share</md-button>
-            <md-button ng-click="previewScene($event,'edit',id)">Preview</md-button>
-            <md-button ng-click="closeDialog()" class="md-primary">Save</md-button>
+            <md-button ng-click="previewCurrent($event)">Preview</md-button>
+            <md-button ng-click="saveEdition()" class="md-primary">Save</md-button>
         </md-dialog-actions>
     </div>
     <div ng-show="menu==2">

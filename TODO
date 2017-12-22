@@ -1,0 +1,50 @@
+TODO
+====
+
+Will do
+*******
++ config, do not force country
++ film, untagged scenes show tooltip if too many
++ film, explain what checking the box means (skiping or watching?)
++ stream, scene list on scene edit should be dark style
++ stream, allow login in from scene share
++ stream, allow sharing only some of the scenes
++ stream, change the "you do not have permissions"
++ stream, on currentScene preview, reload with the same data
+
+
+
+Seem hard
+*********
++ config, three-phase-checkbox, toggle when text clicked
++ stream, on preview, do not override current skip list (need to perform sync, as time offset might be different, use store list...)
+
+
+Done
+****
+//+ search, add thumbails
+//+ film, untagged scenes (make smaller)
+//+ film, untagged scenes (say multiple)
+//+ film, share button only when share is available (not when editors mode)
+//+ film, too many items on list, make it more compact
+//+ film, hide editors control on imdb/kids in mind screen, disable dot...
+//+ stream, try load webview a bit faster
+//+ stream, preview a bit shorter (maybe)
+//+ stream, close button on scene list (top right)
+//+ stream, disable transitions between dialogs
+//+ stream, missing tags on two columns
+//+ stream, new scenes should be created as "edited"
+//+ stream, that green is awful
+//+ stream, times should be on time format :)
+//+ stream, data is modified by default, allow cancel changes
+
+
+
+
+
+
+
+
+
+
+
