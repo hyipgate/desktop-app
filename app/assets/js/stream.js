@@ -185,7 +185,13 @@ var skip = {
     list: [],
     next_start: Infinity,
 
-    load_list: function(scenes) { // TODO: check this actually merge ovelaping scenes. Remove duplicates...
+    load_list: function(raw_scenes) { // TODO: check this actually merge ovelaping scenes. Remove duplicates...
+
+        var scenes = []
+        for (var i = 0; i < raw_scenes.length; i++) {
+            if (raw_scenes[i].skip) scenes.push(raw_scenes[i])
+        }
+
         for (var i = 0; i < scenes.length; i++) {
             for (var j = 0; j < scenes.length; j++) {
                 if (scenes[i].start < scenes[j].start && scenes[j].start < scenes[i].end) {
@@ -196,18 +202,18 @@ var skip = {
 
         skip.list = []
         for (var i = 0; i < scenes.length; i++) {
-            skip.list[i] = {}
-            skip.list[i].start = scenes[i].start * 1000
-            skip.list[i].end = scenes[i].end * 1000
-            skip.list[i].skip = scenes[i].skip
+            skip.list[i] = {
+                start: scenes[i].start * 1000,
+                end: scenes[i].end * 1000
+            }
         }
     },
 
     preview: function(start, end) {
         console.log("Starting preview of: ", start, "->", end)
-        skip.load_list([{ start: start, end: end }]);
+        skip.load_list([{ start: start, end: end, skip: true }]);
         var u_start = sync.to_users_time(1000 * start)
-        wc.send('seek-time', u_start / 1000 - 3)
+        wc.send('seek-time', u_start / 1000 - 2.5)
         wc.send('pause', false)
     },
 

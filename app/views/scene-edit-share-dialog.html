@@ -1,0 +1,107 @@
+<md-dialog layout="column" md-theme="darkTheme" style="width: 800px">
+    <div ng-show="menu==0">
+        <md-dialog-content>
+            <md-content layout="row" layout-padding>
+                <div style="width: 100%">
+                    <md-list class="md-dense" flex>
+                        <md-list-item class="md-2-line" ng-repeat="scene in scenes">
+                            <div class="md-list-item-text" layout="column">
+                                <h3>
+                                <b style="color:#393">{{ scene.diffTag.added | tags }}</b>
+                                <b style="color:#933">{{ scene.diffTag.removed | tags }}</b>
+                                <b>{{ scene.diffTag.same | tags }}</b>
+                                <i>({{ scene.start | seconds:scene.end }})</i></h3>
+                                <p>{{ scene.comment }}</p>
+                            </div>
+                            <md-icon class="md-secondary" ng-show="scene.edited" ng-click="openShareDialog()" aria-label="Share" md-svg-icon="./assets/img/upload.svg"></md-icon>
+                            <md-icon class="md-secondary" ng-click="previewScene($event,'list',$index)" aria-label="Preview" md-svg-icon="./assets/img/preview.svg"></md-icon>
+                            <md-icon class="md-secondary" ng-click="openEditDialog($index)" aria-label="Edit" md-svg-icon="./assets/img/edit.svg"></md-icon>
+                        </md-list-item>
+                    </md-list>
+                </div>
+            </md-content>
+        </md-dialog-content>
+        <md-dialog-actions>
+            <md-button ng-click="hideDialog()">Close</md-button>
+            <span style="flex: 1 1 auto"></span>
+            <md-button ng-click="dumpToFile()" ng-show="isDumpable">Dump to file</md-button>
+            <md-button ng-click="openShareDialog()">Share</md-button>
+        </md-dialog-actions>
+    </div>
+    <div ng-show="menu==1">
+        <md-dialog-content>
+            <md-content layout="row" layout-padding>
+                <md-input-container flex="17">
+                    <label>Start</label>
+                    <input type="time" step=".04" placeholder="second" ng-model="startTime" ng-change="timeChanged('start')" required/>
+                </md-input-container>
+                <md-input-container flex="17">
+                    <label>End</label>
+                    <input type="time" step=".04" placeholder="second" ng-model="endTime" ng-change="timeChanged('end')" required/>
+                </md-input-container>
+                <md-input-container flex="66">
+                    <label>Comment</label>
+                    <input type="text" ng-model="comment" placeholder="Short comment" />
+                    <br>
+                </md-input-container>
+            </md-content>
+            <md-content style="margin-top: -50px" layout="row" layout-padding>
+                <label>Tags</label>
+                <md-input-container flex style="width: 100%">
+                    <md-select ng-model="selectedTags" multiple>
+                        <md-optgroup label="Sex" style="width: 33%; float: left;">
+                            <md-option ng-value="tag" ng-repeat="tag in tagsSex" aria-label="Select Tags">{{tag}}</md-option>
+                        </md-optgroup>
+                        <md-optgroup label="Violence" style="width: 33%; float: left;">
+                            <md-option ng-value="tag" ng-repeat="tag in tagsVio" aria-label="Select Tags">{{tag}}</md-option>
+                        </md-optgroup>
+                        <md-optgroup label="Others" style="width: 33%; float: left;">
+                            <md-option ng-value="tag" ng-repeat="tag in tagsOth" aria-label="Select Tags">{{tag}}</md-option>
+                        </md-optgroup>
+                    </md-select>
+                </md-input-container>
+            </md-content>
+        </md-dialog-content>
+        <md-dialog-actions>
+            <md-button ng-click="openListDialog()">Cancel</md-button>
+            <span style="flex: 1 1 auto"></span>
+            <md-button ng-click="removeScene()">Delete</md-button>
+            <md-button ng-click="openShareDialog()">Share</md-button>
+            <md-button ng-click="previewCurrent($event)">Preview</md-button>
+            <md-button ng-click="saveEdition()" class="md-primary">Save</md-button>
+        </md-dialog-actions>
+    </div>
+    <div ng-show="menu==2">
+        <md-dialog-content>
+            <md-content layout="row" class="md-padding">
+                <md-list class="md-dense" layout="column" flex=33>
+                    <h4>Tagged Sex</h4>
+                    <md-list-item ng-repeat="tag in tagStatus | filter: { type: 'Sex' }">
+                        <md-checkbox aria-label="tagStatus" ng-model="tag.done"></md-checkbox>
+                        <b class="md-list-item-text">{{ tag.name }}</b>
+                    </md-list-item>
+                </md-list>
+                <md-list class="md-dense" layout="column" flex=33>
+                    <h4>Tagged Violence</h4>
+                    <md-list-item ng-repeat="tag in tagStatus | filter: { type: 'Violence' }">
+                        <md-checkbox aria-label="tagStatus" ng-model="tag.done"></md-checkbox>
+                        <b class="md-list-item-text">{{ tag.name }}</b>
+                    </md-list-item>
+                </md-list>
+                <md-list class="md-dense" layout="column" flex=33>
+                    <h4>Tagged Others</h4>
+                    <md-list-item ng-repeat="tag in tagStatus | filter: { type: 'Others' }">
+                        <md-checkbox aria-label="tagStatus" ng-model="tag.done"></md-checkbox>
+                        <b class="md-list-item-text">{{ tag.name }}</b>
+                    </md-list-item>
+                </md-list>
+            </md-content>
+        </md-dialog-content>
+        <md-dialog-actions>
+            <md-button aria-label="Close" ng-click="hideDialog()">Close</md-button>
+            <span style="flex: 1 1 auto"></span>
+            <md-button aria-label="logIn" ng-click="logIn($event)">Log In</md-button>
+            <md-button aria-label="uploadScenes" ng-click="uploadScenes()" class="md-primary">Share</md-button>
+        </md-dialog-actions>
+    </div>
+</md-dialog>
