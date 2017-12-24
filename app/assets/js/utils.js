@@ -203,9 +203,9 @@ function save_sync_ref(imdbid, sync_data5234) {
  */
 function merge_local_tags(film) {
     trace("merge_local_tags", arguments)
-    if (film.status == 400 || !film.data["id"] || !film.data["id"]["imdb"]) return film
+    if (film.status == 400 || !film.data["id"] || !film.data["id"]["tmdb"]) return film
 
-    var imdbid = film.data["id"]["imdb"]
+    var imdbid = film.data["id"]["tmdb"]
 
     var scenes = get_local_data(imdbid + "_mytags")
     if (!scenes) {
@@ -227,7 +227,6 @@ function merge_local_tags(film) {
         if (syncRef) film.data.syncRef = syncRef
     }
 
-
     if (!film.data.tagStatus) {
         var tags = get_settings().tags;
         var tagStatus = []
@@ -236,7 +235,6 @@ function merge_local_tags(film) {
         }
         film.data.tagStatus = tagStatus
     }
-
     return film;
 }
 

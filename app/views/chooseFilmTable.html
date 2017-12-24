@@ -12,7 +12,7 @@
     </section>
     <section flex class="movieList" style="margin-top: -10%">
         <md-list>
-            <md-list-item ng-repeat="movie in set.movieData.list" ng-click="set.selected(movie.id)">
+            <md-list-item ng-repeat="movie in set.movieData.list" ng-click="set.searchId(movie.id)">
                 <img style="width: 50px; margin-right: 16px" ng-src="{{ movie.poster }}"/>
                 <h4>{{ movie.title }} - {{ movie.year }}</h4>
                 <!--<div class="md-list-item-text" layout="column">
