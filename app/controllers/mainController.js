@@ -40,31 +40,6 @@ angular.module('mainCtrl', ['ngMaterial'])
             $rootScope.movieData = film
         }
 
-        $rootScope.addScene = function(start = -1, end = -1, tags = [], comment = "") {
-            console.log("[add scene] ", arguments)
-            var scene = {
-                id: random_id(),
-                tags: tags,
-                comment: comment,
-                start: start,
-                edited: true,
-                end: end
-            }
-            var scenes = angular.copy($rootScope.movieData.scenes);
-            scenes.push(scene)
-            $rootScope.movieData.scenes = scenes
-            return (scenes.length - 1)
-        }
-
-        function random_id() {
-            var text = ""
-            var possible = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
-            for (var i = 0; i < 10; i++) {
-                text += possible.charAt(Math.floor(Math.random() * possible.length));
-            };
-            return text;
-        }
-
         vm.getFile = function(event) {
             vm.processing = true;
             var file = event.target.files;
@@ -171,13 +146,16 @@ angular.module('mainCtrl', ['ngMaterial'])
             }
         }
 
-        $rootScope.editScene = function($event, open, id) {
+        $rootScope.editScene = function($event, open, previewed_scene) {
             pause(true)
             $mdDialog.show({
                 targetEvent: $event,
                 templateUrl: 'views/scene-edit-share-dialog.html',
-                locals: { id: id, open: open },
-                controller: ['$scope', 'id', 'open', function($scope, id, open) {
+                onRemoving: function(event) {
+                    pause(false)
+                },
+                locals: { previewed_scene: previewed_scene, open: open },
+                controller: ['$scope', 'previewed_scene', 'open', function($scope, previewed_scene, open) {
 
 
                     $scope.openListDialog = function(argument) {
@@ -186,14 +164,29 @@ angular.module('mainCtrl', ['ngMaterial'])
                         $scope.menu = 0
                     }
 
-                    $scope.openEditDialog = function(index, $event) {
-                        $scope.scene = $rootScope.movieData.scenes[index]
-                        $scope.startTime = new Date($scope.scene.start * 1000)
-                        $scope.endTime = new Date($scope.scene.end * 1000)
-                        $scope.selectedTags = angular.copy($scope.scene.tags);
-                        $scope.comment = angular.copy($scope.scene.comment);
-                        $scope.id = index
+                    $scope.openEditDialog = function(index) {
+                        var data = $rootScope.movieData.scenes[index]
+                        loadEditInputs(data, index)
+                    }
+
+                    function loadEditInputs(data, index) {
+                        $scope.startTime = new Date(data.start * 1000)
+                        $scope.endTime = new Date(data.end * 1000)
+                        $scope.selectedTags = angular.copy(data.tags);
+                        $scope.comment = angular.copy(data.comment);
+                        $scope.index = index !== undefined? index : $rootScope.movieData.scenes.length;
                         $scope.menu = 1
+                    }
+
+                    function getEditInputs() {
+                        var scene = {
+                            tags: $scope.selectedTags,
+                            start: $scope.startTime.getTime() / 1000,
+                            end: $scope.endTime.getTime() / 1000,
+                            comment: $scope.comment,
+                            index: $scope.index
+                        }
+                        return scene
                     }
 
                     $scope.openShareDialog = function() {
@@ -204,15 +197,14 @@ angular.module('mainCtrl', ['ngMaterial'])
                     console.log(open)
 
                     if (open == "edit") {
-                        $scope.openEditDialog(id)
+                        $scope.openEditDialog(index)
+                    } else if (open == "preview") {
+                        loadEditInputs(previewed_scene, previewed_scene.index)
                     } else if (open == "share") {
                         $scope.openShareDialog()
                     } else {
                         $scope.openListDialog()
                     }
-
-
-
 
 
                     var tags = $rootScope.utils.get_settings().tags;
@@ -230,37 +222,57 @@ angular.module('mainCtrl', ['ngMaterial'])
                         return filtered_tags
                     }
 
+                    function random_id() {
+                        var text = ""
+                        var possible = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
+                        for (var i = 0; i < 10; i++) {
+                            text += possible.charAt(Math.floor(Math.random() * possible.length));
+                        };
+                        return text;
+                    }
+
                     $scope.saveEdition = function() {
-                        if ($scope.selectedTags.length == 0 ) return $rootScope.openToast("Need at least one tag")
-                        if ($scope.comment.length < 5 ) return $rootScope.openToast("Need a brief comment")
-                        $scope.scene.tags = $scope.selectedTags
-                        $scope.scene.start = $scope.startTime.getTime()/1000
-                        $scope.scene.end = $scope.endTime.getTime()/1000
-                        $scope.scene.comment = $scope.comment
-                        $scope.scene.edited = true
-                        $scope.scene.diffTag = $rootScope.utils.get_diff_tag($scope.scene, $rootScope.movieData.online_scenes)
+                        if ($scope.selectedTags.length == 0) return $rootScope.openToast("Need at least one tag")
+                        //if ($scope.comment.length < 5 ) return $rootScope.openToast("Need a brief comment")
+
+                        var scene = getEditInputs()
+
+                        if ($rootScope.movieData.scenes[$scope.index]) {
+                            scene.id = $rootScope.movieData.scenes[$scope.index].id
+                        } else {
+                            scene.id = random_id()
+                        }
+                        scene.edited = true
+                        scene.diffTag = $rootScope.utils.get_diff_tag(scene, $rootScope.movieData.online_scenes)
+
+                        console.log(scene,$scope.index)
+
+                        var scenes = angular.copy($rootScope.movieData.scenes);
+                        scenes[$scope.index] = scene
+                        console.log( $rootScope.movieData.scenes )
+                        $rootScope.movieData.scenes = scenes
+                        console.log( $rootScope.movieData.scenes )
                         $rootScope.utils.save_edition($rootScope.movieData)
                         $scope.openListDialog()
                     }
 
-                    $scope.previewScene = function($event, menu, index) {
+                    $scope.previewScene = function($event, index) {
                         var scene = $rootScope.movieData.scenes[index]
                         skip.preview(scene.start, scene.end)
-                        setTimeout(function() { $rootScope.editScene($event, menu, index) }, 4000);
+                        setTimeout(function() { $rootScope.editScene($event, "list") }, 4000);
                         $scope.hideDialog()
                     }
 
-                    $scope.previewCurrent = function ($event) {
-                        var start = $scope.startTime.getTime()/1000
-                        var end = $scope.endTime.getTime()/1000
-                        skip.preview(start, end)
-                        setTimeout(function() { $rootScope.editScene($event, "edit", id) }, 4000);
+                    $scope.previewCurrent = function($event) {
+                        var data = getEditInputs()
+                        skip.preview(data.start, data.end)
+                        setTimeout(function() { $rootScope.editScene($event, "preview", data) }, 4000);
                         $scope.hideDialog()
                     }
 
                     $scope.hideDialog = function(action) {
                         $mdDialog.hide()
-                        pause(!!action)
+                        //pause(!!action)
                     }
 
                     $scope.uploadScenes = function() {
@@ -314,7 +326,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                             lastEnd = time
                             if (date != new_date) $scope.endTime = new_date
                         }
-                        go_to_frame( ms / 1000 )
+                        go_to_frame(ms / 1000)
                     }
 
                     function pad(n, width, z) {

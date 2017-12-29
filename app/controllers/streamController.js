@@ -12,7 +12,7 @@ angular.module('streamCtrl', ['ngMaterial'])
         //-------- Control buttons over player ----------//
         ///////////////////////////////////////////////////
 
-        console.log("Starting StreamController ",vm.src, onimdb)
+        console.log("Starting StreamController ", vm.src, onimdb)
 
         $scope.back_menu = false
         $scope.editors_menu = false
@@ -20,9 +20,9 @@ angular.module('streamCtrl', ['ngMaterial'])
         vm.health_color = "rgba(200, 200, 200, 0.6)"
         $scope.webview_blur = 0;
 
-        $scope.show_buttons = function( action ) {
+        $scope.show_buttons = function(action) {
             $scope.back_menu = action
-            if( $scope.settings.editors_view && !onimdb ) $scope.editors_menu = action
+            if ($scope.settings.editors_view && !onimdb) $scope.editors_menu = action
             vm.last_moved = Date.now()
         }
 
@@ -31,7 +31,7 @@ angular.module('streamCtrl', ['ngMaterial'])
             // Check we are on sync
             var illness = sync.health_report()
             if (illness > 5000) {
-                $scope.show_buttons( true )
+                $scope.show_buttons(true)
                 var red = Math.min(255, Math.floor(illness / 100)) // Red color
                 var oth = Math.min(0, 200 - Math.floor(illness / 200)) // Others (blue and green) color
                 var opa = Math.min(1, Math.floor(illness / 2500) / 10) // Opacity
@@ -40,8 +40,8 @@ angular.module('streamCtrl', ['ngMaterial'])
                 return
             }
             // Check last activity and hide controls if needed
-            if ( $scope.back_menu  && vm.last_moved && vm.last_moved + 2000 < Date.now()) {
-                $scope.show_buttons( false )
+            if ($scope.back_menu && vm.last_moved && vm.last_moved + 2000 < Date.now()) {
+                $scope.show_buttons(false)
                 vm.health_color = "rgba(200, 200, 200, 0.6)"
                 $rootScope.$apply();
             }
@@ -63,10 +63,15 @@ angular.module('streamCtrl', ['ngMaterial'])
         }
 
         $scope.markTime = function($event) {
-            var scene = mark_current_time()
-            if (scene) {
-                var index = $rootScope.addScene(scene.start, scene.end)
-                $rootScope.editScene($event, "edit", index)
+            var marked_scene = mark_current_time()
+            if (marked_scene) {
+                var scene = {
+                    tags: [],
+                    comment: "",
+                    start: marked_scene.start,
+                    end: marked_scene.end
+                }
+                $rootScope.editScene($event, "preview", scene)
                 $scope.webview_blur = 0;
             } else {
                 $scope.webview_blur = 20;

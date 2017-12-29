@@ -61,6 +61,7 @@ angular.module('filmCtrl', ['ngMaterial'])
                 }
 
             }
+            $scope.missingTagsFullList = missingTags.join(", ")
             if (missingTags.length == 0) {
                 $scope.missingTags = ""
             } else if (missingTags.length < 6) {

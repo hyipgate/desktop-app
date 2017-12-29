@@ -53,7 +53,7 @@ function search_film(file, title, url, imdbid) {
             // If we haven't identified this file before, ask the network
             return call_online_api({ action: "search", filename: stats.estimated_title, hash: stats.hash, bytesize: stats.filesize, url: url }).then(function(film) {
                 if (film["status"] == 200 && film["data"]["type"] != "list") {
-                    var imdbid = film["data"]["id"]["imdb"]
+                    var imdbid = film["data"]["id"]["tmdb"]
                     set_local_data(stats.hash + "|" + stats.filesize, imdbid)
                     set_local_data(imdbid, film["data"])
                 }
@@ -179,7 +179,7 @@ function share_scenes(film) {
  */
 function save_edition(film) {
     trace("save_edition", arguments)
-    var imdbid = film["id"]["imdb"]
+    var imdbid = film["id"]["tmdb"]
     var scenes = clean_scenes(film.scenes)
     return set_local_data(imdbid + "_mytags", film.scenes)
 }
@@ -306,7 +306,7 @@ function get_settings() {
 }
 
 var defaul_settings = {
-    language: "ES",
+    language: "auto",
     username: "",
     editors_view: false,
     tags: [
