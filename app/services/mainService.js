@@ -1,16 +1,81 @@
 angular.module('MainService', ['ngCookies'])
 
 .factory('service', ['$http', '$q', '$cookies', function($http, $q, $cookies) {
+  "use strict";
 
   var MainFactory = {};
   var data = {};
+  var scenes = [];
+  var searchQuery;
+  var syncRef = {};
+
+  function random_id () {
+    var text     = ""
+    var possible = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
+    for (var i = 0; i < 10; i++) {
+      text += possible.charAt( Math.floor( Math.random() * possible.length ));
+    };
+    return text;
+  }
+
+  MainFactory.removeScene = function ( id ) {
+    console.log( scenes )
+    scenes.splice( id, 1 )
+    console.log( scenes )
+  }
+
+  MainFactory.addScene = function( start = -1, end = -1, tags = [], comment = "" ) {
+    console.log("add scene")
+    var scene = {
+      id:       random_id(),
+      tags:     tags,
+      comment:  comment,
+      start:    start,
+      end:      end
+    }
+    scenes.push( scene )
+    return (scenes.length-1)
+  }
+
+  MainFactory.updateScene = function( id, scene ) {
+    scenes[id] = scene
+  }
+
+  MainFactory.getScenes = function () {
+    return scenes
+  }
 
   MainFactory.saveSelectedFilm = function(filmData){
-  	data.film = filmData;
+    console.log("save film")
+    console.log( filmData )
+  	syncRef   = filmData.syncRef || {} // important {} and not []
+    console.log( syncRef )
+    data.film = filmData;
+    if ( !filmData.scenes ) return
+    scenes.splice( 0, scenes.length )
+    for (var i = 0; i < filmData.scenes.length; i++) {
+      scenes[i] = filmData.scenes[i]
+    }
+  }
+
+  MainFactory.getSyncRef = function () {
+    return syncRef;
+  }
+
+  MainFactory.setSyncRef = function ( ref ) {
+    syncRef = ref;
   }
 
   MainFactory.getSelectedFilm = function(){
   	return data.film;
+  }
+
+  MainFactory.saveSearchQuery = function(query){
+  	searchQuery = query;
+  }
+
+  MainFactory.getSearchQuery = function(){
+  	return searchQuery;
   }
 
   return MainFactory;

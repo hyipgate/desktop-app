@@ -1,6 +1,11 @@
-
+/dist
 /bower_components
 /node_modules
 npm-debug.log
 /localData
+/release-builds
 .node-persist/storage/*
+Update.exe
+SquirrelSetup.log
+
+package-lock.json

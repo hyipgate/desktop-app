@@ -2,47 +2,87 @@
 	Select a movie styles
 */
 
-.select{
-	background-color: #4CAF50;
-	text-align: center;
+@font-face {
+    font-family: myFirstFont;
+    src: url(Vtks Blank.ttf);
 }
 
-.select md-icon{
-	width: 40vmin;
-	height: 40vmin;
+#mainPage {
+  min-width: 100%;
+  min-height: 100%;
+  overflow-y: hidden;
+  /*	padding: 0;*/
+  color: #fff;
+  background: linear-gradient( rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../img/bg.jpg') no-repeat center center;
+  background-size: cover;
 }
 
-.select .material-icons{
-	font-size: 40vmin;
+.transparentFab {
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
 
-.fullPage{
-
-	min-width: 100%;
-	min-height: 100%;
+.greyFab {
+  background-color: rgba(200, 200, 200, 0.6) !important;
+  box-shadow: none !important;
 }
 
-#mainPage{
-	display: table;
-	text-align: center;
-	color: #fff;
-	background-color: #4CAF50;
+.fullPage {
+  min-width: 100%;
+  min-height: 100%;
 }
 
-#mainPage div{
-	min-width: 100%;
-	min-height: 100%;
-	display: table-cell;
-	vertical-align: center;
+.takeFileLabel {
+  margin-left: 15%;
 }
 
-#movieInfo{
-	padding-top: 10%;
-	padding-right: 10%;
-	padding-left: 10%;
-	color: #fff;
+.takeFileLabel:hover {
+  color: #66BB6A;
+  cursor: pointer;
 }
 
-#movieInfo #movieData{
-	margin-left: 5%;
+.movieList {
+  width: 50%;
+}
+
+.parentsGuide:hover {
+    background-color: lightgreen;
+}
+
+.parentsGuide {
+    text-decoration: underline;
+}
+
+.movieList md-list {
+  height: 300px;
+  overflow-y: auto;
+}
+
+#movieInfo {
+  padding-top: 10%;
+  padding-right: 10%;
+  padding-left: 10%;
+  color: #fff;
+}
+
+#movieInfo #movieData {
+  margin-left: 5%;
+}
+
+.myfont {
+    font-family: myFirstFont;
+}
+
+
+
+/*  styles for '...' http://hackingui.com/front-end/a-pure-css-solution-for-multiline-text-truncation/*/ 
+.block-with-text {
+  /* hide text if it more than N lines  */
+  overflow: hidden;
+  /* for set '...' in absolute position * /
+  position: relative; 
+  /* use this value to count block height */
+  line-height: 1.2em;
+  /* max-height = line-height (1.2) * lines max number (3) */
+  max-height: 3.6em;
 }

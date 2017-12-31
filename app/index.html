@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta lang="en">
-  <title>Family Cinema</title>
+  <title>fCinema</title>
 
   <meta name="viewport" content="initial-scale=1" />
 
@@ -21,12 +21,22 @@
   <script src="./../bower_components/angular-messages/angular-messages.min.js"></script>
   <script src="./../bower_components/pouchdb/dist/pouchdb.min.js"></script>
 
+  <script src="./../node_modules/angular-three-state-checkbox/dist/three-state-checkbox.js"></script>
+  <link href="./../node_modules/angular-three-state-checkbox/dist/three-state-checkbox.css" rel="stylesheet">
+
   <!-- controllers -->
   <script type="text/javascript" src="./controllers/mainController.js"></script>
   <script type="text/javascript" src="./controllers/filmController.js"></script>
+  <script type="text/javascript" src="./controllers/streamController.js"></script>
+  <script type="text/javascript" src="./controllers/chooseFilmTableController.js"></script>
+  <script type="text/javascript" src="./controllers/configController.js"></script>
+  <script type="text/javascript" src="./controllers/communityController.js"></script>
 
   <!-- services -->
   <script type="text/javascript" src="./services/mainService.js"></script>
+
+  <!-- Utils -->
+  <script type="text/javascript" src="./assets/js/stream.js"></script>
 
   <!-- main Angular app files -->
   <script type="text/javascript" src="./app.routes.js"></script>
@@ -37,9 +47,9 @@
   <link rel="stylesheet" href="./assets/css/style.css">
 
 </head>
-<body ng-app="familyCinema" ng-controller="MainController as main" ng-cloak layout="column">
+<body ng-app="familyCinema" ng-controller="MainController as main" ng-cloak style="overflow: hidden;">
     <!-- ANGULAR VIEWS -->
-    <div ng-view flex layout="column">
+    <div layout="row" ng-view style="min-height: 100%;">
         <!--Here comes the view -->
     </div>
 </body>
