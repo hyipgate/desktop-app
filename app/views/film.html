@@ -20,7 +20,7 @@
                 <p class="md-body-1 block-with-text">{{film.movieData.metadata.plot}}</p>
             </div>
             <div style="overflow-y: auto; overflow-x: hidden;">
-                <p>What scenes do you want to skip?</p>
+                <p class="md-caption" ng-show="film.scenes.length!=0">What scenes do you want to skip?</p>
                 <md-list class="md-dense">
                     <md-list-item class="md-2-line" ng-repeat="scene in film.scenes | filter: {list: 'true' }">
                         <md-checkbox ng-model="scene.skip"></md-checkbox>
@@ -32,7 +32,7 @@
                     </md-list-item>
                 </md-list>
                 <p style="color: #b11;" class="md-caption"><b>{{missingTags}}</b>
-                <md-tooltip md-delay="1000">{{missingTagsFullList}}</md-tooltip>
+                    <md-tooltip md-delay="1000">{{missingTagsFullList}}</md-tooltip>
                 </p>
             </div>
         </div>
@@ -41,7 +41,6 @@
     <md-button class="md-fab md-fab-top-left transparentFab" aria-label="Back" ng-click="backToSearch()">
         <md-icon md-svg-src="./assets/img/back.svg"></md-icon>
     </md-button>
-
     <md-button class="md-fab md-fab-top-right transparentFab" aria-label="Community" ng-click="openCommunity()" style="margin-right: 60px">
         <md-icon md-svg-src="./assets/img/community.svg" style="fill:white"></md-icon>
     </md-button>

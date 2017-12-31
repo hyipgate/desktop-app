@@ -3,23 +3,24 @@ TODO
 
 Will do
 *******
-+ film, untagged scenes show tooltip if too many
-+ stream, scene list on scene edit should be dark style
 + stream, allow login in from scene share
 + stream, allow sharing only some of the scenes
 + stream, change the "you do not have permissions"
++ film, get providers for tv series
++ api, feels slow, check why
 
 
 
 Seem hard
 *********
 + film, plot text, on overflow, show elepsis
-+ config, three-phase-checkbox, toggle when text clicked
++ config, three-phase-checkbox, toggle when text clicked (not only on checkbox)
 + stream, on preview, do not override current skip list (need to perform sync, as time offset might be different, use store list...)
 
 
 Done
 ****
+//+ film, untagged scenes show tooltip if too many
 //+ config, do not force country
 //+ stream, on currentScene preview, reload with the same data
 //+ search, add thumbails

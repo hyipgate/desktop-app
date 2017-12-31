@@ -9,6 +9,12 @@ angular.module('communityCtrl', ['ngMaterial'])
             $rootScope.utils.set_settings($scope.settings)
         }
 
+        vm.toggleDevTools = function() {
+            const { remote } = require('electron')
+            remote.getCurrentWindow().toggleDevTools();
+        }
+
+
         vm.need = [
             { iwilldo: false, name: "Coffe (2€)" },
             { iwilldo: false, name: "Beer (3€)" },

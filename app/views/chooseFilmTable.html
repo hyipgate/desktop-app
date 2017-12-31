@@ -13,11 +13,11 @@
     <section flex class="movieList" style="margin-top: -10%">
         <md-list>
             <md-list-item ng-repeat="movie in set.movieData.list" ng-click="set.searchId(movie.id)">
-                <img style="width: 50px; margin-right: 16px" ng-src="{{ movie.poster }}" />
                 <span style="position: relative; z-index: 1;">
-                    <h4>{{ movie.title }} - {{ movie.year }}</h4>
+                    <img style="width: 50px; margin-right: 16px;" ng-src="{{ movie.poster }}" />
                     <md-tooltip>{{movie.overview}}</md-tooltip>
                 </span>
+                <h4>{{ movie.title }} - {{ movie.year }}</h4>
                 <!--<div class="md-list-item-text" layout="column">
                     <h3>{{ movie.title }} - {{ movie.year }}</h3>
                     <!- -<p>{{ movie.director }} - {{ movie.year }}</p>- ->
