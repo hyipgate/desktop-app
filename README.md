@@ -9,14 +9,14 @@ There are three main parts in this project a [website](https://github.com/fcinem
 
 # Installation
 
-This project is build on [electron](http://electron.atom.io/) and [node.js](https://nodejs.org/en/). After installing [node.js](https://nodejs.org/en/download/) download/clone this project and install depencies by executing 
+This project is build on [electron](http://electron.atom.io/) and [node.js](https://nodejs.org/en/). After installing [node.js](https://nodejs.org/en/download/) download/clone this project and install depencies by executing. Note that bower has to be installed. 
 ```
 npm install
-bower install
+npm run bower
 ```
 from the project folder. To run the app, execute
 ```
-electron .
+npm run start
 ```
 
 # Guided tour
