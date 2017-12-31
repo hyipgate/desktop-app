@@ -60,10 +60,11 @@ function createWindow() {
         // when you should delete the corresponding element.
         mainWindow = null
     })
-
+    var url;
     if (!isDev) {
         const server = 'https://hazel-server-omngoodbmi.now.sh'
-        const feed = `${server}/update/${process.platform}/${app.getVersion()}`
+        url = `${server}/update/${process.platform}/${app.getVersion()}`
+        const feed = url;
         autoUpdater.setFeedURL(feed);
         autoUpdater.checkForUpdates();
     }
@@ -87,8 +88,8 @@ function createWindow() {
         type: 'info',
         buttons: ['Close'],
         title: 'Error',
-        message: 'There was a problem updating the application',
-        detail: message
+        message: url,
+        detail: String(message)
       }
 
       dialog.showMessageBox(dialogOpts2, (response) => {
