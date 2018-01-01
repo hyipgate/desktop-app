@@ -10,6 +10,7 @@ angular.module('mainCtrl', ['ngMaterial'])
 
         $rootScope.electron = require('electron');
         $rootScope.utils = $rootScope.electron.remote.require('./app/assets/js/utils');
+        $rootScope.appVersion = require('../package.json').version;
 
         $rootScope.openToast = function(msg) {
             $mdToast.show($mdToast.simple().textContent(msg).hideDelay(2000));
