@@ -100,7 +100,7 @@
         <md-dialog-actions>
             <md-button aria-label="Close" ng-click="hideDialog()">Close</md-button>
             <span style="flex: 1 1 auto"></span>
-            <md-button aria-label="logIn" ng-click="logIn($event)">Log In</md-button>
+            <md-button aria-label="logIn" ng-click="hideDialog() && logIn($event)">Log In</md-button>
             <md-button aria-label="uploadScenes" ng-click="uploadScenes()" class="md-primary">Share</md-button>
         </md-dialog-actions>
     </div>

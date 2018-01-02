@@ -4,7 +4,7 @@
         <div flex=10></div>
         <div flex=40 layout="column" layout-align="center center">
             <div flex>
-                <img ng-src="{{film.movieData.images.posters[0]}}" alt="Film Poster" height="450px">
+                <img ng-src="{{film.movieData.images.posters[0]}}" alt="Film Poster" height="450px" width="287px" style="object-fit: cover">
                 <div layout="row" layout-align="center center">
                     <md-button class="md-raised" ng-click="film.share()" style="display:{{share_button? 'block' : 'none'}}">Share</md-button>
                     <md-button class="md-primary md-raised" ng-click="showListBottomSheet(false)">Play</md-button>

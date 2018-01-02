@@ -35,7 +35,7 @@
             <div ng-show="coffee" ng-repeat="need in community.need">
                 <md-checkbox ng-model="need.iwilldo">{{need.name}}</md-checkbox>
             </div>
-            <md-button class="md-raised md-primary md-hue-2" ng-click="community.logIn($event)">Send!</md-button>
+            <md-button class="md-raised md-primary md-hue-2" ng-click="community.sendFeedback($event)">Send!</md-button>
         </form>
         <div layout="column">
             <md-switch ng-model="settings.editors_view" aria-label="Editor mode">

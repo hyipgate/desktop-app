@@ -101,6 +101,7 @@ angular.module('mainCtrl', ['ngMaterial'])
         }
 
         $rootScope.logIn = function(ev) {
+            console.log("log_in")
             $mdDialog.show({
                 template: '<md-dialog layout="column" md-theme="darkTheme">' +
                     '  <md-dialog-content>' +
@@ -148,11 +149,13 @@ angular.module('mainCtrl', ['ngMaterial'])
 
         $rootScope.editScene = function($event, open, previewed_scene) {
             pause(true)
+            isDialogVisible = true
             $mdDialog.show({
                 targetEvent: $event,
                 templateUrl: 'views/scene-edit-share-dialog.html',
                 onRemoving: function(event) {
                     pause(false)
+                    isDialogVisible = false
                 },
                 locals: { previewed_scene: previewed_scene, open: open },
                 controller: ['$scope', 'previewed_scene', 'open', function($scope, previewed_scene, open) {

@@ -310,11 +310,11 @@ var defaul_settings = {
     username: "",
     editors_view: false,
     tags: [
-        { 'action': null, 'type': 'Sex', 'name': 'rape' },
-        { 'action': null, 'type': 'Sex', 'name': 'topless' },
-        { 'action': null, 'type': 'Sex', 'name': 'full nudity' },
         { 'action': null, 'type': 'Sex', 'name': 'explicit sex' },
         { 'action': null, 'type': 'Sex', 'name': 'implicit sex' },
+        { 'action': null, 'type': 'Sex', 'name': 'sexual comment' },
+        { 'action': null, 'type': 'Sex', 'name': 'full nudity' },
+        { 'action': null, 'type': 'Sex', 'name': 'topless' },
         { 'action': null, 'type': 'Sex', 'name': 'kissing' },
         { 'action': null, 'type': 'Sex', 'name': 'sensual scene' },
 
@@ -406,7 +406,7 @@ function call_online_api(params) {
     // Add region (if available) and version
     var region = get_settings().language
     if (region) params["region"] = region;
-    params["version"] = "0.1"; // MODIFY VERSION IN THIS LINE
+    //params["version"] = "0.1"; // MODIFY VERSION IN THIS LINE
     // Create query
     var str = [];
     for (var key in params)
@@ -431,13 +431,13 @@ function call_online_api(params) {
                 if (reply.data["token"]) set_local_data("token", reply.data["token"])
                 if (reply.data["username"]) set_local_data("username", reply.data["username"])
                 if (reply.data["permissions"]) set_local_data("permissions", reply.data["permissions"])
-                if (reply.data["update"] == "force") {
+                /*if (reply.data["update"] == "force") {
                     const { dialog, shell } = require('electron')
                     console.log(dialog.showMessageBox({ "type": "info", "title": "New version available", "message": "We got new exiting features for you!", "buttons": ["Try them"] }, function(argument) {
                         shell.openExternal("www.fcinema.org/updates");
                     }))
                     resolve({ status: 400 })
-                }
+                }*/
                 resolve(reply)
             }
         });
