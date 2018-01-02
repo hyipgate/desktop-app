@@ -14,6 +14,16 @@ angular.module('communityCtrl', ['ngMaterial'])
             remote.getCurrentWindow().toggleDevTools();
         }
 
+        $scope.feedback = ""
+        $scope.help = ""
+
+        $scope.sendFeedback = function() {
+            $rootScope.utils.send_feedback( $scope.feedback, $scope.help ).then(function(answer) {
+                $rootScope.openToast(answer.data)
+                $scope.feedback = ""
+                $scope.help = ""
+            })
+        }
 
         vm.need = [
             { iwilldo: false, name: "Coffe (2€)" },

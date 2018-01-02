@@ -3,41 +3,22 @@
         <h1 class="md-display-1">Welcome {{settings.username? 'back '+settings.username: 'to our community'}}</h1>
     </section>
     <section layout="row" style="height: 500px">
-        <form name="userForm" flex=60 layout="column" style="overflow-y: auto; overflow-x: hidden;">
+        <div flex=45 layout="column" style="overflow-y: auto; overflow-x: hidden;">
             <h3>How would you like family cinema to be?</h3>
             <md-input-container>
-                <input name="lastName" ng-model="lastName" required>
-                <div ng-messages="userForm.lastName.$error" ng-show="userForm.lastName.$dirty">
-                    <div ng-message="required">We really want your opinion!</div>
-                </div>
+                <textarea name="feedback" ng-model="feedback" placeholder="Things we can improve"></textarea>
             </md-input-container>
-            <h3>Can you help make it possible?</h3>
             <md-input-container>
-                <md-checkbox ng-model="settings.editors_view" aria-label="Checkbox 1">
-                    Edit films
-                </md-checkbox>
-                <md-checkbox ng-model="code" aria-label="Checkbox 1">
-                    Write code
-                </md-checkbox>
-                <md-checkbox ng-model="coffee" aria-label="Checkbox 1">
-                    Get coffee
-                </md-checkbox>
-                <md-checkbox ng-model="thanks" aria-label="Checkbox 1">
-                    Say thanks
-                </md-checkbox>
+                <textarea name="help" ng-model="help" placeholder="Ways you can help"></textarea>
+                <h5>Possible ideas: edit films, write code, donate, say thanks...</h5>
             </md-input-container>
-            <md-input-container ng-show="thanks">
-                <input aria-label="title" ng-model="title" placeholder="Thank you!">
+            <md-input-container>
+                <md-button class="md-raised md-primary md-hue-2" ng-click="sendFeedback()">Send!</md-button>
             </md-input-container>
-            <md-input-container ng-show="code">
-                <input aria-label="title" ng-model="title" placeholder="I know JS/CSS/... and I will like to help doing...">
-            </md-input-container>
-            <div ng-show="coffee" ng-repeat="need in community.need">
-                <md-checkbox ng-model="need.iwilldo">{{need.name}}</md-checkbox>
-            </div>
-            <md-button class="md-raised md-primary md-hue-2" ng-click="community.sendFeedback($event)">Send!</md-button>
-        </form>
-        <div layout="column">
+        </div>
+        <div layout="column" flex=10></div>
+        <div layout="column" flex=45>
+            <h3>Personal space</h3>
             <md-switch ng-model="settings.editors_view" aria-label="Editor mode">
                 Editor's mode
             </md-switch>

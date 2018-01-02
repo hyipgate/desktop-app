@@ -82,6 +82,11 @@ function add_review(review) {
 }
 
 
+function send_feedback( feedback, help ) {
+    trace("feedback", arguments)
+    return call_online_api({ action: "feedback", feedback: feedback, help: help })
+}
+
 
 
 /**
@@ -165,7 +170,7 @@ function share_scenes(film) {
         syncRef: film.syncRef
     }
 
-    film = encodeURIComponent(JSON.stringify(filtered_film))
+    film = JSON.stringify(filtered_film)
 
     return call_online_api({ action: "modify", data: film })
 }
@@ -365,6 +370,7 @@ exports.share_scenes = share_scenes;
 exports.link_file_to_film = link_file_to_film;
 exports.merge_local_tags = merge_local_tags
 exports.get_diff_tag = get_diff_tag
+exports.send_feedback = send_feedback
 
 // Authentication functions
 exports.new_user = new_user;
@@ -410,7 +416,7 @@ function call_online_api(params) {
     // Create query
     var str = [];
     for (var key in params)
-        if (params[key]) str.push(key + "=" + params[key]);
+        if (params[key]) str.push(key + "=" + encodeURIComponent(params[key]));
     var url = "https://www.fcinema.org/api"; // + str.join( "&" )
     // Reject if query is invalid
     if (str.length == 0) return Promise.reject("Invalid parameters");
