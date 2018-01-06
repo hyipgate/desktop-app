@@ -257,14 +257,14 @@ angular.module('mainCtrl', ['ngMaterial'])
                     $scope.previewScene = function($event, index) {
                         var scene = $rootScope.movieData.scenes[index]
                         skip.preview(scene.start, scene.end)
-                        setTimeout(function() { $rootScope.editScene($event, "list") }, 4000);
+                        setTimeout(function() { $rootScope.editScene($event, "list") }, 5000);
                         $scope.hideDialog()
                     }
 
                     $scope.previewCurrent = function($event) {
                         var data = getEditInputs()
                         skip.preview(data.start, data.end)
-                        setTimeout(function() { $rootScope.editScene($event, "preview", data) }, 4000);
+                        setTimeout(function() { $rootScope.editScene($event, "preview", data) }, 5000);
                         $scope.hideDialog()
                     }
 

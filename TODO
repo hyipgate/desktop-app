@@ -3,7 +3,8 @@ TODO
 
 Will do
 *******
-+ api, share syncRef on individual call (when user.level>=2, we are on master, and there are missing frames)
++ api, store users email when the loggin
++ api, share syncref only when user.level>=2
 + api, download syncRef on another call, only if it was updated
 + api, make sure we save username, token, and level, might be good to save all inside settings
 + api, store offset data on non-master versions
@@ -36,6 +37,7 @@ Seem hard
 
 Done
 ****
+//+ api, share syncRef on individual call
 //+ stream, allow sharing only some of the scenes
 //+ config, send feedback
 //+ film, when poster is too wide

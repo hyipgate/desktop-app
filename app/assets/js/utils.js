@@ -169,10 +169,10 @@ function save_edition(film_id, data ) {
  */
 function save_sync_ref(film_id, sync_data) {
     trace("save_sync_ref", arguments)
-    //if (sync_data.length == 0) return
-    var b = JSON.parse(sync_data)
-    //var film_id = film[ "id" ][ "imdb" ]
-    return set_local_data(film_id + "_mysync", b)
+
+    share_sync_ref( sync_data, film_id )
+
+    return set_local_data(film_id + "_mysync", JSON.parse(sync_data) )
 }
 
 
