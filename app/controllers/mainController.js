@@ -159,27 +159,39 @@ angular.module('mainCtrl', ['ngMaterial'])
                     isDialogVisible = false
                 },
                 locals: { previewed_scene: previewed_scene, open: open },
-                controller: ['$scope', 'previewed_scene', 'open', function($scope, previewed_scene, open) {
+                controller: ['$scope', 'open', 'previewed_scene', function($scope, open, previewed_scene) {
 
 
                     $scope.openListDialog = function(argument) {
                         $scope.scenes = $rootScope.movieData.scenes
-                        $scope.isDumpable = (($rootScope.file).indexOf("file:///") == 0)
+                        if ($rootScope.file) {
+                            $scope.isDumpable = (($rootScope.file).indexOf("file:///") == 0)
+                        }
+                        if ($location.path() == '/film') {
+                            $scope.nopreview = true
+                        }
                         $scope.menu = 0
                     }
 
                     $scope.openEditDialog = function(index) {
-                        var data = $rootScope.movieData.scenes[index]
-                        loadEditInputs(data, index)
+                        var scene = $rootScope.movieData.scenes[index]
+                        loadEditInputs(scene)
                     }
 
-                    function loadEditInputs(data, index) {
+                    function loadEditInputs(data) {
                         $scope.startTime = new Date(data.start * 1000)
                         $scope.endTime = new Date(data.end * 1000)
                         $scope.selectedTags = angular.copy(data.tags);
                         $scope.comment = angular.copy(data.comment);
-                        $scope.index = index !== undefined? index : $rootScope.movieData.scenes.length;
+                        $scope.id = data.id
                         $scope.menu = 1
+                    }
+
+                    function find_key_by_id(list, id) {
+                        for (var i = 0; i < list.length; i++) {
+                            if (list[i].id == id) return i
+                        }
+                        return -1;
                     }
 
                     function getEditInputs() {
@@ -188,7 +200,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                             start: $scope.startTime.getTime() / 1000,
                             end: $scope.endTime.getTime() / 1000,
                             comment: $scope.comment,
-                            index: $scope.index
+                            id: $scope.id
                         }
                         return scene
                     }
@@ -200,12 +212,8 @@ angular.module('mainCtrl', ['ngMaterial'])
 
                     console.log(open)
 
-                    if (open == "edit") {
-                        $scope.openEditDialog(index)
-                    } else if (open == "preview") {
-                        loadEditInputs(previewed_scene, previewed_scene.index)
-                    } else if (open == "share") {
-                        $scope.openShareDialog()
+                    if (open == "preview") {
+                        loadEditInputs(previewed_scene)
                     } else {
                         $scope.openListDialog()
                     }
@@ -226,37 +234,23 @@ angular.module('mainCtrl', ['ngMaterial'])
                         return filtered_tags
                     }
 
-                    function random_id() {
-                        var text = ""
-                        var possible = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
-                        for (var i = 0; i < 10; i++) {
-                            text += possible.charAt(Math.floor(Math.random() * possible.length));
-                        };
-                        return text;
-                    }
-
                     $scope.saveEdition = function() {
                         if ($scope.selectedTags.length == 0) return $rootScope.openToast("Need at least one tag")
                         //if ($scope.comment.length < 5 ) return $rootScope.openToast("Need a brief comment")
-
                         var scene = getEditInputs()
-
-                        if ($rootScope.movieData.scenes[$scope.index]) {
-                            scene.id = $rootScope.movieData.scenes[$scope.index].id
-                        } else {
-                            scene.id = random_id()
-                        }
                         scene.edited = true
-                        scene.diffTag = $rootScope.utils.get_diff_tag(scene, $rootScope.movieData.online_scenes)
+                        scene.local = true
+                        scene.removed = false
 
-                        console.log(scene,$scope.index)
+                        var index = find_key_by_id($rootScope.movieData.scenes, scene.id)
+                        console.log(index)
+                        if (index == -1) index = $rootScope.movieData.scenes.length
 
                         var scenes = angular.copy($rootScope.movieData.scenes);
-                        scenes[$scope.index] = scene
-                        console.log( $rootScope.movieData.scenes )
+                        scenes[index] = scene
                         $rootScope.movieData.scenes = scenes
-                        console.log( $rootScope.movieData.scenes )
-                        $rootScope.utils.save_edition($rootScope.movieData)
+                        var film_id = $rootScope.movieData.id.tmdb
+                        $rootScope.utils.save_edition(film_id, scene)
                         $scope.openListDialog()
                     }
 
@@ -279,22 +273,39 @@ angular.module('mainCtrl', ['ngMaterial'])
                         //pause(!!action)
                     }
 
-                    $scope.uploadScenes = function() {
-                        $rootScope.utils.share_scenes($rootScope.movieData).then(function(answer) {
-                            $rootScope.openToast(answer.data)
+                    $scope.uploadCurrent = function() {
+                        var index = find_key_by_id($rootScope.movieData.scenes, $scope.id)
+                        $scope.uploadScene(index)
+                    }
+
+                    $scope.uploadScene = function(index) {
+                        var film_id = $rootScope.movieData.id.tmdb
+                        var scene = $rootScope.movieData.scenes[index]
+
+                        if (scene.tags.length == 0) return $rootScope.openToast("Need at least one tag")
+
+                        $rootScope.utils.share_scene(scene, film_id).then(function(answer) {
+                            $rootScope.openToast(answer.data.message || answer.data)
                             if (answer.status == 500) return
-                            for (var i = 0; i < $rootScope.movieData.scenes.length; i++) {
-                                $rootScope.movieData.scenes[i].edited = false
-                            }
+                            $rootScope.movieData.scenes[index].edited = false
+                            $rootScope.movieData.scenes[index].local = !answer.data.accepted
+                            $rootScope.utils.save_edition(film_id, $rootScope.movieData.scenes[index])
+                            $rootScope.movieData.scenes[index].globallyremoved = scene.removed && answer.data.accepted
                         })
                     }
 
                     $scope.removeScene = function() {
                         console.log("[remove] deleting scene")
+                        var index = find_key_by_id($rootScope.movieData.scenes, $scope.id)
+
                         var scenes = angular.copy($rootScope.movieData.scenes);
-                        scenes.splice(id, 1)
+                        scenes[index].removed = true
+                        scenes[index].local = true
+                        scenes[index].edited = true
                         $rootScope.movieData.scenes = scenes
-                        $rootScope.utils.save_edition($rootScope.movieData)
+
+                        var film_id = $rootScope.movieData.id.tmdb
+                        $rootScope.utils.save_edition(film_id, scenes[index])
                         $scope.openListDialog()
                     }
 

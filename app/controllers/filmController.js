@@ -10,7 +10,6 @@ angular.module('filmCtrl', ['ngMaterial'])
         vm.getMovie = function() {
             vm.movieData = $rootScope.movieData //service.getSelectedFilm();
             vm.scenes = vm.movieData.scenes //service.getScenes();
-            vm.movieData.tags = []
 
             console.log(vm.movieData)
 

@@ -69,13 +69,23 @@ angular.module('streamCtrl', ['ngMaterial'])
                     tags: [],
                     comment: "",
                     start: marked_scene.start,
-                    end: marked_scene.end
+                    end: marked_scene.end,
+                    id: random_id()
                 }
                 $rootScope.editScene($event, "preview", scene)
                 $scope.webview_blur = 0;
             } else {
                 $scope.webview_blur = 20;
             }
+        }
+
+        function random_id() {
+            var text = ""
+            var possible = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
+            for (var i = 0; i < 10; i++) {
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+            };
+            return text;
         }
 
         ///////////////////////////////////////////////////

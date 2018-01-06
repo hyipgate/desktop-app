@@ -3,12 +3,16 @@ TODO
 
 Will do
 *******
++ api, share syncRef on individual call (when user.level>=2, we are on master, and there are missing frames)
++ api, download syncRef on another call, only if it was updated
++ api, make sure we save username, token, and level, might be good to save all inside settings
++ api, store offset data on non-master versions
++ stream, on scene edit, share only visible if edited :)
 + stream, save scene.edited instead of calculating it each time (if scene is edited, but already shared as feedback, we might want to stop annoying the user, maybe)
 + read tag list from deafault list, not from settings (as tags might be updated)
 + search, on back pressed, search the last search again
 + film, on back pressed, show last item
 + stream, allow login in from scene share
-+ stream, allow sharing only some of the scenes
 + film, get providers for tv series
 + api, feels slow, check why
 + search, default image instead of broken
@@ -32,6 +36,8 @@ Seem hard
 
 Done
 ****
+//+ stream, allow sharing only some of the scenes
+//+ config, send feedback
 //+ film, when poster is too wide
 //+ film, untagged scenes show tooltip if too many
 //+ film, tv series, use default background

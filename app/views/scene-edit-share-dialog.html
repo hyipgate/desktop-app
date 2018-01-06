@@ -1,20 +1,21 @@
 <md-dialog layout="column" md-theme="darkTheme" style="width: 800px">
     <div ng-show="menu==0">
         <md-dialog-content>
-            <md-content layout="row" layout-padding>
+            <md-content layout="row" layout-padding style="max-height: 400px">
                 <div style="width: 100%">
                     <md-list class="md-dense" flex>
                         <md-list-item class="md-2-line" ng-repeat="scene in scenes">
                             <div class="md-list-item-text" layout="column">
                                 <h3>
-                                <b style="color:#393">{{ scene.diffTag.added | tags }}</b>
-                                <b style="color:#933">{{ scene.diffTag.removed | tags }}</b>
-                                <b>{{ scene.diffTag.same | tags }}</b>
+                                <b ng-show="scene.local && !scene.removed" style="color:#393">(Locally edited)</b>
+                                <b ng-show="scene.local && scene.removed" style="color:#933">(Locally removed)</b>
+                                <b ng-show="scene.globallyremoved" style="color:#933">(Globally removed)</b>
+                                <b>{{ scene.tags | tags }}</b>
                                 <i>({{ scene.start | seconds:scene.end }})</i></h3>
                                 <p>{{ scene.comment }}</p>
                             </div>
-                            <md-icon class="md-secondary" ng-show="scene.edited" ng-click="openShareDialog()" aria-label="Share" md-svg-icon="./assets/img/upload.svg"></md-icon>
-                            <md-icon class="md-secondary" ng-click="previewScene($event,$index)" aria-label="Preview" md-svg-icon="./assets/img/preview.svg"></md-icon>
+                            <md-icon class="md-secondary" ng-show="scene.edited" ng-click="uploadScene($index)" aria-label="Share" md-svg-icon="./assets/img/upload.svg"></md-icon>
+                            <md-icon ng-hide="nopreview" class="md-secondary" ng-click="previewScene($event,$index)" aria-label="Preview" md-svg-icon="./assets/img/preview.svg"></md-icon>
                             <md-icon class="md-secondary" ng-click="openEditDialog($index)" aria-label="Edit" md-svg-icon="./assets/img/edit.svg"></md-icon>
                         </md-list-item>
                     </md-list>
@@ -25,7 +26,6 @@
             <md-button ng-click="hideDialog()">Close</md-button>
             <span style="flex: 1 1 auto"></span>
             <md-button ng-click="dumpToFile()" ng-show="isDumpable">Dump to file</md-button>
-            <md-button ng-click="openShareDialog()">Share</md-button>
         </md-dialog-actions>
     </div>
     <div ng-show="menu==1">
@@ -66,8 +66,8 @@
             <md-button ng-click="openListDialog()">Cancel</md-button>
             <span style="flex: 1 1 auto"></span>
             <md-button ng-click="removeScene()">Delete</md-button>
-            <md-button ng-click="openShareDialog()">Share</md-button>
-            <md-button ng-click="previewCurrent($event)">Preview</md-button>
+            <!--<md-button ng-click="uploadCurrent()">Share</md-button>-->
+            <md-button ng-hide="nopreview" ng-click="previewCurrent($event)">Preview</md-button>
             <md-button ng-click="saveEdition()" class="md-primary">Save</md-button>
         </md-dialog-actions>
     </div>
@@ -101,7 +101,7 @@
             <md-button aria-label="Close" ng-click="hideDialog()">Close</md-button>
             <span style="flex: 1 1 auto"></span>
             <md-button aria-label="logIn" ng-click="hideDialog() && logIn($event)">Log In</md-button>
-            <md-button aria-label="uploadScenes" ng-click="uploadScenes()" class="md-primary">Share</md-button>
+            <md-button aria-label="updateTagged" ng-click="updateTagged()" class="md-primary">Share</md-button>
         </md-dialog-actions>
     </div>
 </md-dialog>

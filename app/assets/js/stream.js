@@ -43,7 +43,7 @@ function end_capture() {
 var isDialogVisible = false
 function check_everything_works() {
 
-    if( isDialogVisible ) return console.log("[check_everything_works] Dialog is visible")
+    if( isDialogVisible ) return //console.log("[check_everything_works] Dialog is visible")
     if (!wc.rect) return console.log("[check_everything_works] Missing wc.rect"); //todo add get rect/load webview
 
     var time = video_time()
