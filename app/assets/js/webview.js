@@ -128,9 +128,10 @@ handpick = {
                 video.playbackRate = 1
                 handpick.video_fade_in()
                 handpick.skipping = false
-            } else if (now > start - 60 / 1000 && !hidden) {
+            } else if (now > start - 0.08 && !hidden) {
                 handpick.video_fade_out()
-                handpick.seek_time(end)
+                handpick.video.play()
+                handpick.seek_time(end + 0.08)
                 hidden = true
             }
         }, 30)

@@ -10,7 +10,6 @@ angular.module('filmCtrl', ['ngMaterial'])
         vm.getMovie = function() {
             vm.movieData = $rootScope.movieData //service.getSelectedFilm();
             vm.scenes = vm.movieData.scenes //service.getScenes();
-            vm.movieData.tags = []
 
             console.log(vm.movieData)
 
@@ -97,11 +96,18 @@ angular.module('filmCtrl', ['ngMaterial'])
                 vm.movieData = $rootScope.movieData // service.getSelectedFilm();
 
                 vm.getProviders = function(lan) {
+                    if (lan == "auto") {
+                        lan = Object.keys(vm.movieData.providers)[0] // TODO
+                    }
+                    console.log(vm.movieData.providers, lan)
                     var playable = [];
-                    if (vm.movieData.providers[lan]) {
-                        var providers = vm.movieData.providers[lan]
+                    var unsupported_providers = ["Apple iTunes"];
+                    var providers = vm.movieData.providers[lan]
+                    if (providers) {
+
                         for (var i = 0; i < providers.length; i++) {
-                            if (providers[i].name === "movistar-plus" || providers[i].name === "apple-itunes") continue
+                            console.log(providers[i].name)
+                            if (unsupported_providers.indexOf(providers[i].name) != -1) continue
                             playable.push(providers[i])
                         }
                     }

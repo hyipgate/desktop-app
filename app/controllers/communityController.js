@@ -9,6 +9,22 @@ angular.module('communityCtrl', ['ngMaterial'])
             $rootScope.utils.set_settings($scope.settings)
         }
 
+        vm.toggleDevTools = function() {
+            const { remote } = require('electron')
+            remote.getCurrentWindow().toggleDevTools();
+        }
+
+        $scope.feedback = ""
+        $scope.help = ""
+
+        $scope.sendFeedback = function() {
+            $rootScope.utils.send_feedback( $scope.feedback, $scope.help ).then(function(answer) {
+                $rootScope.openToast(answer.data)
+                $scope.feedback = ""
+                $scope.help = ""
+            })
+        }
+
         vm.need = [
             { iwilldo: false, name: "Coffe (2€)" },
             { iwilldo: false, name: "Beer (3€)" },

@@ -10,14 +10,14 @@
         <md-button class="md-primary md-raised" aria-label="Select a movie" ng-click="main.searchTitle()" class="md-button">Search</md-button>
         <br>
     </section>
-    <section flex class="movieList" style="margin-top: -10%">
+    <section flex class="movieList" style="margin: -5% 0 -10% 0">
         <md-list>
             <md-list-item ng-repeat="movie in set.movieData.list" ng-click="set.searchId(movie.id)">
-                <img style="width: 50px; margin-right: 16px" ng-src="{{ movie.poster }}" />
                 <span style="position: relative; z-index: 1;">
-                    <h4>{{ movie.title }} - {{ movie.year }}</h4>
+                    <img style="width: 50px; margin-right: 16px;" ng-src="{{ movie.poster }}" />
                     <md-tooltip>{{movie.overview}}</md-tooltip>
                 </span>
+                <h4>{{ movie.title }} - {{ movie.year }}</h4>
                 <!--<div class="md-list-item-text" layout="column">
                     <h3>{{ movie.title }} - {{ movie.year }}</h3>
                     <!- -<p>{{ movie.director }} - {{ movie.year }}</p>- ->
@@ -28,6 +28,9 @@
     </section>
     <section flex>
         <!--  &darr; Scroll down for more suggestions-->
+    </section>
+    <section flex layout="row" layout-align="space-between center" style="margin-left: 90%;">
+        <span style="font-size: 1rem;color:#fff;">v{{appVersion}}</span>
     </section>
     <md-button class="md-fab md-fab-top-right transparentFab" aria-label="Settings" ng-click="openCommunity()" style="margin-right: 60px">
         <md-icon md-svg-src="./assets/img/community.svg" style="fill:white"></md-icon>

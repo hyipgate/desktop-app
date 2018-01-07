@@ -3,23 +3,46 @@ TODO
 
 Will do
 *******
-+ film, untagged scenes show tooltip if too many
-+ stream, scene list on scene edit should be dark style
++ api, store users email when the loggin
++ api, share syncref only when user.level>=2
++ api, download syncRef on another call, only if it was updated
++ api, make sure we save username, token, and level, might be good to save all inside settings
++ api, store offset data on non-master versions
++ stream, on scene edit, share only visible if edited :)
++ stream, save scene.edited instead of calculating it each time (if scene is edited, but already shared as feedback, we might want to stop annoying the user, maybe)
++ read tag list from deafault list, not from settings (as tags might be updated)
++ search, on back pressed, search the last search again
++ film, on back pressed, show last item
 + stream, allow login in from scene share
-+ stream, allow sharing only some of the scenes
-+ stream, change the "you do not have permissions"
++ film, get providers for tv series
++ api, feels slow, check why
++ search, default image instead of broken
++ film, show pg code
++ utils, improve tag list
++ stream, editing time does weird things: it starts with hours = 1 (while should be 0) and every time we add/substract seconds/milliseconds/minutes the hours also increase/decrease by one every time (when using up/down)
++ stream, To start/end scene creation while watching, the "point" key to do so is not working anymore (might be coz watched element is not focus when pressed??)
++ film, fit all providers on list, or allow scrolling...
++ community, send log with suggestions
+
+
 
 
 
 Seem hard
 *********
 + film, plot text, on overflow, show elepsis
-+ config, three-phase-checkbox, toggle when text clicked
++ config, three-phase-checkbox, toggle when text clicked (not only on checkbox)
 + stream, on preview, do not override current skip list (need to perform sync, as time offset might be different, use store list...)
 
 
 Done
 ****
+//+ api, share syncRef on individual call
+//+ stream, allow sharing only some of the scenes
+//+ config, send feedback
+//+ film, when poster is too wide
+//+ film, untagged scenes show tooltip if too many
+//+ film, tv series, use default background
 //+ config, do not force country
 //+ stream, on currentScene preview, reload with the same data
 //+ search, add thumbails
@@ -36,9 +59,10 @@ Done
 //+ stream, missing tags on two columns
 //+ stream, new scenes should be created as "edited"
 //+ stream, that green is awful
+//+ stream, change the "you do not have permissions"
 //+ stream, times should be on time format :)
 //+ stream, data is modified by default, allow cancel changes
-
+//+ stream, when manually going to a time-to-be-skipped, the screen becomes black and it's hard to get back to normal
 
 
 

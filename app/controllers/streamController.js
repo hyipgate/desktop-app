@@ -69,13 +69,23 @@ angular.module('streamCtrl', ['ngMaterial'])
                     tags: [],
                     comment: "",
                     start: marked_scene.start,
-                    end: marked_scene.end
+                    end: marked_scene.end,
+                    id: random_id()
                 }
                 $rootScope.editScene($event, "preview", scene)
                 $scope.webview_blur = 0;
             } else {
                 $scope.webview_blur = 20;
             }
+        }
+
+        function random_id() {
+            var text = ""
+            var possible = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
+            for (var i = 0; i < 10; i++) {
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+            };
+            return text;
         }
 
         ///////////////////////////////////////////////////
@@ -86,15 +96,12 @@ angular.module('streamCtrl', ['ngMaterial'])
             // Stop timers...
             clearInterval(interval_id);
             window.onkeyup = null
-            var sref562 = end_capture()
-            console.log("sref562 length: ", sref562)
-            // If we are on edit mode, save reference
-            if (sref562) {
+            var syncRef = end_capture()
+            console.log("syncRef length: ", syncRef)
+            // If we got new syncRef
+            if (syncRef) {
                 console.log("We got new sync data")
-                var a = JSON.stringify(sref562)
-                console.log(a)
-                $rootScope.utils.save_sync_ref($rootScope.movieData["id"]["imdb"], a)
-                service.setSyncRef(sref562)
+                $rootScope.utils.save_sync_ref($rootScope.movieData["id"]["imdb"], JSON.stringify(syncRef))
             }
             // Go back to film view
             $location.path('/film');
