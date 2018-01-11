@@ -7,7 +7,7 @@ angular.module('chooseFilmCtrl', ['ngMaterial'])
         $rootScope.electron = require('electron');
 
         vm.getMovie = function() {
-            vm.movieData = $rootScope.movieData //service.getSelectedFilm();
+            vm.movieData = $rootScope.movieData
         }
 
         vm.searchId = function(id) {

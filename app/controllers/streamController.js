@@ -49,18 +49,15 @@ angular.module('streamCtrl', ['ngMaterial'])
 
         if (!onimdb) {
             var interval_id = setInterval(check, 1000);
+
+            //---- Listen to keyboard "mark time" events ----//
+            window.onkeyup = function(e) {
+                var key = e.keyCode ? e.keyCode : e.which;
+                if (key == 110) $scope.$apply($scope.markTime())
+            }
         }
 
 
-
-
-        ///////////////////////////////////////////////////
-        //---- Listen to keyboard "mark time" events ----//
-        ///////////////////////////////////////////////////
-        window.onkeyup = function(e) {
-            var key = e.keyCode ? e.keyCode : e.which;
-            if (key == 110) $scope.$apply($scope.markTime())
-        }
 
         $scope.markTime = function($event) {
             var marked_scene = mark_current_time()
@@ -97,11 +94,11 @@ angular.module('streamCtrl', ['ngMaterial'])
             clearInterval(interval_id);
             window.onkeyup = null
             var syncRef = end_capture()
-            console.log("syncRef length: ", syncRef)
+            console.log("syncRef length: ", syncRef.length)
             // If we got new syncRef
             if (syncRef) {
                 console.log("We got new sync data")
-                $rootScope.utils.save_sync_ref($rootScope.movieData["id"]["imdb"], JSON.stringify(syncRef))
+                $rootScope.utils.save_sync_ref($rootScope.movieData.id.tmdb, JSON.stringify(syncRef))
             }
             // Go back to film view
             $location.path('/film');

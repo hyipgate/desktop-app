@@ -37,14 +37,12 @@ angular.module('mainCtrl', ['ngMaterial'])
         }
 
         $rootScope.setFilm = function(film) {
-            //service.saveSelectedFilm(film);
             $rootScope.movieData = film
         }
 
         vm.getFile = function(event) {
             vm.processing = true;
             var file = event.target.files;
-            //service.setFile( file[0].path )
             if (file) {
                 vm.search_film(file[0].path, null).then(function(film) {
                     vm.processing = false;
@@ -89,8 +87,8 @@ angular.module('mainCtrl', ['ngMaterial'])
             });
         };
 
-        vm.selected = function(imdbid) {
-            $rootScope.utils.search_film(null, null, null, imdbid).then(function(film) {
+        vm.selected = function(film_id) {
+            $rootScope.utils.search_film(null, null, null, film_id).then(function(film) {
                 $rootScope.setFilm(film.data);
                 $location.path('/film');
                 if (!$rootScope.$$phase) $rootScope.$apply();
@@ -205,9 +203,13 @@ angular.module('mainCtrl', ['ngMaterial'])
                         return scene
                     }
 
-                    $scope.openShareDialog = function() {
+                    $scope.openTaggedDialog = function() {
                         $scope.tagStatus = $rootScope.movieData.tagStatus
                         $scope.menu = 2
+                    }
+
+                    $scope.updateTagged = function() {
+                        $rootScope.utils.update_tagged($scope.tagStatus, $rootScope.movieData.id.tmdb)
                     }
 
                     console.log(open)
@@ -297,7 +299,9 @@ angular.module('mainCtrl', ['ngMaterial'])
                     $scope.removeScene = function() {
                         console.log("[remove] deleting scene")
                         var index = find_key_by_id($rootScope.movieData.scenes, $scope.id)
-
+                        if (index == -1) {
+                            return $scope.openListDialog()
+                        }
                         var scenes = angular.copy($rootScope.movieData.scenes);
                         scenes[index].removed = true
                         scenes[index].local = true

@@ -8,14 +8,14 @@ angular.module('filmCtrl', ['ngMaterial'])
         //-------------- Load Film Metadata...  ---------//
         /////////////////////////////////////////////////// 
         vm.getMovie = function() {
-            vm.movieData = $rootScope.movieData //service.getSelectedFilm();
-            vm.scenes = vm.movieData.scenes //service.getScenes();
+            vm.scenes = $rootScope.movieData.scenes //service.getScenes();
+            vm.movieData = $rootScope.movieData
 
-            console.log(vm.movieData)
+            console.log($rootScope.movieData)
 
-            if (vm.movieData.images.backdrops[0]) {
+            if ($rootScope.movieData.images.backdrops[0]) {
                 vm.css = {
-                    'background': 'linear-gradient( rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(' + vm.movieData.images.backdrops[0] + ') no-repeat center center',
+                    'background': 'linear-gradient( rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(' + $rootScope.movieData.images.backdrops[0] + ') no-repeat center center',
                     'background-size': 'cover',
                 }
             }
@@ -93,16 +93,15 @@ angular.module('filmCtrl', ['ngMaterial'])
 
             function BottonSheetDialogController($scope, settings, scenes, $mdDialog) {
                 var vm = this
-                vm.movieData = $rootScope.movieData // service.getSelectedFilm();
 
                 vm.getProviders = function(lan) {
                     if (lan == "auto") {
-                        lan = Object.keys(vm.movieData.providers)[0] // TODO
+                        lan = Object.keys($rootScope.movieData.providers)[0] // TODO
                     }
-                    console.log(vm.movieData.providers, lan)
+                    console.log($rootScope.movieData.providers, lan)
                     var playable = [];
                     var unsupported_providers = ["Apple iTunes"];
-                    var providers = vm.movieData.providers[lan]
+                    var providers = $rootScope.movieData.providers[lan]
                     if (providers) {
 
                         for (var i = 0; i < providers.length; i++) {
@@ -131,8 +130,8 @@ angular.module('filmCtrl', ['ngMaterial'])
                     $mdBottomSheet.hide(file[0].path);
                     $rootScope.file = "file:///" + file[0].path
                     $location.path('/stream');
-                    $rootScope.utils.link_file_to_film($rootScope.file, vm.movieData.id.imdb)
-                    load_film(scenes, $rootScope.file, service.getSyncRef())
+                    $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
+                    load_film(scenes, $rootScope.file, $rootScope.movieData, $rootScope.movieData.syncRef)
                 }
 
                 vm.showPrompt = function(ev) {
@@ -150,7 +149,7 @@ angular.module('filmCtrl', ['ngMaterial'])
                         $mdBottomSheet.hide(custom_url);
                         $rootScope.file = custom_url
                         $location.path('/stream');
-                        load_film(scenes, $rootScope.file, service.getSyncRef())
+                        load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
                     }, function() {
                         $scope.status = 'You didn\'t name your dog.';
                     });
@@ -171,7 +170,7 @@ angular.module('filmCtrl', ['ngMaterial'])
                     $mdBottomSheet.hide(clickedItem.name);
                     $rootScope.file = vm.forceHttps(clickedItem.url)
                     $location.path('/stream');
-                    load_film(scenes, $rootScope.file, service.getSyncRef())
+                    load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
                 };
             }
         }
@@ -187,12 +186,12 @@ angular.module('filmCtrl', ['ngMaterial'])
         }
 
         vm.parentsGuide = function($event) {
-            $rootScope.file = "https://www.imdb.com/title/" + vm.movieData.id.imdb + "/parentalguide"
+            $rootScope.file = "https://www.imdb.com/title/" + $rootScope.movieData.id.imdb + "/parentalguide"
             $location.path('/stream');
         }
 
         vm.kidsInMind = function(argument) {
-            $rootScope.file = "http://www.kids-in-mind.com/cgi-bin/search/search.pl?q=" + vm.movieData.metadata.title
+            $rootScope.file = "http://www.kids-in-mind.com/cgi-bin/search/search.pl?q=" + $rootScope.movieData.metadata.title
             $location.path('/stream');
         }
 

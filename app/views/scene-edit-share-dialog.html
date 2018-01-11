@@ -23,9 +23,10 @@
             </md-content>
         </md-dialog-content>
         <md-dialog-actions>
-            <md-button ng-click="hideDialog()">Close</md-button>
+            <md-button aria-label="Close" ng-click="hideDialog()">Close</md-button>
             <span style="flex: 1 1 auto"></span>
-            <md-button ng-click="dumpToFile()" ng-show="isDumpable">Dump to file</md-button>
+            <md-button aria-label="Tagged" ng-click="openTaggedDialog()">Tagged</md-button>
+            <md-button aria-label="dumpToFile" ng-click="dumpToFile()" ng-show="isDumpable">Dump to file</md-button>
         </md-dialog-actions>
     </div>
     <div ng-show="menu==1">
@@ -98,9 +99,8 @@
             </md-content>
         </md-dialog-content>
         <md-dialog-actions>
-            <md-button aria-label="Close" ng-click="hideDialog()">Close</md-button>
+            <md-button aria-label="Back" ng-click="openListDialog()">Back</md-button>
             <span style="flex: 1 1 auto"></span>
-            <md-button aria-label="logIn" ng-click="hideDialog() && logIn($event)">Log In</md-button>
             <md-button aria-label="updateTagged" ng-click="updateTagged()" class="md-primary">Share</md-button>
         </md-dialog-actions>
     </div>

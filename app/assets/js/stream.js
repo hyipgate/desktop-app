@@ -229,7 +229,7 @@ var skip = {
         var next_start = Infinity
         var next_end = Infinity
         for (var i = 0; i < skip.list.length; i++) {
-            var time_to_end = skip.list[i].end - r_time + 160 // TOOD: do these margins properly
+            var time_to_end = skip.list[i].end - r_time + 160 // TODO: do these margins properly
             var time_to_start = skip.list[i].start - r_time - 160 // TODO
             // Update times if scene is in the future, and the nearest one
             if (time_to_end > 0 && time_to_start < next_start) {
