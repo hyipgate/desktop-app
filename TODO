@@ -4,13 +4,13 @@ TODO
 Blocking
 ********
 + api, store users email when they log in
-+ read tag list from default list, not from settings (as tags might be updated)
-+ utils, improve tag list
 + stream, editing time does weird things: it starts with hours = 1 (while should be 0) and every time we add/substract seconds/milliseconds/minutes the hours also increase/decrease by one every time (when using up/down)
 
 
 Can wait
 *********
++ stream, pop out "tagged" dialog when closing film
++ stream, on fullscreen netflix, cursor is hidden when edit dialog is shown
 + api, store offset data on non-master versions
 + community, send log with suggestions
 + stream, To start/end scene creation while watching, the "point" key to do so is not working anymore (might be coz watched element is not focus when pressed??)
@@ -24,18 +24,21 @@ Can wait
 + api, download syncRef on another call, only if it was updated
 + api, make sure we save username, token, and level, might be good to save all inside settings
 + search, merge the two search screens
++ film, fit all providers on list, or allow scrolling...
 
 
 At some point
 *************
-+ film, fit all providers on list, or allow scrolling...
 + film, plot text, on overflow, show elepsis
 + config, three-phase-checkbox, toggle when text clicked (not only on checkbox)
-+ stream, on preview, do not override current skip list (need to perform sync, as time offset might be different, use store list...)
 
 
 Done
 ****
+//+ read tag list from default list, not from settings (as tags might be updated)
+//+ utils, improve tag list
+//+ allow backward seek on Netflix
+//+ stream, on preview, do not override current skip list (need to perform sync, as time offset might be different, use store list...)
 //+ edit, allow sharing tagged scenes
 //+ all, check service.syncRef is never used
 //+ stream, on scene edit, share only visible if edited :)

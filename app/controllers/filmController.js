@@ -110,6 +110,21 @@ angular.module('filmCtrl', ['ngMaterial'])
                             playable.push(providers[i])
                         }
                     }
+                    if (settings.default_providers) {
+                        var urls = settings.default_providers.split(";")
+                        for (var i = 0; i < urls.length; i++) {
+                            var name = urls[i].split("->")
+                            var url = name[1].replace(/#imdb/, $rootScope.movieData.id.imdb);
+                            url = url.replace(/#title/, $rootScope.movieData.metadata.title);
+                            var tmdb = $rootScope.movieData.id.tmdb.split("_")
+                            if (tmdb[0] == "episode") {
+                                url = url.replace(/#season/, tmdb[2]);
+                                url = url.replace(/#episode/, tmdb[3]);
+                            }
+                            url = url.replace(/#tmdb/, tmdb[1]);
+                            playable.push({ name: name[0], url: url, icon: 'add.svg' })
+                        }
+                    }
                     playable.push({ name: "File/DVD", url: "file", icon: 'file.svg' })
                     playable.push({ name: "Custom URL", url: "custom", icon: 'add.svg' })
                     return playable
@@ -131,7 +146,7 @@ angular.module('filmCtrl', ['ngMaterial'])
                     $rootScope.file = "file:///" + file[0].path
                     $location.path('/stream');
                     $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
-                    load_film(scenes, $rootScope.file, $rootScope.movieData, $rootScope.movieData.syncRef)
+                    load_film(scenes, $rootScope.getSyncID(), $rootScope.movieData.syncRef)
                 }
 
                 vm.showPrompt = function(ev) {
@@ -149,7 +164,7 @@ angular.module('filmCtrl', ['ngMaterial'])
                         $mdBottomSheet.hide(custom_url);
                         $rootScope.file = custom_url
                         $location.path('/stream');
-                        load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
+                        load_film(scenes, $rootScope.getSyncID(), $rootScope.movieData.syncRef)
                     }, function() {
                         $scope.status = 'You didn\'t name your dog.';
                     });
@@ -170,7 +185,7 @@ angular.module('filmCtrl', ['ngMaterial'])
                     $mdBottomSheet.hide(clickedItem.name);
                     $rootScope.file = vm.forceHttps(clickedItem.url)
                     $location.path('/stream');
-                    load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
+                    load_film(scenes, $rootScope.getSyncID(), $rootScope.movieData.syncRef)
                 };
             }
         }
@@ -200,11 +215,11 @@ angular.module('filmCtrl', ['ngMaterial'])
     }).filter('minutes', function() {
         return function(input) {
             input = input || 0;
-            return Math.floor(input / 60)
+            return Math.floor(input / 60 / 1000)
         };
     }).filter('seconds', function() {
         return function(start, end) {
-            var len = Math.floor(end - start);
+            var len = Math.floor((end - start) / 1000);
             console.log(len)
             if (len > 60) {
                 var min = Math.floor(len / 60)

@@ -114,12 +114,10 @@ function compare_scenes(a, b) {
 
 function copy_scene(old, new_scene) {
     if (!new_scene) new_scene = {}
-    new_scene['id'] = old['id']
-    new_scene['tags'] = old['tags']
-    new_scene['comment'] = old['comment']
-    new_scene['start'] = old['start']
-    new_scene['end'] = old['end']
-    new_scene['edited'] = old['edited']
+    var good = ['id', 'tags', 'comment', 'start', 'end', 'src', 'edited']
+    for (var i = 0; i < good.length; i++) {
+        new_scene[good[i]] = old[good[i]]
+    }
     return new_scene
 }
 
@@ -229,10 +227,10 @@ function merge_local_tags(film) {
     }
     film.data.scenes = scenes*/
 
-    if (!film.data.syncRef) {
-        var syncRef = get_local_data(film_id + "_mysync")
-        console.log("we got previous syncRef ", syncRef)
-        if (syncRef) film.data.syncRef = syncRef
+    var syncRef = get_local_data(film_id + "_mysync")
+    if (syncRef) {
+        console.log("we got previous syncRef ")
+        film.data.syncRef[syncRef.src] = syncRef
     }
 
     var tags = defaul_settings.tags;
@@ -292,6 +290,7 @@ function compare_arrays(a, b) {
 function get_settings() {
     var settings = get_local_data("settings")
     if (!settings) settings = defaul_settings;
+    if (!settings.tags[0].long) settings.tags = defaul_settings.tags
     return settings;
 }
 
@@ -300,29 +299,26 @@ var defaul_settings = {
     username: "",
     editors_view: false,
     tags: [
-        { 'action': null, 'type': 'Sex', 'name': 'explicit sex' },
-        { 'action': null, 'type': 'Sex', 'name': 'implicit sex' },
-        { 'action': null, 'type': 'Sex', 'name': 'sexual comment' },
-        { 'action': null, 'type': 'Sex', 'name': 'full nudity' },
-        { 'action': null, 'type': 'Sex', 'name': 'topless' },
-        { 'action': null, 'type': 'Sex', 'name': 'kissing' },
-        { 'action': null, 'type': 'Sex', 'name': 'sensual scene' },
+        { 'action': null, 'name': 'Sexual harrasement', 'long': 'Lack of informed approval or freely given agreement; bullying, coercion or unwelcome sexual advances https://en.wikipedia.org/wiki/Sexual_harassment' },
+        { 'action': null, 'name': 'Sexual objectification', 'long': 'A person is viewed primarily as an object of sexual desire, with no interest on her/his interest or wellbeing. https://en.wikipedia.org/wiki/Sexual_objectification' },
+        { 'action': null, 'name': 'Erotic nudity', 'long': 'Private parts or underwear shown in a provocative manner' },
+        { 'action': null, 'name': 'Non-erotic nudity', 'long': '' },
+        { 'action': null, 'name': 'Explicit Sex', 'long': '' },
+        { 'action': null, 'name': 'Passionate kissing', 'long': '' },
+        { 'action': null, 'name': 'Implied Sex', 'long': '' },
+        { 'action': null, 'name': 'Sexual Talk', 'long': 'Sexually focused talk' },
 
-        { 'action': null, 'type': 'Violence', 'name': 'torture' },
-        { 'action': null, 'type': 'Violence', 'name': 'accident' },
-        { 'action': null, 'type': 'Violence', 'name': 'killing' },
-        { 'action': null, 'type': 'Violence', 'name': 'hand gesture' },
-        { 'action': null, 'type': 'Violence', 'name': 'explosion' },
-        { 'action': null, 'type': 'Violence', 'name': 'battle' },
-        { 'action': null, 'type': 'Violence', 'name': 'corpse' },
+        { 'action': null, 'name': 'Discrimination', 'long': 'Unjust or prejudicial treatment on the grounds of race, age, sex, religion...  https://en.wikipedia.org/wiki/Discrimination' },
+        { 'action': null, 'name': 'Credits', 'long': 'Closing/opening credits' },
+        { 'action': null, 'name': 'Profanity', 'long': '' },
+        { 'action': null, 'name': 'Blasphemy', 'long': 'The action or offence of speaking sacrilegiously about God or sacred things' },
+        { 'action': null, 'name': 'Ilegal drugs', 'long': '' },
+        { 'action': null, 'name': 'Tobacco/Alcohol', 'long': '' },
+        { 'action': null, 'name': 'Frightening Scene', 'long': '' },
 
-        { 'action': null, 'type': 'Others', 'name': 'credits' },
-        { 'action': null, 'type': 'Others', 'name': 'profanities' },
-        { 'action': null, 'type': 'Others', 'name': 'deity improper use' },
-        { 'action': null, 'type': 'Others', 'name': 'deity insult' },
-        { 'action': null, 'type': 'Others', 'name': 'alcohol/tobacco' },
-        { 'action': null, 'type': 'Others', 'name': 'ilegal drug' },
-        { 'action': null, 'type': 'Others', 'name': 'frightening scene' },
+        { 'action': null, 'name': 'Graphic Violence', 'long': '' },
+        { 'action': null, 'name': 'Extended Torture/Agony', 'long': '' },
+        { 'action': null, 'name': 'Death', 'long': '' },
     ]
 }
 

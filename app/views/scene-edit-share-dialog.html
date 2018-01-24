@@ -34,11 +34,11 @@
             <md-content layout="row" layout-padding>
                 <md-input-container flex="17">
                     <label>Start</label>
-                    <input type="time" step=".04" placeholder="second" ng-model="startTime" ng-change="timeChanged('start')" required/>
+                    <input type="time" step=".04" placeholder="second" ng-model="startTime" ng-change="timeChanged('start')" required ng-disabled="cantedit" />
                 </md-input-container>
                 <md-input-container flex="17">
                     <label>End</label>
-                    <input type="time" step=".04" placeholder="second" ng-model="endTime" ng-change="timeChanged('end')" required/>
+                    <input type="time" step=".04" placeholder="second" ng-model="endTime" ng-change="timeChanged('end')" required ng-disabled="cantedit" />
                 </md-input-container>
                 <md-input-container flex="66">
                     <label>Comment</label>
@@ -50,15 +50,10 @@
                 <label>Tags</label>
                 <md-input-container flex style="width: 100%">
                     <md-select ng-model="selectedTags" multiple>
-                        <md-optgroup label="Sex" style="width: 33%; float: left;">
-                            <md-option ng-value="tag" ng-repeat="tag in tagsSex" aria-label="Select Tags">{{tag}}</md-option>
-                        </md-optgroup>
-                        <md-optgroup label="Violence" style="width: 33%; float: left;">
-                            <md-option ng-value="tag" ng-repeat="tag in tagsVio" aria-label="Select Tags">{{tag}}</md-option>
-                        </md-optgroup>
-                        <md-optgroup label="Others" style="width: 33%; float: left;">
-                            <md-option ng-value="tag" ng-repeat="tag in tagsOth" aria-label="Select Tags">{{tag}}</md-option>
-                        </md-optgroup>
+                        <div style="width: 100%; grid-template-columns: 33% 33% 33%; display:grid">
+                            <md-option style="height: 42px;" ng-value="tag" ng-repeat="tag in tags" aria-label="Select Tags">{{tag.name}}
+                            </md-option>
+                        </div>
                     </md-select>
                 </md-input-container>
             </md-content>
@@ -68,6 +63,7 @@
             <span style="flex: 1 1 auto"></span>
             <md-button ng-click="removeScene()">Delete</md-button>
             <!--<md-button ng-click="uploadCurrent()">Share</md-button>-->
+            <md-button ng-show="cantedit" ng-click="enableEdition()">Enable edit</md-button>
             <md-button ng-hide="nopreview" ng-click="previewCurrent($event)">Preview</md-button>
             <md-button ng-click="saveEdition()" class="md-primary">Save</md-button>
         </md-dialog-actions>

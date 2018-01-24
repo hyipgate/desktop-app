@@ -67,7 +67,8 @@ angular.module('streamCtrl', ['ngMaterial'])
                     comment: "",
                     start: marked_scene.start,
                     end: marked_scene.end,
-                    id: random_id()
+                    id: random_id(),
+                    src: $rootScope.getSyncID()
                 }
                 $rootScope.editScene($event, "preview", scene)
                 $scope.webview_blur = 0;
@@ -94,10 +95,11 @@ angular.module('streamCtrl', ['ngMaterial'])
             clearInterval(interval_id);
             window.onkeyup = null
             var syncRef = end_capture()
-            console.log("syncRef length: ", syncRef.length)
+            console.log("syncRef length: ", Object.keys(syncRef).length)
             // If we got new syncRef
             if (syncRef) {
                 console.log("We got new sync data")
+                $rootScope.movieData.syncRef[syncRef.src] = syncRef
                 $rootScope.utils.save_sync_ref($rootScope.movieData.id.tmdb, JSON.stringify(syncRef))
             }
             // Go back to film view
@@ -108,11 +110,11 @@ angular.module('streamCtrl', ['ngMaterial'])
     }).filter('minutes', function() {
         return function(input) {
             input = input || 0;
-            return Math.floor(input / 60)
+            return Math.floor(input / 60 / 1000)
         };
     }).filter('seconds', function() {
         return function(start, end) {
-            var len = Math.floor(end - start);
+            var len = Math.floor((end - start) / 1000);
             if (len > 60) {
                 var min = Math.floor(len / 60)
                 var str = min + "min " + (len - 60 * min) + "s"
