@@ -51,7 +51,7 @@
                 <md-input-container flex style="width: 100%">
                     <md-select ng-model="selectedTags" multiple>
                         <div style="width: 100%; grid-template-columns: 33% 33% 33%; display:grid">
-                            <md-option style="height: 42px;" ng-value="tag" ng-repeat="tag in tags" aria-label="Select Tags">{{tag.name}}
+                            <md-option style="height: 42px;" ng-value="tag.name" ng-repeat="tag in tags" aria-label="Select Tags">{{tag.name}}
                             </md-option>
                         </div>
                     </md-select>
@@ -70,28 +70,18 @@
     </div>
     <div ng-show="menu==2">
         <md-dialog-content>
-            <md-content layout="row" class="md-padding">
-                <md-list class="md-dense" layout="column" flex=33>
-                    <h4>Tagged Sex</h4>
-                    <md-list-item ng-repeat="tag in tagStatus | filter: { type: 'Sex' }">
+            <md-content layout="column" class="md-padding">
+                <h4>Tick if all scenes of a type are tagged</h4>
+                <md-list class="md-dense" style="display: grid; grid-template-columns: 33% 33% 33%; width: 100%;">
+                    <md-list-item class="md-1-line" ng-repeat="tag in tagStatus" style="height: 25px; font-size: 15px" >
                         <md-checkbox aria-label="tagStatus" ng-model="tag.done"></md-checkbox>
                         <b class="md-list-item-text">{{ tag.name }}</b>
+                        <md-tooltip md-delay="1000">{{tag.long}}</md-tooltip>
                     </md-list-item>
                 </md-list>
-                <md-list class="md-dense" layout="column" flex=33>
-                    <h4>Tagged Violence</h4>
-                    <md-list-item ng-repeat="tag in tagStatus | filter: { type: 'Violence' }">
-                        <md-checkbox aria-label="tagStatus" ng-model="tag.done"></md-checkbox>
-                        <b class="md-list-item-text">{{ tag.name }}</b>
-                    </md-list-item>
-                </md-list>
-                <md-list class="md-dense" layout="column" flex=33>
-                    <h4>Tagged Others</h4>
-                    <md-list-item ng-repeat="tag in tagStatus | filter: { type: 'Others' }">
-                        <md-checkbox aria-label="tagStatus" ng-model="tag.done"></md-checkbox>
-                        <b class="md-list-item-text">{{ tag.name }}</b>
-                    </md-list-item>
-                </md-list>
+                <md-input-container>
+                    <textarea name="extra" ng-model="extra" placeholder="Other comments"></textarea>
+                </md-input-container>
             </md-content>
         </md-dialog-content>
         <md-dialog-actions>

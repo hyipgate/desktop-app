@@ -12,7 +12,7 @@ function load_film(scenes, src, ref) {
 
     reference.tableList = []
     reference.tables = {}
-    reference.our_table = {}
+    reference.our_src = ""
     reference.original_size = 0
     sync.offset = {}
     sync.confidence = {}
@@ -42,11 +42,11 @@ function end_capture() {
     wc.webview = false
     wc.rect = false
 
-    if (reference.original_size == Object.keys(reference.our_table).length) {
+    if (reference.original_size == Object.keys(reference.tables[reference.our_src]).length) {
         console.log("Nothing new here")
         return false
     }
-    return reference.our_table
+    return reference.tables[reference.our_src]
 }
 
 var isDialogVisible = false
@@ -138,8 +138,9 @@ var wc = {
                 console.log("[hash-ready] (ERROR) Discarding frame, processing_time:  ", Math.floor(processing_time))
                 return;
             }
-            // Add hash to list and update reference
+            // Add hash to list
             reference.add_hash(arg.hash, arg.time + processing_time / 2)
+            // Update sync
             for (var i = 0; i < reference.tableList.length; i++) {
                 sync.update(arg.hash, arg.time + processing_time / 2, reference.tableList[i])
             }
@@ -227,6 +228,7 @@ var skip = {
     },
 
     want_to_see: function() {
+        reference.tableList = []
         // Find next scene
         var overlaping_th = 500 // Consider two scenes overlap is gap between them is smaller than this value
         var c_time = video_time()
@@ -237,6 +239,7 @@ var skip = {
             var time_to_start = skip.list[i].start - sync.to_reference_time(c_time, skip.list[i].src, "start")
             // Update times if scene is in the future, and the nearest one
             if (time_to_end < 0) continue // Scene is in the past
+            reference.pushSrc(skip.list[i].src) // Make sure this src is updated
             if (time_to_start > next_end + overlaping_th) continue // We start after another scene ends (ie there is another scene before)
             if (next_start > time_to_end + overlaping_th) { // We are before in time, replace
                 next_end = time_to_end
@@ -315,20 +318,27 @@ var sync = {
 
     // Locates the specified time in the reference film.
     to_reference_time: function(c_time, src, extreme = "center") {
-        if (reference.our_table.src == src) return c_time
-        return c_time + sync.offset[src] // r - c = o
+        if (reference.our_src == src) return c_time
+        return c_time + sync.offset[src][extreme] // r - c = o
     },
 
     // Locates the specified time in the users film.
     to_users_time: function(r_time, src, extreme = "center") {
-        if (reference.our_table.src == src) return r_time
-        return r_time - sync.offset[src] // r - c = o
+        if (reference.our_src == src) return r_time
+        return r_time - sync.offset[src][extreme] // r - c = o
+    },
+
+    normalize: function(vector) {
+        var sum = 0
+        for (var offset in vector) sum += vector[offset]
+        for (var offset in vector) vector[offset] = vector[offset] / sum
+        return vector
     },
 
     update: function(c_hash, c_time, src) {
         // Check we have the data we need
-        console.log(c_hash, c_time, src)
-        if (!c_hash || !c_time) return console.log("[update_sync] Missing c_time || c_hash");
+        console.log("[sync.update] ", c_hash, c_time, src)
+        if (!c_hash || !c_time || !src) return console.log("[sync.update] Missing c_time || c_hash || src");
 
         c_time += 1000 * debug.induced_sync_offset // DEBUG
 
@@ -336,53 +346,70 @@ var sync = {
         var histogram = sync.histogram[src] || {}
         var guessed_time = sync.to_reference_time(c_time, src);
         var guessed_block = Math.floor(guessed_time / 1000);
-        console.log(histogram, guessed_time, guessed_block)
+
         // Compare user's frame with reference's frames in "span" blocks around the "guessed_time"
         var d_arr = {};
         var d_min = Infinity;
+        var d_max = -Infinity
         for (var block = guessed_block - sync.span; block <= guessed_block + sync.span; block++) {
-            var ref_data = reference.tables[src][block]
-            if (!ref_data) ref_data = []
+            var ref_data = reference.tables[src][block] || []
             for (var r = 0; r < ref_data.length; r++) {
-                // Calculate how different the frames are
                 var d = sync.hamming_distance(ref_data[r][0], c_hash)
                 var offset = "" + Math.round((ref_data[r][1] + block * 1000 - c_time) / 80)
                 if (d < d_min) d_min = d;
-                // Store value in array
+                if (d > d_max) d_max = d;
                 d_arr[offset] = d;
             }
         }
 
-        // Update histogram with our new evidence
-        var min_prob = sync.min_probability / sync.span / 12 / 2
+        // When a hash at "offset" is missing, we don't have a "d_arr[offset]", set it to the last value
+        var last = d_max
+        for (var offset in histogram) {
+            if (!d_arr[offset]) {
+                d_arr[offset] = last
+            } else {
+                last = d_arr[offset]
+            }
+        }
+
+        // Calculate new evidence, ie. p(z|x) = p(current d_arr | offset ) = evidence[offset]
+        var evidence = {}
+        var e_max = -Infinity
+        var e_min = Infinity
         for (var offset in d_arr) {
-            if (!d_arr.hasOwnProperty(offset)) continue;
-            if (!histogram[offset] || histogram[offset] < min_prob) histogram[offset] = min_prob
-            var evidence = 2 * (d_min + 8) / (d_arr[offset] + 2)
-            histogram[offset] = histogram[offset] * evidence
+            var e = (d_min + 8) / (d_arr[offset] + 2)
+            evidence[offset] = e
+            if (e > e_max) e_max = e
+            if (e < e_min) e_min = e
+        }
+        //evidence = sync.normalize(evidence)
+
+        //console.log(histogram, evidence)
+
+        // Update histogram with evidence
+        var min_prob = sync.min_probability / sync.span / 12 / 2
+        for (var offset in evidence) {
+            var previous = histogram[offset] ? Math.max(min_prob, histogram[offset]) : min_prob
+            histogram[offset] = previous * evidence[offset]
         }
 
         // Normalize histogram
-        var sum = 0
-        for (var offset in histogram) {
-            if (!histogram.hasOwnProperty(offset)) continue;
-            sum += histogram[offset]
-        }
-        for (var offset in histogram) {
-            if (!histogram.hasOwnProperty(offset)) continue;
-            histogram[offset] = histogram[offset] / sum
-        }
+        histogram = sync.normalize(histogram)
 
 
         // Find item with maximum probability
         var max = -Infinity;
         var m_offset = "0"
+        var sofar = 0
+        var q1, q3
         for (var offset in histogram) {
-            if (!histogram.hasOwnProperty(offset)) continue;
             if (histogram[offset] > max) {
                 max = histogram[offset]
                 m_offset = offset
             }
+            sofar += histogram[offset]
+            //if (!q1 && sofar > 0.05) q1 = offset // for in loops don't go in order
+            //if (!q3 && sofar > 0.95) q3 = offset
         }
 
         c_time -= 1000 * debug.induced_sync_offset // DEBUG
@@ -391,11 +418,13 @@ var sync = {
         sync.confidence[src] = max
         if (sync.confidence[src] > 0.8) {
             sync.last_correct_sync[src] = c_time; // detect possible error (eg flat probability)
-            sync.offset[src] = parseInt(m_offset) * 80
+            sync.offset[src].center = parseInt(m_offset) * 80
+            sync.offset[src].start = parseInt(m_offset) * 80 - 160
+            sync.offset[src].end = parseInt(m_offset) * 80 + 160
         }
         sync.last_was_weird[src] = (d_arr[m_offset] - d_min > 5) // check if current minimum match historic minimum
 
-        console.log("[update_sync] Now is ", Math.floor(c_time / 1000), "s we are using ", sync.offset[src] / 1000, "s offset. Last sync gave ", parseInt(m_offset) * 80 / 1000, "s offset with ", Math.round(100 * max), "% and d_min ", d_min, "(", d_arr[m_offset], ") adding ", sum)
+        console.log("[update_sync] Now is ", Math.floor(c_time / 1000), "s we are using ", sync.offset[src].center / 1000, "s offset. Last sync gave ", parseInt(m_offset) * 80 / 1000, "s offset with ", Math.round(100 * max), "%, d_min:", d_min, ", d_max:", d_max, ", e_max:", e_max, ", e_min:", e_min)
 
     },
 
@@ -415,7 +444,7 @@ var sync = {
     },
 
     health_report: function(src) {
-        if (src && src == reference.our_table.src) return 0
+        if (src && src == reference.our_src) return 0
 
         if (!film_loaded) return
 
@@ -451,24 +480,23 @@ var reference = {
         console.log(our_src, tables)
         for (var src in tables) {
             if (!tables[src].src) continue
-            if (src == our_src) {
-                reference.our_table = tables[src]
-                reference.original_size = Object.keys(tables[src]).length;
-            } else {
-                reference.tables[src] = tables[src]
-                sync.offset[src] = 0
-                sync.confidence[src] = 0
-                sync.histogram[src] = {}
-                sync.last_correct_sync[src] = -Infinity
-                sync.last_was_weird[src] = false
-            }
+            reference.tables[src] = tables[src]
+            sync.offset[src] = { start: 0, center: 0, end: 0 }
+            sync.confidence[src] = 0
+            sync.histogram[src] = {}
+            sync.last_correct_sync[src] = -Infinity
+            sync.last_was_weird[src] = false
         }
-        reference.our_table.src = our_src
+        reference.our_src = our_src
+        if (!reference.tables[our_src]) {
+            reference.tables[our_src] = { src: our_src }
+        }
+        reference.original_size = Object.keys(reference.tables[our_src]).length;
     },
 
     pushSrc: function(src) {
         if (reference.tableList.indexOf(src) != -1) return
-        if (reference.our_table.src == src) return
+        if (reference.our_src == src) return
         reference.tableList.push(src)
     },
 
@@ -478,9 +506,9 @@ var reference = {
 
         var block = Math.floor(c_time / 1000)
         var ms = c_time - 1000 * block
-        if (!reference.our_table[block]) reference.our_table[block] = []
-
-        reference.our_table[block].push([c_hash, ms])
+        var table = reference.tables[reference.our_src]
+        if (!table[block]) table[block] = []
+        table[block].push([c_hash, ms])
         console.log("[add_hash] ", c_hash, block, ms)
     },
 
@@ -488,7 +516,7 @@ var reference = {
         var block = Math.floor(c_time / 1000)
         var ms = c_time - 1000 * block
 
-        var ref_data = reference.our_table[block] || []
+        var ref_data = reference.tables[reference.our_src][block] || []
         for (var i = 0; i < ref_data.length; i++) {
             if (Math.abs(ref_data[i][1] - ms) < 50) return false
         }
@@ -501,7 +529,7 @@ var reference = {
         var span = start ? 2000 : 1000
         var previous_hash = false
         for (var block = Math.floor((t_pressed - span) / 1000); block <= Math.floor(t_pressed / 1000); block++) {
-            var ref_data = reference.our_table[block]
+            var ref_data = reference.tables[reference.our_src][block]
             if (!ref_data) ref_data = []
             for (var i = 1; i < ref_data.length; i++) {
                 var t = ref_data[i][1] + block * 1000

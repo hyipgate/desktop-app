@@ -235,10 +235,10 @@ function merge_local_tags(film) {
 
     var tags = defaul_settings.tags;
     var tagStatus = []
-    /*for (var i = 0; i < tags.length; i++) {
-        var done = (film.tagged.indexOf(tags[i].name) != -1)
-        tagStatus[i] = { name: tags[i].name, done: done, type: tags[i].type }
-    }*/
+    for (var i = 0; i < tags.length; i++) {
+        var done = (film.data.tagged.indexOf(tags[i].name) != -1)
+        tagStatus[i] = { name: tags[i].name, done: done, long: tags[i].long }
+    }
     film.data.tagStatus = tagStatus
 
 
