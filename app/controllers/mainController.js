@@ -37,14 +37,17 @@ angular.module('mainCtrl', ['ngMaterial'])
         }
 
         $rootScope.setFilm = function(film) {
-            //service.saveSelectedFilm(film);
+            console.log("[setFilm] ", film)
             $rootScope.movieData = film
+        }
+
+        $rootScope.getSyncID = function(argument) {
+            return $rootScope.file
         }
 
         vm.getFile = function(event) {
             vm.processing = true;
             var file = event.target.files;
-            //service.setFile( file[0].path )
             if (file) {
                 vm.search_film(file[0].path, null).then(function(film) {
                     vm.processing = false;
@@ -89,8 +92,8 @@ angular.module('mainCtrl', ['ngMaterial'])
             });
         };
 
-        vm.selected = function(imdbid) {
-            $rootScope.utils.search_film(null, null, null, imdbid).then(function(film) {
+        vm.selected = function(film_id) {
+            $rootScope.utils.search_film(null, null, null, film_id).then(function(film) {
                 $rootScope.setFilm(film.data);
                 $location.path('/film');
                 if (!$rootScope.$$phase) $rootScope.$apply();
@@ -178,11 +181,25 @@ angular.module('mainCtrl', ['ngMaterial'])
                         loadEditInputs(scene)
                     }
 
+                    $scope.enableEdition = function() {
+                        var data = getEditInputs()
+                        if (sync.health_report(data.src) < 1e4) {
+                            data.start = sync.to_users_time(data.start, data.src)
+                            data.end = sync.to_users_time(data.end, data.src)
+                            data.src = $rootScope.getSyncID()
+                            loadEditInputs(data)
+                        } else {
+                            $rootScope.openToast("Out of sync, can't convert times. Try previewing")
+                        }
+                    }
+
                     function loadEditInputs(data) {
-                        $scope.startTime = new Date(data.start * 1000)
-                        $scope.endTime = new Date(data.end * 1000)
-                        $scope.selectedTags = angular.copy(data.tags);
-                        $scope.comment = angular.copy(data.comment);
+                        $scope.cantedit = ($rootScope.getSyncID() != data.src)
+                        $scope.src = data.src
+                        $scope.startTime = new Date(data.start)
+                        $scope.endTime = new Date(data.end)
+                        $scope.selectedTags = angular.copy(data.tags)
+                        $scope.comment = angular.copy(data.comment)
                         $scope.id = data.id
                         $scope.menu = 1
                     }
@@ -197,17 +214,22 @@ angular.module('mainCtrl', ['ngMaterial'])
                     function getEditInputs() {
                         var scene = {
                             tags: $scope.selectedTags,
-                            start: $scope.startTime.getTime() / 1000,
-                            end: $scope.endTime.getTime() / 1000,
+                            start: $scope.startTime.getTime(),
+                            end: $scope.endTime.getTime(),
                             comment: $scope.comment,
-                            id: $scope.id
+                            id: $scope.id,
+                            src: $scope.src
                         }
                         return scene
                     }
 
-                    $scope.openShareDialog = function() {
+                    $scope.openTaggedDialog = function() {
                         $scope.tagStatus = $rootScope.movieData.tagStatus
                         $scope.menu = 2
+                    }
+
+                    $scope.updateTagged = function() {
+                        $rootScope.utils.update_tagged($scope.tagStatus, $rootScope.movieData.id.tmdb)
                     }
 
                     console.log(open)
@@ -219,23 +241,10 @@ angular.module('mainCtrl', ['ngMaterial'])
                     }
 
 
-                    var tags = $rootScope.utils.get_settings().tags;
-                    $scope.tagsSex = extractTags(tags, "Sex")
-                    $scope.tagsVio = extractTags(tags, "Violence")
-                    $scope.tagsOth = extractTags(tags, "Others")
-
-
-                    function extractTags(all_tags, type) {
-                        var filtered_tags = []
-                        for (var i = 0; i < all_tags.length; i++) {
-                            if (all_tags[i].type !== type) continue
-                            filtered_tags.push(all_tags[i].name);
-                        }
-                        return filtered_tags
-                    }
+                    $scope.tags = $rootScope.utils.get_settings().tags 
 
                     $scope.saveEdition = function() {
-                        if ($scope.selectedTags.length == 0) return $rootScope.openToast("Need at least one tag")
+                        //if ($scope.selectedTags.length == 0) return $rootScope.openToast("Need at least one tag")
                         //if ($scope.comment.length < 5 ) return $rootScope.openToast("Need a brief comment")
                         var scene = getEditInputs()
                         scene.edited = true
@@ -243,7 +252,6 @@ angular.module('mainCtrl', ['ngMaterial'])
                         scene.removed = false
 
                         var index = find_key_by_id($rootScope.movieData.scenes, scene.id)
-                        console.log(index)
                         if (index == -1) index = $rootScope.movieData.scenes.length
 
                         var scenes = angular.copy($rootScope.movieData.scenes);
@@ -256,15 +264,15 @@ angular.module('mainCtrl', ['ngMaterial'])
 
                     $scope.previewScene = function($event, index) {
                         var scene = $rootScope.movieData.scenes[index]
-                        skip.preview(scene.start, scene.end)
-                        setTimeout(function() { $rootScope.editScene($event, "list") }, 5000);
+                        skip.preview(scene.start, scene.end, scene.src)
+                        setTimeout(function() { $rootScope.editScene($event, "list") }, 5500);
                         $scope.hideDialog()
                     }
 
                     $scope.previewCurrent = function($event) {
                         var data = getEditInputs()
-                        skip.preview(data.start, data.end)
-                        setTimeout(function() { $rootScope.editScene($event, "preview", data) }, 5000);
+                        skip.preview(data.start, data.end, data.src)
+                        setTimeout(function() { $rootScope.editScene($event, "preview", data) }, 5500);
                         $scope.hideDialog()
                     }
 
@@ -297,7 +305,9 @@ angular.module('mainCtrl', ['ngMaterial'])
                     $scope.removeScene = function() {
                         console.log("[remove] deleting scene")
                         var index = find_key_by_id($rootScope.movieData.scenes, $scope.id)
-
+                        if (index == -1) {
+                            return $scope.openListDialog()
+                        }
                         var scenes = angular.copy($rootScope.movieData.scenes);
                         scenes[index].removed = true
                         scenes[index].local = true
@@ -341,7 +351,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                             lastEnd = time
                             if (date != new_date) $scope.endTime = new_date
                         }
-                        go_to_frame(ms / 1000)
+                        go_to_frame(ms)
                     }
 
                     function pad(n, width, z) {
@@ -362,7 +372,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                             var skip_list = []
                             for (var i = 0; i < scenes.length; i++) {
                                 var scene = scenes[i]
-                                if (scene.skip) skip_list.push({ start: scene.start - 0.08, end: scene.end + 0.08 })
+                                if (scene.skip) skip_list.push({ start: scene.start - 800, end: scene.end + 800 })
                             }
                             var input = $rootScope.file
 

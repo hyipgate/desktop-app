@@ -114,33 +114,39 @@ function compare_scenes(a, b) {
 
 function copy_scene(old, new_scene) {
     if (!new_scene) new_scene = {}
-    new_scene['id'] = old['id']
-    new_scene['tags'] = old['tags']
-    new_scene['comment'] = old['comment']
-    new_scene['start'] = old['start']
-    new_scene['end'] = old['end']
-    new_scene['edited'] = old['edited']
+    var good = ['id', 'tags', 'comment', 'start', 'end', 'src', 'edited']
+    for (var i = 0; i < good.length; i++) {
+        new_scene[good[i]] = old[good[i]]
+    }
     return new_scene
 }
 
 
 function share_scene(scene, film_id) {
     trace("share_scene", arguments) // actions "add|remove|edit"
-    var action = scene.removed? "remove" : "edit";
+    var action = scene.removed ? "remove" : "edit";
     return call_online_api({ action: action, data: JSON.stringify(scene), film_id: film_id })
 }
 
 
 function update_tagged(tagStatus, film_id) {
-    return call_online_api({ action: "modify", data: tagStatus, film_id: film_id })
+    trace("update_tagged", arguments)
+
+    var tagged = []
+    for (var i = 0; i < tagStatus.length; i++) {
+        if (tagStatus[i].done) tagged.push(tagStatus[i].name)
+    }
+    return call_online_api({ action: "settagged", data: JSON.stringify(tagged), film_id: film_id })
 }
 
 function share_sync_ref(syncRef, film_id) {
+    trace("share_sync_ref", arguments)
     return call_online_api({ action: "setsync", data: syncRef, film_id: film_id })
 }
 
-function get_sync_ref(syncRef, film_id) {
-    return call_online_api({ action: "getsync", data: syncRef, film_id: film_id })
+function get_sync_ref(film_id) {
+    trace("get_sync_ref", arguments)
+    return call_online_api({ action: "getsync", film_id: film_id })
 }
 
 
@@ -149,14 +155,14 @@ function get_sync_ref(syncRef, film_id) {
  * Save scenes editions localy
  * @returns {something}
  */
-function save_edition(film_id, data ) {
+function save_edition(film_id, data) {
     trace("save_edition", arguments)
-    var scene = copy_scene( data )
+    var scene = copy_scene(data)
     scene.removed = !!data.removed
-    var scenes = get_local_data( film_id + "_myedits" ) || []
-    var index = find_key_by_id( scenes, scene.id )
-    if ( index == -1 ) {
-        scenes.push( scene )
+    var scenes = get_local_data(film_id + "_myedits") || []
+    var index = find_key_by_id(scenes, scene.id)
+    if (index == -1) {
+        scenes.push(scene)
     } else {
         scenes[index] = scene
     }
@@ -170,9 +176,9 @@ function save_edition(film_id, data ) {
 function save_sync_ref(film_id, sync_data) {
     trace("save_sync_ref", arguments)
 
-    share_sync_ref( sync_data, film_id )
+    share_sync_ref(sync_data, film_id)
 
-    return set_local_data(film_id + "_mysync", JSON.parse(sync_data) )
+    return set_local_data(film_id + "_mysync", JSON.parse(sync_data))
 }
 
 
@@ -193,11 +199,11 @@ function merge_local_tags(film) {
     var scenes = get_local_data(film_id + "_myedits") || []
     for (var i = 0; i < scenes.length; i++) {
         var index = find_key_by_id(film.data.scenes, scenes[i].id)
-        if (index == -1) {
+        if (index == -1) { // local scene is mising on master
             if (scenes[i].removed) continue;
             scenes[i].local = true
             film.data.scenes.push(scenes[i])
-        } else {
+        } else { // local scene is also on master
             var same = compare_scenes(film.data.scenes[index], scenes[i])
             if (scenes[i].removed) {
                 film.data.scenes[index].removed = true
@@ -209,7 +215,7 @@ function merge_local_tags(film) {
                 copy_scene(scenes[i], film.data.scenes[index])
                 film.data.scenes[index].local = true
                 film.data.scenes[index].edited = scenes[i].edited
-            }
+            } // else local version is same as master
         }
     }
 
@@ -221,31 +227,22 @@ function merge_local_tags(film) {
     }
     film.data.scenes = scenes*/
 
-    if (!film.data.syncRef) {
-        var syncRef = get_local_data(film_id + "_mysync")
-        console.log("we got previous syncRef ", syncRef)
-        if (syncRef) film.data.syncRef = syncRef
+    var syncRef = get_local_data(film_id + "_mysync")
+    if (syncRef) {
+        console.log("we got previous syncRef ")
+        film.data.syncRef[syncRef.src] = syncRef
     }
 
-    // TODO
-    if (!film.data.tagStatus) {
-        var tags = get_settings().tags;
-        var tagStatus = []
-        for (var i = 0; i < tags.length; i++) {
-            tagStatus[i] = { name: tags[i].name, done: false, type: tags[i].type }
-        }
-        film.data.tagStatus = tagStatus
+    var tags = defaul_settings.tags;
+    var tagStatus = []
+    for (var i = 0; i < tags.length; i++) {
+        var done = (film.data.tagged.indexOf(tags[i].name) != -1)
+        tagStatus[i] = { name: tags[i].name, done: done, long: tags[i].long }
     }
+    film.data.tagStatus = tagStatus
+
+
     return film;
-}
-
-function edited(scene, online) {
-    for (var i = 0; i < online.length; i++) {
-        if (online[i].id == scene.id) {
-            return (JSON.stringify(scene) !== JSON.stringify(online[i]))
-        }
-    }
-    return true
 }
 
 function get_diff_tag(scene, online) {
@@ -290,19 +287,10 @@ function compare_arrays(a, b) {
 
 
 
-/**
- * Assign current user as "agent" of this film
- * @returns {json} API response
- */
-function claim(film_id) {
-    trace("claim", arguments)
-    return call_online_api({ action: "claim", film_id: film_id })
-}
-
-
 function get_settings() {
     var settings = get_local_data("settings")
     if (!settings) settings = defaul_settings;
+    if (!settings.tags[0].long) settings.tags = defaul_settings.tags
     return settings;
 }
 
@@ -311,29 +299,26 @@ var defaul_settings = {
     username: "",
     editors_view: false,
     tags: [
-        { 'action': null, 'type': 'Sex', 'name': 'explicit sex' },
-        { 'action': null, 'type': 'Sex', 'name': 'implicit sex' },
-        { 'action': null, 'type': 'Sex', 'name': 'sexual comment' },
-        { 'action': null, 'type': 'Sex', 'name': 'full nudity' },
-        { 'action': null, 'type': 'Sex', 'name': 'topless' },
-        { 'action': null, 'type': 'Sex', 'name': 'kissing' },
-        { 'action': null, 'type': 'Sex', 'name': 'sensual scene' },
+        { 'action': null, 'name': 'Sexual harrasement', 'long': 'Lack of informed approval or freely given agreement; bullying, coercion or unwelcome sexual advances https://en.wikipedia.org/wiki/Sexual_harassment' },
+        { 'action': null, 'name': 'Sexual objectification', 'long': 'A person is viewed primarily as an object of sexual desire, with no interest on her/his interest or wellbeing. https://en.wikipedia.org/wiki/Sexual_objectification' },
+        { 'action': null, 'name': 'Erotic nudity', 'long': 'Private parts or underwear shown in a provocative manner' },
+        { 'action': null, 'name': 'Non-erotic nudity', 'long': '' },
+        { 'action': null, 'name': 'Explicit Sex', 'long': '' },
+        { 'action': null, 'name': 'Passionate kissing', 'long': '' },
+        { 'action': null, 'name': 'Implied Sex', 'long': '' },
+        { 'action': null, 'name': 'Sexual Talk', 'long': 'Sexually focused talk' },
 
-        { 'action': null, 'type': 'Violence', 'name': 'torture' },
-        { 'action': null, 'type': 'Violence', 'name': 'accident' },
-        { 'action': null, 'type': 'Violence', 'name': 'killing' },
-        { 'action': null, 'type': 'Violence', 'name': 'hand gesture' },
-        { 'action': null, 'type': 'Violence', 'name': 'explosion' },
-        { 'action': null, 'type': 'Violence', 'name': 'battle' },
-        { 'action': null, 'type': 'Violence', 'name': 'corpse' },
+        { 'action': null, 'name': 'Discrimination', 'long': 'Unjust or prejudicial treatment on the grounds of race, age, sex, religion...  https://en.wikipedia.org/wiki/Discrimination' },
+        { 'action': null, 'name': 'Credits', 'long': 'Closing/opening credits' },
+        { 'action': null, 'name': 'Profanity', 'long': '' },
+        { 'action': null, 'name': 'Blasphemy', 'long': 'The action or offence of speaking sacrilegiously about God or sacred things' },
+        { 'action': null, 'name': 'Ilegal drugs', 'long': '' },
+        { 'action': null, 'name': 'Tobacco/Alcohol', 'long': '' },
+        { 'action': null, 'name': 'Frightening Scene', 'long': '' },
 
-        { 'action': null, 'type': 'Others', 'name': 'credits' },
-        { 'action': null, 'type': 'Others', 'name': 'profanities' },
-        { 'action': null, 'type': 'Others', 'name': 'deity improper use' },
-        { 'action': null, 'type': 'Others', 'name': 'deity insult' },
-        { 'action': null, 'type': 'Others', 'name': 'alcohol/tobacco' },
-        { 'action': null, 'type': 'Others', 'name': 'ilegal drug' },
-        { 'action': null, 'type': 'Others', 'name': 'frightening scene' },
+        { 'action': null, 'name': 'Graphic Violence', 'long': '' },
+        { 'action': null, 'name': 'Extended Torture/Agony', 'long': '' },
+        { 'action': null, 'name': 'Death', 'long': '' },
     ]
 }
 
@@ -361,12 +346,12 @@ exports.get_settings = get_settings;
 exports.set_settings = set_settings;
 exports.save_edition = save_edition;
 exports.save_sync_ref = save_sync_ref;
-exports.claim = claim;
 exports.share_scene = share_scene;
 exports.link_file_to_film = link_file_to_film;
 exports.merge_local_tags = merge_local_tags
 exports.get_diff_tag = get_diff_tag
 exports.send_feedback = send_feedback
+exports.update_tagged = update_tagged
 
 // Authentication functions
 exports.new_user = new_user;
@@ -427,21 +412,30 @@ function call_online_api(params) {
         }, function(error, response, body) {
             if (error) {
                 resolve({ status: 400 })
-            } else {
-                var reply = JSON.parse(body)
-                console.log(reply)
-                if (reply.data["token"]) set_local_data("token", reply.data["token"])
-                if (reply.data["username"]) set_local_data("username", reply.data["username"])
-                if (reply.data["permissions"]) set_local_data("permissions", reply.data["permissions"])
-                /*if (reply.data["update"] == "force") {
-                    const { dialog, shell } = require('electron')
-                    console.log(dialog.showMessageBox({ "type": "info", "title": "New version available", "message": "We got new exiting features for you!", "buttons": ["Try them"] }, function(argument) {
-                        shell.openExternal("www.fcinema.org/updates");
-                    }))
-                    resolve({ status: 400 })
-                }*/
-                resolve(reply)
+                return
             }
+
+            try {
+                var reply = JSON.parse(body)
+            } catch (error) {
+                console.log("Invalid response body: ", body)
+                resolve({ status: 400 })
+                return
+            }
+
+            console.log(reply)
+            if (reply.data["token"]) set_local_data("token", reply.data["token"])
+            if (reply.data["username"]) set_local_data("username", reply.data["username"])
+            if (reply.data["permissions"]) set_local_data("permissions", reply.data["permissions"])
+            /*if (reply.data["update"] == "force") {
+                const { dialog, shell } = require('electron')
+                console.log(dialog.showMessageBox({ "type": "info", "title": "New version available", "message": "We got new exiting features for you!", "buttons": ["Try them"] }, function(argument) {
+                    shell.openExternal("www.fcinema.org/updates");
+                }))
+                resolve({ status: 400 })
+            }*/
+            resolve(reply)
+
         });
 
     });
