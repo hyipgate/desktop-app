@@ -8,13 +8,11 @@ handpick = {
 
     div: null,
 
-    seek_backwards: false,
-
-    seek_fordward: false,
+    seekmodel: false,
 
     listen: function() {
-        handpick.ipcRenderer.on('go-to-frame', function(event, data) {
-            if (handpick.isloaded()) handpick.go_to_frame(data)
+        handpick.ipcRenderer.on('go-to-frame', function(event, ms) {
+            if (handpick.isloaded()) handpick.go_to_frame(ms/1000)
         });
 
         handpick.ipcRenderer.on('mute', function(event, data) {
@@ -33,8 +31,8 @@ handpick = {
             if (handpick.isloaded()) handpick.get_rect(data)
         });
 
-        handpick.ipcRenderer.on('seek-time', function(event, data) {
-            if (handpick.isloaded()) handpick.seek_time(data)
+        handpick.ipcRenderer.on('seek-time', function(event, ms) {
+            if (handpick.isloaded()) handpick.seek_time(ms/1000)
         });
 
         handpick.ipcRenderer.on('skip-scene', function(event, data) {
@@ -47,11 +45,29 @@ handpick = {
 
     },
 
+    loading: false,
+    load_iframes: function() {
+        if (handpick.loading) return
+        var iframes = document.getElementsByTagName("iframe")
+        for (var i = 0; i < iframes.length; i++) {
+            if (iframes[i].offsetWidth < 0.9 * document.documentElement.clientWidth) continue
+            if (iframes[i].offsetHeight < 0.9 * document.documentElement.clientHeight) continue
+            console.log(iframes[i].src)
+            handpick.loading = true
+            window.location.assign(iframes[i].src)
+        }
+    },
+
     load: function() {
         var video = document.getElementsByTagName("video")
-        if (video.length != 1) {
-            console.log("[webview] loading fail, more/less than one video, ie. ", video.length)
+        if (video.length > 1) {
+            console.log("[webview] loading fail, more than one video, ie. ", video.length)
             return;
+        }
+        if (video.length == 0) {
+            console.log("[webview] loading fail, no video tag")
+            handpick.load_iframes()
+            return
         }
         if (video[0].readyState < 1 || !video[0].currentTime || video[0].currentTime < 0.1) {
             console.log("[webview] too early to tell if this is the video, ie. ", video[0].currentTime)
@@ -66,14 +82,13 @@ handpick = {
         handpick.video.ontimeupdate = function() { handpick.get_current_time() };
 
         var url = window.location.href
-        if (url.indexOf("netflix") != -1 || url.indexOf("amazon") != -1) {
-            handpick.seek_fordward = false
-            handpick.seek_backwards = false
+        if (url.indexOf("netflix") != -1) {
+            handpick.seekmodel = "netflix"
+        } else if (url.indexOf("amazon") != -1) {
+            handpick.seekmodel = "amazon"
         } else {
-            handpick.seek_fordward = true
-            handpick.seek_backwards = true
+            handpick.seekmodel = "normal"
         }
-
         handpick.div = document.createElement("div");
         document.body.appendChild(handpick.div)
     },
@@ -84,32 +99,63 @@ handpick = {
 
     fast_rate_til: function(time) {
         var now = handpick.video.currentTime
-        var stop_time = 1000*(time - now) / handpick.fast_rate
-        console.log( "[fast_rate_til] ",stop_time )
-        if ( stop_time < 25 ) return // Doesn't make sense to go fast rate a few ms
+        var stop_time = 1000 * (time - now) / handpick.fast_rate
+        console.log("[fast_rate_til] ", stop_time)
+        if (stop_time < 25) return // Doesn't make sense to go fast rate a few ms
 
         handpick.video.playbackRate = handpick.fast_rate
-        setTimeout( function () {
-            console.log("[fast_rate_til] setting normal rate ", handpick.video.currentTime )
+        setTimeout(function() {
+            console.log("[fast_rate_til] setting normal rate ", handpick.video.currentTime)
             handpick.video.playbackRate = 1;
-        }, stop_time );
+        }, stop_time);
+    },
+
+    netflix_seek: function(time) {
+        var scrubber = document.getElementsByClassName('player-scrubber-progress')[0];
+        var controls = document.getElementsByClassName('player-controls-wrapper')[0];
+        var progress = document.getElementsByClassName('player-scrubber-progress-completed')[0]
+        var currentFactor = parseFloat(progress.style.width.slice(0, -1)) / 100
+        var factor = currentFactor / handpick.video.currentTime * time;
+
+        controls.style.visibility = "hidden"
+        var eventOptions = {
+            'bubbles': true,
+            'button': 0,
+            'currentTarget': scrubber
+        };
+        scrubber.dispatchEvent(new MouseEvent('mousemove', eventOptions));
+
+        position = scrubber.getBoundingClientRect();
+        eventOptions = {
+            'view': window,
+            'bubbles': true,
+            'cancelable': true,
+            'clientX': position.left + position.width * factor,
+            'clientY': position.top + position.height / 2
+        };
+        // make the "trickplay preview" show up
+        scrubber.dispatchEvent(new MouseEvent('mouseover', eventOptions));
+        // click
+        scrubber.dispatchEvent(new MouseEvent('mousedown', eventOptions));
+        scrubber.dispatchEvent(new MouseEvent('mouseup', eventOptions));
+        scrubber.dispatchEvent(new MouseEvent('mouseout', eventOptions));
+
+        controls.style.visibility = "visible"
     },
 
     seek_time: function(time) {
         console.log("[seek_time] seeking time ", time)
         var video = handpick.video;
-        var now = video.currentTime
-        if (now > time) {
-            if (handpick.seek_backwards) {
-                video.currentTime = time
-            } else {
-                console.log("[seek_time] Sorry unable to seek backwards")
-            }
+        if (handpick.seekmodel == "normal") {
+            video.currentTime = time
+        } else if (handpick.seekmodel == "netflix") {
+            handpick.netflix_seek(time)
         } else {
-            if (handpick.seek_fordward) {
-                video.currentTime = time
-            } else {
+            var now = video.currentTime
+            if (now > time) {
                 handpick.fast_rate_til(time)
+            } else {
+                console.log("[seek_time] Unable to seek")
             }
         }
     },
@@ -159,9 +205,11 @@ handpick = {
 
     go_to_frame: function(time) {
         if (!time) return;
-        var now = handpick.video.currentTime
-        if (handpick.seek_fordward && handpick.seek_backwards ) {
+        if (handpick.seekmodel == "normal") {
             handpick.video.currentTime = time
+        } else if (handpick.seekmodel == "netflix") {
+            handpick.netflix_seek(time)
+            handpick.video.pause()
         }
     },
 
@@ -175,19 +223,20 @@ handpick = {
         var video = handpick.video;
         video.style.visibility = 'visible';
         video.muted = false;
-        setTimeout(function() {
+        /*setTimeout(function() {
             video.volume = video.volume * 2
-        }, 30)
+        }, 30)*/
     },
 
     video_fade_out: function() {
         console.log("Hiding player ")
         var video = handpick.video;
         video.style.visibility = 'hidden';
-        video.volume = video.volume / 2
+        /*video.volume = video.volume / 2
         setTimeout(function() {
-            video.muted = true;
-        }, 30)
+            
+        }, 30)*/
+        video.muted = true;
     },
 
     focus_video: function() {

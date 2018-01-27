@@ -2,71 +2,21 @@
     <section>
         <h1 class="md-display-1">Settings</h1>
     </section>
-    <md-content layout="row" style="width:70%">
-    <md-tabs md-dynamic-height md-border-bottom flex="100">
-      <md-tab label="Violence">
-        <md-content class="md-padding" layout="row">
-                <md-list class="md-dense" layout="column">
-                    <md-list-item ng-if="$even" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Violence' }">
-                        <span three-state-checkbox ng-model="tag.action"></span>
-                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
-                    </md-list-item>
-                </md-list>
-                <flex flex="20"></flex>
-                <md-list class="md-dense" layout="column">
-                    <md-list-item ng-if="$odd" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Violence' }">
-                        <span three-state-checkbox ng-model="tag.action"></span>
-                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
-                    </md-list-item>
-                </md-list>
-        </md-content>
-      </md-tab>
-      <md-tab label="Sex and Nudity">
-        <md-content class="md-padding" layout="row">
-               <md-list class="md-dense" layout="column">
-                    <md-list-item ng-if="$even" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Sex' }">
-                        <span three-state-checkbox ng-model="tag.action"></span>
-                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
-                    </md-list-item>
-                </md-list>
-                <flex flex="20"></flex>
-               <md-list class="md-dense" layout="column">
-                    <md-list-item ng-if="$odd" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Sex' }">
-                        <span three-state-checkbox ng-model="tag.action"></span>
-                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
-                    </md-list-item>
-                </md-list>
-        </md-content>
-      </md-tab>
-      <md-tab label="Others">
-        <md-content class="md-padding" layout="row">
-                <md-list class="md-dense" layout="column">
-                    <md-list-item ng-if="$even" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Others' }">
-                        <span three-state-checkbox ng-model="tag.action"></span>
-                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
-                    </md-list-item>
-                    <md-list-item></md-list-item>
-                </md-list>
-                <flex flex="20"></flex>
-                <md-list class="md-dense" layout="column">
-                    <md-list-item ng-if="$odd" class="md-1-line" ng-repeat="tag in settings.tags | filter: {type: 'Others' }">
-                        <span three-state-checkbox ng-model="tag.action"></span>
-                        <div class="md-list-item-text" layout="column">{{tag.name}}</div>
-                    </md-list-item>
-                    <md-list-item></md-list-item>
-                    <md-list-item></md-list-item>
-                </md-list>
-        </md-content>
-      </md-tab>
-    </md-tabs>       
+    <md-content layout="row" style="width:70%" class="md-padding" layout="row">
+        <md-list class="md-dense" layout="column" style="display: grid; grid-template-columns: 33% 33% 33%; width: 100%;">
+            <md-list-item class="md-1-line" ng-repeat="tag in settings.tags">
+                <span three-state-checkbox ng-model="tag.action"></span>
+                <div class="md-list-item-text" layout="column">{{tag.name}}</div>
+                <md-tooltip md-delay="1000">{{tag.long}}</md-tooltip>
+            </md-list-item>
+        </md-list>
     </md-content>
-    <md-content style="width:70%; padding-bottom: 6px;" layout="row" layout-align="space-around center">
-        <div><span three-state-checkbox ng-model="true" ></span>I'm OK with this. Ignore tag</div>
-        <div><span three-state-checkbox ng-model="false"></span>I don't like it. Skip by default</div>
-        <div><span three-state-checkbox ng-model="null"></span>Warn me, but don't skip by default</div>
+    <md-content style="width:70%; padding-bottom: 10px;" layout="row" layout-align="space-around center">
+        <div><span three-state-checkbox ng-model="true"></span>Ignore. I'm OK with this</div>
+        <div><span three-state-checkbox ng-model="false"></span>Skip. I don't like this</div>
+        <div><span three-state-checkbox ng-model="null"></span>Ask. Warn me, but don't skip by default</div>
     </md-content>
     <flex flex="5"></flex>
-
     <section flex style="width:70%" layout="row" layout-align="space-between center">
         <md-input-container>
             <label>Country</label>
@@ -76,22 +26,18 @@
                 </md-option>
             </md-select>
         </md-input-container>
-
         <md-switch ng-model="settings.editors_view" aria-label="Editor mode">
             Editor's mode
         </md-switch>
-
         <div>
             <md-button class="md-raised md-primary md-hue-2" ng-click="logIn($event)">Log In</md-button>
             <md-button class="md-raised md-primary md-hue-2" ng-click="config.newUser($event)">New user</md-button>
             <md-button class="md-raised md-primary md-hue-2" ng-click="config.newPass($event)">Change password</md-button>
         </div>
     </section>
-
     <section flex layout="row" layout-align="space-between center" style="margin-left: 90%;">
         <span style="font-size: 1rem;color:#fff;">v{{appVersion}}</span>
     </section>
-
     <md-button class="md-fab md-fab-top-left transparentFab" aria-label="Settings" ng-click="closeSettings()">
         <md-icon md-svg-src="./assets/img/back.svg" style="fill:white"></md-icon>
     </md-button>
