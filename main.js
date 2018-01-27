@@ -83,19 +83,6 @@ function createWindow() {
       })
     })
 
-    autoUpdater.on('error', message => {
-      const dialogOpts2 = {
-        type: 'info',
-        buttons: ['Close'],
-        title: 'Error',
-        message: url,
-        detail: String(message)
-      }
-
-      dialog.showMessageBox(dialogOpts2, (response) => {
-      })
-    })
-
 }
 
 // This method will be called when Electron has finished
