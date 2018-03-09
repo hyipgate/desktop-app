@@ -9,6 +9,7 @@
 const electron = require('electron')
 // Module to control application life.
 const app = electron.app;
+const Menu = electron.Menu;
 const autoUpdater = electron.autoUpdater;
 const dialog = electron.dialog;
 const ipcMain = electron.ipcMain;
@@ -42,8 +43,24 @@ function createWindow() {
         }
     })
 
-    // remove menu bar
-    mainWindow.setMenu(null);
+    var template = [{
+        label: "fCinema",
+        submenu: [
+            { label: "About fCinema", selector: "orderFrontStandardAboutPanel:" },
+            { type: "separator" },
+            { label: "Quit", accelerator: "Command+Q", click: function() { app.quit(); }}
+        ]}, {
+        label: "Edit",
+        submenu: [
+            { label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:" },
+            { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
+            { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
+        ]}
+    ];
+
+    const menu = Menu.buildFromTemplate(template)
+    Menu.setApplicationMenu(menu)
+
 
     // and load the index.html of the app.
     mainWindow.loadURL('file://' + __dirname + '/app/index.html')
@@ -84,6 +101,7 @@ function createWindow() {
     })
 
 }
+
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
