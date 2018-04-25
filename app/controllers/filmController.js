@@ -144,11 +144,30 @@ angular.module('filmCtrl', ['ngMaterial'])
                     var file = event.target.files;
                     console.log("playFile: ", file)
                     $mdBottomSheet.hide(file[0].path);
-                    $rootScope.file = "file:///" + file[0].path
-                    $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
-                    load_film(scenes, $rootScope.getSyncID(), $rootScope.movieData.syncRef)
-                    $location.path('/stream');
+                    /* RegEx for checking valid file format
+                        /^(.*\.(mp4)$)/
+                        /^(.*\.(mp4|avi)$)/
+                    */
+                    console.log('Here');
+                    if(/^(.*\.(mp4)$)/.test(file[0].path)){
+                        console.log('1');
+                        $rootScope.file = "file:///" + file[0].path
+                        $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
+                        load_film(scenes, $rootScope.getSyncID(), $rootScope.movieData.syncRef)
+                        $location.path('/stream');
+                    }else{
+                        console.log('2');
+                        vm.unsupportedFile();
+                    }
                 }
+
+                vm.unsupportedFile = function() {
+                    var error = $mdDialog.alert()
+                        .title('Unsupported file')
+                        .textContent('Sorry, only .mp4 files are currently supported')
+                        .ok('Ok')
+                    $mdDialog.show(error)
+                };
 
                 vm.showPrompt = function(ev) {
                     // Appending dialog to document.body to cover sidenav in docs app
