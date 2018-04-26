@@ -12,7 +12,7 @@ handpick = {
 
     listen: function() {
         handpick.ipcRenderer.on('go-to-frame', function(event, ms) {
-            if (handpick.isloaded()) handpick.go_to_frame(ms/1000)
+            if (handpick.isloaded()) handpick.go_to_frame(ms / 1000)
         });
 
         handpick.ipcRenderer.on('mute', function(event, data) {
@@ -32,7 +32,7 @@ handpick = {
         });
 
         handpick.ipcRenderer.on('seek-time', function(event, ms) {
-            if (handpick.isloaded()) handpick.seek_time(ms/1000)
+            if (handpick.isloaded()) handpick.seek_time(ms / 1000)
         });
 
         handpick.ipcRenderer.on('skip-scene', function(event, data) {
@@ -98,34 +98,51 @@ handpick = {
     },
 
     fast_rate_til: function(time) {
-        var now = handpick.video.currentTime
-        var stop_time = 1000 * (time - now) / handpick.fast_rate
-        console.log("[fast_rate_til] ", stop_time)
-        if (stop_time < 25) return // Doesn't make sense to go fast rate a few ms
-
         handpick.video.playbackRate = handpick.fast_rate
+        var frequency = 0.1
         setTimeout(function() {
-            console.log("[fast_rate_til] setting normal rate ", handpick.video.currentTime)
-            handpick.video.playbackRate = 1;
-        }, stop_time);
+            if (handpick.video.currentTime + frequency * handpick.fast_rate * 3 < time) {
+                handpick.fast_rate_til(time)
+            } else {
+                console.log("[fast_rate_til] setting normal rate ", handpick.video.currentTime)
+                handpick.video.playbackRate = 1;
+            }
+        }, frequency * 1000);
     },
 
     netflix_seek: function(time) {
-        var scrubber = document.getElementsByClassName('player-scrubber-progress')[0];
-        var controls = document.getElementsByClassName('player-controls-wrapper')[0];
-        var progress = document.getElementsByClassName('player-scrubber-progress-completed')[0]
-        var currentFactor = parseFloat(progress.style.width.slice(0, -1)) / 100
-        var factor = currentFactor / handpick.video.currentTime * time;
 
-        controls.style.visibility = "hidden"
-        var eventOptions = {
+        // Allow pointer events
+        var no_pointer = document.getElementsByClassName("PlayerControls--control-element-hidden")
+        for (var i = 0; i < no_pointer.length; i++) no_pointer[i].style.pointerEvents = "auto"
+
+        // Convert time to %
+        var scrubberHead = document.getElementsByClassName("scrubber-head")[0]
+        var factor = time / scrubberHead.getAttribute("aria-valuemax")
+
+        // Show controls (we need the position of the control bar, so we need to render it)
+        var scrubber = document.getElementsByClassName('track')[0];
+        var controls = document.getElementsByClassName('controls')[0];
+        controls.className = controls.className.replace("inactive", "active")
+        //controls.style.visibility = "hidden" // but we can hide it from the user :)
+        scrubber.dispatchEvent(new MouseEvent('mousemove', {
             'bubbles': true,
-            'button': 0,
             'currentTarget': scrubber
-        };
-        scrubber.dispatchEvent(new MouseEvent('mousemove', eventOptions));
+        }));
 
-        position = scrubber.getBoundingClientRect();
+        // Get the positino of the control bar
+        var new_position = scrubber.getBoundingClientRect();
+        if (new_position.left != 0) {
+            console.log("using new position")
+            position = new_position
+        } else if (position) {
+            console.log("using old position...")
+        } else {
+            console.log("Panic! Unable to jump, what shall we do??")
+            return
+        }
+
+        // Now do an actual jump
         eventOptions = {
             'view': window,
             'bubbles': true,
@@ -133,6 +150,7 @@ handpick = {
             'clientX': position.left + position.width * factor,
             'clientY': position.top + position.height / 2
         };
+        console.log("netflix_seek: ", position.left, " + ", position.width, " * ", factor, " = ", eventOptions.clientX)
         // make the "trickplay preview" show up
         scrubber.dispatchEvent(new MouseEvent('mouseover', eventOptions));
         // click
@@ -141,6 +159,7 @@ handpick = {
         scrubber.dispatchEvent(new MouseEvent('mouseout', eventOptions));
 
         controls.style.visibility = "visible"
+
     },
 
     seek_time: function(time) {
@@ -150,6 +169,7 @@ handpick = {
             video.currentTime = time
         } else if (handpick.seekmodel == "netflix") {
             handpick.netflix_seek(time)
+            handpick.fast_rate_til(time)
         } else {
             var now = video.currentTime
             if (now > time) {
@@ -174,6 +194,8 @@ handpick = {
                 video.playbackRate = 1
                 handpick.video_fade_in()
                 handpick.skipping = false
+                handpick.video.playbackRate = 1;
+                handpick.ipcRenderer.sendToHost("skip_finished")
             } else if (now > start - 0.08 && !hidden) {
                 handpick.video_fade_out()
                 handpick.video.play()
@@ -181,14 +203,6 @@ handpick = {
                 hidden = true
             }
         }, 30)
-    },
-
-    setTimer: function(delay) {
-        if (timer_delay == delay) return
-        if (timer_id) clearInterval(timer_id);
-        console.log("setting timer every ", delay)
-        if (delay) timer_id = setInterval(get_thumbail, delay);
-        timer_delay = delay;
     },
 
     mute: function(state) {
@@ -209,7 +223,6 @@ handpick = {
             handpick.video.currentTime = time
         } else if (handpick.seekmodel == "netflix") {
             handpick.netflix_seek(time)
-            handpick.video.pause()
         }
     },
 

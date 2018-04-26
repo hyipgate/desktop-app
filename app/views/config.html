@@ -2,19 +2,20 @@
     <section>
         <h1 class="md-display-1">Settings</h1>
     </section>
-    <md-content layout="row" style="width:70%" class="md-padding" layout="row">
+    <md-content style="width:70%;" layout="row" layout-align="space-around center">
+        <h4>What do you prefer?</h4>
+        <div class="noClicks"><span three-state-checkbox ng-model="vtrue"></span>Filter active</div>
+        <div class="noClicks"><span three-state-checkbox ng-model="vfalse"></span>No protection</div>
+        <div class="noClicks"><span three-state-checkbox ng-model="vnull"></span>Ask per scene</div>
+    </md-content>
+    <md-content layout="row" style="width:70%" class="md-dense" layout="row">
         <md-list class="md-dense" layout="column" style="display: grid; grid-template-columns: 33% 33% 33%; width: 100%;">
-            <md-list-item class="md-1-line" ng-repeat="tag in settings.tags">
+            <md-list-item class="md-1-line" ng-repeat="tag in settings.tags" onclick="this.getElementsByTagName('span')[0].click()">
                 <span three-state-checkbox ng-model="tag.action"></span>
                 <div class="md-list-item-text" layout="column">{{tag.name}}</div>
-                <md-tooltip md-delay="1000">{{tag.long}}</md-tooltip>
+                <md-tooltip md-delay="2000">{{tag.long}}</md-tooltip>
             </md-list-item>
         </md-list>
-    </md-content>
-    <md-content style="width:70%; padding-bottom: 10px;" layout="row" layout-align="space-around center">
-        <div><span three-state-checkbox ng-model="true"></span>Ignore. I'm OK with this</div>
-        <div><span three-state-checkbox ng-model="false"></span>Skip. I don't like this</div>
-        <div><span three-state-checkbox ng-model="null"></span>Ask. Warn me, but don't skip by default</div>
     </md-content>
     <flex flex="5"></flex>
     <section flex style="width:70%" layout="row" layout-align="space-between center">
@@ -29,11 +30,10 @@
         <md-switch ng-model="settings.editors_view" aria-label="Editor mode">
             Editor's mode
         </md-switch>
-        <div>
-            <md-button class="md-raised md-primary md-hue-2" ng-click="logIn($event)">Log In</md-button>
-            <md-button class="md-raised md-primary md-hue-2" ng-click="config.newUser($event)">New user</md-button>
-            <md-button class="md-raised md-primary md-hue-2" ng-click="config.newPass($event)">Change password</md-button>
-        </div>
+        <md-input-container flex="66">
+            <label>Custom providers</label>
+            <input type="text" ng-model="settings.default_providers" placeholder="Custom"/>
+        </md-input-container>
     </section>
     <section flex layout="row" layout-align="space-between center" style="margin-left: 90%;">
         <span style="font-size: 1rem;color:#fff;">v{{appVersion}}</span>

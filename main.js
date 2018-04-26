@@ -1,10 +1,9 @@
-
-  //handle setupevents as quickly as possible
- const setupEvents = require('./installers/setupEvents')
- if (setupEvents.handleSquirrelEvent()) {
+//handle setupevents as quickly as possible
+const setupEvents = require('./installers/setupEvents')
+if (setupEvents.handleSquirrelEvent()) {
     // squirrel event handled and app will exit in 1000ms, so don't do anything else
     return;
- }
+}
 
 const electron = require('electron')
 // Module to control application life.
@@ -37,8 +36,7 @@ function createWindow() {
         minHeight: 610,
         minWidth: 890,
         webPreferences: {
-            // The `plugins` have to be enabled.
-            plugins: true
+            plugins: true // The `plugins` have to be enabled.
         }
     })
 
@@ -70,30 +68,29 @@ function createWindow() {
     }
 
     autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
-      const dialogOpts = {
-        type: 'info',
-        buttons: ['Restart', 'Later'],
-        title: 'Application Update',
-        message: process.platform === 'win32' ? releaseNotes : releaseName,
-        detail: 'A new version has been downloaded. Restart the application to apply the updates.'
-      }
+        const dialogOpts = {
+            type: 'info',
+            buttons: ['Restart', 'Later'],
+            title: 'Application Update',
+            message: process.platform === 'win32' ? releaseNotes : releaseName,
+            detail: 'A new version has been downloaded. Restart the application to apply the updates.'
+        }
 
-      dialog.showMessageBox(dialogOpts, (response) => {
-        if (response === 0) autoUpdater.quitAndInstall()
-      })
+        dialog.showMessageBox(dialogOpts, (response) => {
+            if (response === 0) autoUpdater.quitAndInstall()
+        })
     })
 
     autoUpdater.on('error', message => {
-      const dialogOpts2 = {
-        type: 'info',
-        buttons: ['Close'],
-        title: 'Error',
-        message: url,
-        detail: String(message)
-      }
+        const dialogOpts2 = {
+            type: 'info',
+            buttons: ['Close'],
+            title: 'Error',
+            message: url,
+            detail: String(message)
+        }
 
-      dialog.showMessageBox(dialogOpts2, (response) => {
-      })
+        dialog.showMessageBox(dialogOpts2, (response) => {})
     })
 
 }
@@ -124,10 +121,8 @@ app.on('activate', function() {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 ipcMain.on('get-hash', (event, arg) => {
-    if (!is_valid_rect(arg.rect)) {
-        console.log("[get-hash] (ERROR) invalid rect ", arg.rect)
-        return
-    }
+    if (!is_valid_rect(arg.rect)) return console.log("[get-hash] (ERROR) invalid rect ", arg.rect)
+    if (!mainWindow.isVisible()) return console.log("[get-hash] (ERROR) window is not visible")
     mainWindow.capturePage(function handleCapture(img) {
         var img2 = img.crop(arg.rect).resize({ width: 16, height: 9, quality: "good" })
         img = null // this is an attempt to avoid memory leakages
@@ -142,7 +137,7 @@ ipcMain.on('get-hash', (event, arg) => {
 
 
 ipcMain.on('exit-fullscreen', (event, arg) => {
-    if( mainWindow.isFullScreen() ) mainWindow.setFullScreen( false );
+    if (mainWindow.isFullScreen()) mainWindow.setFullScreen(false);
 })
 
 
@@ -150,11 +145,8 @@ ipcMain.on('exit-fullscreen', (event, arg) => {
  * Improves the quality of the rect (croping black borders)
  */
 ipcMain.on('improve-rect', (event, arg) => {
-    if (!is_valid_rect(arg.orect)) {
-        console.log("[improve-rect] (ERROR) invaled rect...", arg.orect)
-        return
-    }
-    console.log('[improve-rect] got a valid rect...', arg.orect)
+    if (!is_valid_rect(arg.orect)) return console.log("[improve-rect] (ERROR) invalid rect ", arg.orect)
+    if (!mainWindow.isVisible()) return console.log("[improve-rect] (ERROR) window is not visible")
     mainWindow.capturePage(function handleCapture(img) {
         var orect = arg.orect
         if (img.isEmpty()) return console.log('[get-hash] (ERROR) Empty image')
@@ -213,12 +205,10 @@ ipcMain.on('improve-rect', (event, arg) => {
         rect.height = Math.round(orect.height - trim);
 
 
-        if (is_valid_rect(rect)) {
-            console.log("got new improved rect ", rect)
-            event.sender.send('improved-rect-ready', { 'orect': orect, 'rect': rect })
-        } else {
-            console.log("[improve-rect] (ERROR) got invalied rect", rect)
-        }
+        if (!is_valid_rect(rect)) return console.log("[improve-rect] (ERROR) got invalied rect", rect)
+
+        console.log("got new improved rect ", rect)
+        event.sender.send('improved-rect-ready', { 'orect': orect, 'rect': rect })
 
     })
 })

@@ -27,4 +27,9 @@ angular.module('chooseFilmCtrl', ['ngMaterial'])
 
         vm.getMovie();
 
-    });
+    }).filter('poster', function() {
+        return function(poster) {
+            if (poster) return poster
+            return "./assets/img/missingPoster.jpg"
+        };
+    })
