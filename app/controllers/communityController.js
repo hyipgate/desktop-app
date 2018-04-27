@@ -2,12 +2,6 @@ angular.module('communityCtrl', ['ngMaterial'])
 
     .controller('CommunityController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog) {
         var vm = this;
-        $scope.settings = $rootScope.utils.get_settings() // this reads a file... store the value...
-
-        $rootScope.saveSettings = function() {
-            console.log("saving data ", $scope.settings)
-            $rootScope.utils.set_settings($scope.settings)
-        }
 
         vm.toggleDevTools = function() {
             const { remote } = require('electron')
@@ -35,6 +29,11 @@ angular.module('communityCtrl', ['ngMaterial'])
             { iwilldo: false, name: "Server (21€)" }
         ]
 
+        vm.logOut = function(ev){
+            $rootScope.settings.username = ""
+            $rootScope.saveSettings()
+        }
+
         vm.logIn = function(ev) {
             $mdDialog.show({
                 template: '<md-dialog layout="column" md-theme="darkTheme">' +
@@ -49,7 +48,7 @@ angular.module('communityCtrl', ['ngMaterial'])
                     '  </md-dialog-actions>' +
                     '</md-dialog>',
                 targetEvent: ev,
-                locals: { username: $scope.settings.username },
+                locals: { username: $rootScope.settings.username },
                 controller: LogInDialogController
             })
 
@@ -67,7 +66,9 @@ angular.module('communityCtrl', ['ngMaterial'])
                     console.log($scope.name, $scope.pass)
                     $rootScope.utils.log_in($scope.name, $scope.pass).then(function(answer) {
                         if (answer["status"] && answer["status"] == 200) {
-                            $rootScope.openToast("You are in!")
+                            $rootScope.openToast("Hi "+$scope.name+", good to have you around!")
+                            $rootScope.settings.username = $scope.name
+                            $rootScope.saveSettings()
                             $mdDialog.hide()
                         } else {
                             $rootScope.openToast(answer.data)
@@ -110,7 +111,9 @@ angular.module('communityCtrl', ['ngMaterial'])
                     console.log("create new user: ", $scope.name, " -> ", $scope.email)
                     $rootScope.utils.new_user($scope.name, $scope.pass, $scope.email).then(function(answer) {
                         if (answer["status"] && answer["status"] == 200) {
-                            $rootScope.openToast("Welcome!")
+                            $rootScope.openToast("Welcome to our community "+$scope.name+"!")
+                            $rootScope.settings.username = $scope.name
+                            $rootScope.saveSettings()
                             $mdDialog.hide()
                         } else {
                             $rootScope.openToast(answer.data)
@@ -127,8 +130,8 @@ angular.module('communityCtrl', ['ngMaterial'])
                     '  <md-dialog-content>' +
                     '    <md-content layout="column" layout-padding>' +
                     '      <md-input-container style="margin:15px 0 0 0;"><label>Username</label><input type="text" ng-model="name"/></md-input-container>' +
-                    '      <md-input-container style="margin:0;"><label>Old Pass</label><input type="password" ng-model="oldpass"/></md-input-container>' +
-                    '      <md-input-container style="margin:0;"><label>New Pass</label><input type="password" ng-model="pass"/></md-input-container>' +
+                    '      <md-input-container style="margin:0;"><label>Old password</label><input type="password" ng-model="oldpass"/></md-input-container>' +
+                    '      <md-input-container style="margin:0;"><label>New password</label><input type="password" ng-model="pass"/></md-input-container>' +
                     '  </md-dialog-content>' +
                     '  <md-dialog-actions>' +
                     '    <md-button ng-click="cancel()">Cancel</md-button>' +
@@ -136,7 +139,7 @@ angular.module('communityCtrl', ['ngMaterial'])
                     '  </md-dialog-actions>' +
                     '</md-dialog>',
                 targetEvent: ev,
-                locals: { username: $scope.settings.username },
+                locals: { username: $rootScope.settings.username },
                 controller: LogInDialogController
             })
 

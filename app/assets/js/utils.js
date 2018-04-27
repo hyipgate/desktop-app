@@ -32,11 +32,11 @@ function search_film(file, title, url, film_id) {
         return call_online_api({ action: "search", film_id: film_id }).then(function(film) {
             if (film["status"] == 200) {
                 set_local_data(film_id, film["data"])
-                return merge_local_tags(film);
+                return merge_local_data(film);
             }
             // In case of network error... check if we got a local copy
             film = get_local_data(film_id)
-            if (film["type"]) return merge_local_tags({ status: 205, data: film })
+            if (film["type"]) return merge_local_data({ status: 205, data: film })
             // If we don't have anything
             return { status: 400, data: {} }
         })
@@ -57,14 +57,14 @@ function search_film(file, title, url, film_id) {
                     set_local_data(stats.hash + "|" + stats.filesize, film_id)
                     set_local_data(film_id, film["data"])
                 }
-                return merge_local_tags(film);
+                return merge_local_data(film);
             })
         })
     }
 
     // We just got a title/url
     return call_online_api({ action: "search", filename: title, url: url }).then(function(film) {
-        return merge_local_tags(film);
+        return merge_local_data(film);
     })
 }
 
@@ -84,6 +84,11 @@ function send_feedback(feedback, help) {
 function log_in(user, pass) {
     trace("log_in", arguments)
     return call_online_api({ action: "login", username: user, password: pass })
+}
+
+function log_out() {
+    trace("log_out", arguments)
+    return call_online_api({ action: "logout" })
 }
 
 
@@ -178,7 +183,19 @@ function save_sync_ref(film_id, sync_data) {
 
     share_sync_ref(sync_data, film_id)
 
-    return set_local_data(film_id + "_mysync", JSON.parse(sync_data))
+    var sync_data = JSON.parse(sync_data)
+
+    var syncRef = get_local_data(film_id + "_mysync")
+
+    console.log("save_sync_ref readed ", syncRef)
+    if (!syncRef) syncRef = {}
+    if (syncRef.src) syncRef = {} // to clean old versions stuff
+    console.log("save_sync_ref merged", merge_sync_data(syncRef[sync_data.src], sync_data))
+    syncRef[sync_data.src] = merge_sync_data(syncRef[sync_data.src], sync_data)
+
+    console.log("save_sync_ref ", syncRef)
+
+    return set_local_data(film_id + "_mysync", syncRef)
 }
 
 
@@ -190,8 +207,8 @@ function find_key_by_id(list, id) {
 }
 
 
-function merge_local_tags(film) {
-    trace("merge_local_tags", arguments)
+function merge_local_data(film) {
+    trace("merge_local_data", arguments)
     if (film.status == 400 || !film.data["id"] || !film.data["id"]["tmdb"]) return film
 
     var film_id = film.data["id"]["tmdb"]
@@ -229,20 +246,36 @@ function merge_local_tags(film) {
 
     var syncRef = get_local_data(film_id + "_mysync")
     if (syncRef) {
-        console.log("we got previous syncRef ")
-        film.data.syncRef[syncRef.src] = syncRef
+        console.log("we got previous sync data")
+        for (var src in syncRef) {
+            film.data.syncRef[src] = merge_sync_data(film.data.syncRef[src], syncRef[src])
+        }
     }
 
-    var tags = defaul_settings.tags;
+    var tags = default_settings.tags;
+    film.data.needstag = []
     var tagStatus = []
     for (var i = 0; i < tags.length; i++) {
-        var done = (film.data.tagged.indexOf(tags[i].name) != -1)
+        var done = null
+        if (film.data.tagged.indexOf(tags[i].name) != -1) done = true
+        if (film.data.needstag.indexOf(tags[i].name) != -1) done = false
         tagStatus[i] = { name: tags[i].name, done: done, long: tags[i].long }
     }
     film.data.tagStatus = tagStatus
 
 
     return film;
+}
+
+function merge_sync_data(a, b) {
+    console.log(a, b)
+    if (!a & !b) return {}
+    if (!a) return b
+    // TODO, merge things properly        
+    if (!b || Object.keys(a).length > Object.keys(b).length) {
+        return a
+    }
+    return b
 }
 
 function get_diff_tag(scene, online) {
@@ -289,14 +322,15 @@ function compare_arrays(a, b) {
 
 function get_settings() {
     var settings = get_local_data("settings")
-    if (!settings) settings = defaul_settings;
-    if (!settings.tags[0].long) settings.tags = defaul_settings.tags
+    if (!settings) settings = default_settings;
+    if (!settings.tags[0].long) settings.tags = default_settings.tags
     return settings;
 }
 
-var defaul_settings = {
+var default_settings = {
     language: "auto",
     username: "",
+    default_providers: "",
     editors_view: false,
     tags: [
         { 'action': null, 'name': 'Sexual harrasement', 'long': 'Lack of informed approval or freely given agreement; bullying, coercion or unwelcome sexual advances https://en.wikipedia.org/wiki/Sexual_harassment' },
@@ -314,10 +348,10 @@ var defaul_settings = {
         { 'action': null, 'name': 'Blasphemy', 'long': 'The action or offence of speaking sacrilegiously about God or sacred things' },
         { 'action': null, 'name': 'Ilegal drugs', 'long': '' },
         { 'action': null, 'name': 'Tobacco/Alcohol', 'long': '' },
-        { 'action': null, 'name': 'Frightening Scene', 'long': '' },
 
+        { 'action': null, 'name': 'Frightening Scene', 'long': '' },
         { 'action': null, 'name': 'Graphic Violence', 'long': '' },
-        { 'action': null, 'name': 'Extended Torture/Agony', 'long': '' },
+        { 'action': null, 'name': 'Torture/Agony', 'long': '' },
         { 'action': null, 'name': 'Death', 'long': '' },
     ]
 }
@@ -348,7 +382,7 @@ exports.save_edition = save_edition;
 exports.save_sync_ref = save_sync_ref;
 exports.share_scene = share_scene;
 exports.link_file_to_film = link_file_to_film;
-exports.merge_local_tags = merge_local_tags
+exports.merge_local_tags = merge_local_data
 exports.get_diff_tag = get_diff_tag
 exports.send_feedback = send_feedback
 exports.update_tagged = update_tagged

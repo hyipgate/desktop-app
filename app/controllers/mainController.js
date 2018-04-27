@@ -12,6 +12,12 @@ angular.module('mainCtrl', ['ngMaterial'])
         $rootScope.utils = $rootScope.electron.remote.require('./app/assets/js/utils');
         $rootScope.appVersion = require('../package.json').version;
 
+        $rootScope.settings = $rootScope.utils.get_settings()
+
+        $rootScope.vtrue = true
+        $rootScope.vfalse = false
+        $rootScope.vnull = null
+
         $rootScope.openToast = function(msg) {
             $mdToast.show($mdToast.simple().textContent(msg).hideDelay(2000));
         };
@@ -24,6 +30,11 @@ angular.module('mainCtrl', ['ngMaterial'])
         $scope.openSettings = function() {
             vm.beforeConfig = $location.path();
             $location.path('/config');
+        }
+
+        $rootScope.saveSettings = function() {
+            console.log("saving data ", $rootScope.settings)
+            $rootScope.utils.set_settings($rootScope.settings)
         }
 
         $scope.closeCommunity = function() {
@@ -41,8 +52,13 @@ angular.module('mainCtrl', ['ngMaterial'])
             $rootScope.movieData = film
         }
 
-        $rootScope.getSyncID = function(argument) {
-            return $rootScope.file
+        previewFinished = function($event, mode, data) {
+            if (skip.is_previewing != 0) {
+                console.log("[previewFinished] wait a bit more...")
+                setTimeout(function() { previewFinished($event, mode, data) }, 1000);
+            } else {
+                setTimeout(function() { $rootScope.editScene($event, mode, data) }, 3000);
+            }
         }
 
         vm.getFile = function(event) {
@@ -81,7 +97,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                     service.saveSearchQuery(vm.searchQuery);
                     $location.path('/chooseFilmTable');
                     console.log(film);
-                    $route.reload();
+                    //$route.reload();
                     if (!$rootScope.$$phase) $rootScope.$apply();
                 } else {
                     console.log(film);
@@ -128,7 +144,7 @@ angular.module('mainCtrl', ['ngMaterial'])
             function LogInDialogController($scope, $mdDialog) {
 
 
-                $scope.name = $rootScope.utils.get_settings().username
+                $scope.name = $rootScope.settings.username
                 $scope.pass = ""
 
                 $scope.cancel = function() {
@@ -160,6 +176,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                 onRemoving: function(event) {
                     pause(false)
                     isDialogVisible = false
+                    if (wc.webview) wc.webview.focus()
                 },
                 locals: { previewed_scene: previewed_scene, open: open },
                 controller: ['$scope', 'open', 'previewed_scene', function($scope, open, previewed_scene) {
@@ -186,7 +203,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                         if (sync.health_report(data.src) < 1e4) {
                             data.start = sync.to_users_time(data.start, data.src)
                             data.end = sync.to_users_time(data.end, data.src)
-                            data.src = $rootScope.getSyncID()
+                            data.src = reference.our_src
                             loadEditInputs(data)
                         } else {
                             $rootScope.openToast("Out of sync, can't convert times. Try previewing")
@@ -194,7 +211,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                     }
 
                     function loadEditInputs(data) {
-                        $scope.cantedit = ($rootScope.getSyncID() != data.src)
+                        $scope.cantedit = (reference.our_src != data.src)
                         $scope.src = data.src
                         $scope.startTime = new Date(data.start)
                         $scope.endTime = new Date(data.end)
@@ -230,18 +247,20 @@ angular.module('mainCtrl', ['ngMaterial'])
 
                     $scope.updateTagged = function() {
                         $rootScope.utils.update_tagged($scope.tagStatus, $rootScope.movieData.id.tmdb)
+                        $scope.hideDialog()
                     }
 
                     console.log(open)
 
                     if (open == "preview") {
                         loadEditInputs(previewed_scene)
+                    } else if (open == "tagged") {
+                        $scope.openTaggedDialog()
                     } else {
                         $scope.openListDialog()
                     }
 
-
-                    $scope.tags = $rootScope.utils.get_settings().tags 
+                    $scope.tags = $rootScope.settings.tags
 
                     $scope.saveEdition = function() {
                         //if ($scope.selectedTags.length == 0) return $rootScope.openToast("Need at least one tag")
@@ -265,14 +284,14 @@ angular.module('mainCtrl', ['ngMaterial'])
                     $scope.previewScene = function($event, index) {
                         var scene = $rootScope.movieData.scenes[index]
                         skip.preview(scene.start, scene.end, scene.src)
-                        setTimeout(function() { $rootScope.editScene($event, "list") }, 5500);
+                        setTimeout(function() { previewFinished($event, "list", null) }, 3000);
                         $scope.hideDialog()
                     }
 
                     $scope.previewCurrent = function($event) {
                         var data = getEditInputs()
                         skip.preview(data.start, data.end, data.src)
-                        setTimeout(function() { $rootScope.editScene($event, "preview", data) }, 5500);
+                        setTimeout(function() { previewFinished($event, "preview", data) }, 3000);
                         $scope.hideDialog()
                     }
 
