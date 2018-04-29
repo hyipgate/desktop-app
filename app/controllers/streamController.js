@@ -4,7 +4,7 @@ angular.module('streamCtrl', ['ngMaterial'])
         var vm = this;
         $scope.scenes = $rootScope.movieData.scenes
 
-/*
+        
         // Hacky method to reload webview once the dom is really loaded
         // To-Do. Implement in a correct way
         angular.element(document).ready(function () {
@@ -12,8 +12,9 @@ angular.module('streamCtrl', ['ngMaterial'])
                 var q = document.querySelector('#webview');
                 q.setAttribute("src",$rootScope.file);
                 q.reload();
-            },10);
-        });*/
+            },200);
+        });
+
 
         var onimdb = ($rootScope.file.indexOf("http://www.kids-in-mind.com/") == 0) || ($rootScope.file.indexOf("https://www.imdb.com/title/") == 0)
 
