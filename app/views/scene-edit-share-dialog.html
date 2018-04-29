@@ -71,12 +71,17 @@
     <div ng-show="menu==2">
         <md-dialog-content>
             <md-content layout="column" class="md-padding">
-                <h4>Tick if all scenes of a type are tagged</h4>
+                <md-content layout="row" layout-align="space-around center">
+                    <h4>How was it?</h4>
+                    <div class="noClicks"><span three-state-checkbox ng-model="vtrue"></span>Everything was tagged</div>
+                    <div class="noClicks"><span three-state-checkbox ng-model="vfalse"></span>There were untagged scenes</div>
+                    <div class="noClicks"><span three-state-checkbox ng-model="vnull"></span>Ask per scene</div>
+                </md-content>
                 <md-list class="md-dense" style="display: grid; grid-template-columns: 33% 33% 33%; width: 100%;">
-                    <md-list-item class="md-1-line" ng-repeat="tag in tagStatus" style="height: 25px; font-size: 15px" >
-                        <md-checkbox aria-label="tagStatus" ng-model="tag.done"></md-checkbox>
-                        <b class="md-list-item-text">{{ tag.name }}</b>
-                        <md-tooltip md-delay="1000">{{tag.long}}</md-tooltip>
+                    <md-list-item class="md-1-line" ng-repeat="tag in tagStatus" style="height: 25px; font-size: 15px" onclick="this.getElementsByTagName('span')[0].click()">
+                        <span aria-label="tagStatus" three-state-checkbox ng-model="tag.done"></span>
+                        <div class="md-list-item-text">{{tag.name}}</div>
+                        <md-tooltip md-delay="2000">{{tag.long}}</md-tooltip>
                     </md-list-item>
                 </md-list>
                 <md-input-container>
@@ -85,7 +90,7 @@
             </md-content>
         </md-dialog-content>
         <md-dialog-actions>
-            <md-button aria-label="Back" ng-click="openListDialog()">Back</md-button>
+            <md-button aria-label="Close" ng-click="hideDialog()">Cancel</md-button>
             <span style="flex: 1 1 auto"></span>
             <md-button aria-label="updateTagged" ng-click="updateTagged()" class="md-primary">Share</md-button>
         </md-dialog-actions>

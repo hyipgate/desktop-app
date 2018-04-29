@@ -1,25 +1,39 @@
 TODO
 ====
 
+
+Don Javier Lancha
+=================
++ 
+
+
+
+
+
+
 Blocking
 ********
++ mytags store it properly
++ hash table, store and work on it properly
 + api, store users email when they log in
 + stream, editing time does weird things: it starts with hours = 1 (while should be 0) and every time we add/substract seconds/milliseconds/minutes the hours also increase/decrease by one every time (when using up/down)
+
++ fix non-working 
 
 
 Can wait
 *********
-+ stream, pop out "tagged" dialog when closing film
-+ stream, on fullscreen netflix, cursor is hidden when edit dialog is shown
++ film, allow custom blur on marking scenes
++ film, if it fails loading image, load default
++ stream, fix sharing tagged dialog, allow three states (done, missing, unknown)
++ stream, sometimes, on netflix, cursor is hidden when edit dialog is shown
 + api, store offset data on non-master versions
 + community, send log with suggestions
 + stream, To start/end scene creation while watching, the "point" key to do so is not working anymore (might be coz watched element is not focus when pressed??)
-+ stream, autofocus film, so that space works as play pause...
 + search, on back pressed, search the last search again
 + film, on back pressed, show last item
 + film, show pg code
 + api, share syncref only when user.level>=2
-+ search, default image instead of broken
 + api, get providers for tv series
 + api, download syncRef on another call, only if it was updated
 + api, make sure we save username, token, and level, might be good to save all inside settings
@@ -30,11 +44,21 @@ Can wait
 At some point
 *************
 + film, plot text, on overflow, show elepsis
-+ config, three-phase-checkbox, toggle when text clicked (not only on checkbox)
 
 
 Done
 ****
+//+ film, missing providers ??
+//+ show logged in feedback
+//+ api, fixed stupid bug when parsing locales
+//+ film, fix image sizes
+//+ stream, wait until preview is finished to relaunch editor
+//+ stream, use current url as syncID, not the first loaded one (eg. google)
+//+ stream, pop out "tagged" dialog when closing film
+//+ config, three-phase-checkbox, toggle when text clicked (not only on checkbox)
+//+ stream, autofocus film, so that space works as play pause...
+//+ search, default image instead of broken
+//+ upgrade sync algorithm
 //+ read tag list from default list, not from settings (as tags might be updated)
 //+ utils, improve tag list
 //+ allow backward seek on Netflix

@@ -2,12 +2,6 @@ angular.module('configCtrl', ['ngMaterial'])
 
     .controller('ConfigController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog) {
         var vm = this;
-        $scope.settings = $rootScope.utils.get_settings() // this reads a file... store the value...
-
-        $rootScope.saveSettings = function() {
-            console.log("saving data ", $scope.settings)
-            $rootScope.utils.set_settings($scope.settings)
-        }
 
         vm.newUser = function(ev) {
             $mdDialog.show({
@@ -68,7 +62,7 @@ angular.module('configCtrl', ['ngMaterial'])
                     '  </md-dialog-actions>' +
                     '</md-dialog>',
                 targetEvent: ev,
-                locals: { username: $scope.settings.username },
+                locals: { username: $rootScope.settings.username },
                 controller: LogInDialogController
             })
 

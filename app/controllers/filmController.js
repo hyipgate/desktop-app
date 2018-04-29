@@ -21,13 +21,12 @@ angular.module('filmCtrl', ['ngMaterial'])
                 }
             }
 
-            $scope.settings = $rootScope.utils.get_settings() // TODO: this reads a file... store the value...
             console.log("get_settings from film controller")
 
 
             /* Apply user's default filter settings on film tags */
-            var skip_tags = $scope.settings.tags.filter(function(tag) { return tag.action == false })
-            var list_tags = $scope.settings.tags.filter(function(tag) { return tag.action != true })
+            var skip_tags = $rootScope.settings.tags.filter(function(tag) { return tag.action === true })
+            var list_tags = $rootScope.settings.tags.filter(function(tag) { return tag.action !== false })
 
             for (var i = 0; i < vm.scenes.length; i++) {
                 // Decide wheter to skip scene or not
@@ -48,12 +47,13 @@ angular.module('filmCtrl', ['ngMaterial'])
                 }
             }
 
+            /* Checked if wants to skip tags we don't have info about */
             var tagStatus = $rootScope.movieData.tagStatus
             var missingTags = []
-            for (var i = 0; i < $scope.settings.tags.length; i++) {
+            for (var i = 0; i < $rootScope.settings.tags.length; i++) {
                 for (var j = 0; j < tagStatus.length; j++) {
-                    if (tagStatus[j].name == $scope.settings.tags[i].name) {
-                        if (!tagStatus[j].done && $scope.settings.tags[i].action !== true) {
+                    if (tagStatus[j].name == $rootScope.settings.tags[i].name) {
+                        if (!tagStatus[j].done && $rootScope.settings.tags[i].action !== false) {
                             missingTags.push(tagStatus[j].name)
                         }
                         break
@@ -71,7 +71,7 @@ angular.module('filmCtrl', ['ngMaterial'])
             }
 
 
-
+            /* Show share button, only if there are edited scenes */
             $scope.share_button = false
             for (var i = 0; i < vm.scenes.length; i++) {
                 if (vm.scenes[i].edited) {
@@ -88,7 +88,7 @@ angular.module('filmCtrl', ['ngMaterial'])
             $scope.alert = '';
             $mdBottomSheet.show({
                 templateUrl: 'views/bottom-sheet-list-template.html',
-                locals: { scenes: vm.scenes, settings: $scope.settings },
+                locals: { scenes: vm.scenes, settings: $rootScope.settings },
                 controller: BottonSheetDialogController
             })
 
@@ -144,11 +144,31 @@ angular.module('filmCtrl', ['ngMaterial'])
                     var file = event.target.files;
                     console.log("playFile: ", file)
                     $mdBottomSheet.hide(file[0].path);
-                    $rootScope.file = "file:///" + file[0].path
-                    $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
-                    load_film(scenes, $rootScope.getSyncID(), $rootScope.movieData.syncRef)
-                    $location.path('/stream');
+                    /* RegEx for checking valid file format
+                        /^(.*\.(mp4)$)/
+                        /^(.*\.(mp4|avi)$)/
+                    */
+                    console.log('Here');
+                    if(/^(.*\.(mp4)$)/.test(file[0].path)){
+                        console.log('1');
+                        $rootScope.file = "file:///" + file[0].path
+                        $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
+                        // TODO, instead of pass bytesize and hash of file, instead of filename! We want it to be an ID shared between users!
+                        load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
+                        $location.path('/stream');
+                    }else{
+                        console.log('2');
+                        vm.unsupportedFile();
+                    }
                 }
+
+                vm.unsupportedFile = function() {
+                    var error = $mdDialog.alert()
+                        .title('Unsupported file')
+                        .textContent('Sorry, only .mp4 files are currently supported')
+                        .ok('Ok')
+                    $mdDialog.show(error)
+                };
 
                 vm.showPrompt = function(ev) {
                     // Appending dialog to document.body to cover sidenav in docs app
@@ -164,7 +184,7 @@ angular.module('filmCtrl', ['ngMaterial'])
                         console.log("custom URL: ", custom_url)
                         $mdBottomSheet.hide(custom_url);
                         $rootScope.file = custom_url
-                        load_film(scenes, $rootScope.getSyncID(), $rootScope.movieData.syncRef)
+                        load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
                         $location.path('/stream');
                     }, function() {
                         $scope.status = 'You didn\'t name your dog.';
@@ -185,7 +205,7 @@ angular.module('filmCtrl', ['ngMaterial'])
                     }
                     $mdBottomSheet.hide(clickedItem.name);
                     $rootScope.file = vm.forceHttps(clickedItem.url)
-                    load_film(scenes, $rootScope.getSyncID(), $rootScope.movieData.syncRef)
+                    load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
                     $location.path('/stream');
                 };
             }

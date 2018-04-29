@@ -42,7 +42,10 @@ function end_capture() {
     wc.webview = false
     wc.rect = false
 
-    if (reference.original_size == Object.keys(reference.tables[reference.our_src]).length) {
+    if (!reference.tables) return
+
+    // Check if we got new frames added to the table
+    if (reference.original_size >= Object.keys(reference.tables[reference.our_src]).length) {
         console.log("Nothing new here")
         return false
     }
@@ -52,12 +55,17 @@ function end_capture() {
 var isDialogVisible = false
 
 function check_everything_works() {
+    // if the dialog is visible, we don't really want to skip nor to capture frames (dialog is in the middle)
+    if (isDialogVisible) return
 
-    if (isDialogVisible) return //console.log("[check_everything_works] Dialog is visible")
+    // If we don't have a video frame, what are we gonna capture?
     if (!wc.rect) return console.log("[check_everything_works] Missing wc.rect"); //todo add get rect/load webview
 
-    var time = video_time()
+    // check if we want to see this frame, and skip if necesary
     skip.want_to_see()
+
+    // If a new hash is needed as future reference or to sync, capture it
+    var time = video_time()
     if (reference.need_hash(time) || sync.need_hash(time)) {
         console.log("[check_everything_works] get-hash")
         ipcRenderer.send('get-hash', { time: time, rect: wc.rect })
@@ -98,8 +106,7 @@ var cpu_time = 0;
 
 
 /**
- * Gets the timestamps of the current video
- * @returns {number} current time
+ * Gets the time the current video is at
  */
 function video_time() {
     // Check we have some time data
@@ -119,12 +126,14 @@ function video_time() {
 //************************************************************************//
 
 
+// Webview functions
 var wc = {
     loaded: false,
     orect: false,
     rect: false,
     webview: false,
 
+    // load the webview
     load: function() {
         /* Check there is a "webview" tag and that it is not already loaded */
         if (wc.loaded) return console.log("webview already loaded! ")
@@ -166,9 +175,15 @@ var wc = {
             } else if (event.channel == "currentTime") {
                 time = 1000 * event.args[0];
                 cpu_time = Date.now();
+            } else if (event.channel == "skip_finished") {
+                skip.is_previewing = false
             } else {
                 console.log("ipc-message received: ", event.channel)
             }
+        })
+
+        wc.webview.addEventListener('did-navigate', (e) => {
+            reference.set_our_src(e.url)
         })
 
         wc.loaded = true
@@ -176,6 +191,7 @@ var wc = {
         return true;
     },
 
+    // send a command to the webview
     send: function(action, params) {
         if (!wc.webview) {
             wc.load()
@@ -197,15 +213,16 @@ var wc = {
 */
 var skip = {
 
-    list: [],
-    next_start: Infinity,
+    list: [], // list of scenes to skip
+    next_start: Infinity, // where the next bit to skip starts
+    is_previewing: false,
 
     load_list: function(scenes) {
         skip.list = []
         for (var i = 0; i < scenes.length; i++) {
-            if (!scenes[i].skip) continue
-            reference.pushSrc(scenes[i].src)
-            skip.list.push({
+            if (!scenes[i].skip) continue // scenes contains all scenes, not only those we want to skip
+            reference.pushSrc(scenes[i].src) // push source into the list of sources we want to track the sync to
+            skip.list.push({ // push the scene into the list of scenes to skip
                 start: scenes[i].start,
                 end: scenes[i].end,
                 src: scenes[i].src
@@ -213,18 +230,24 @@ var skip = {
         }
     },
 
+    // load the preview of a scene
     preview: function(start, end, src) {
         console.log("Starting preview of: ", start, "->", end, " @ ", src)
-        reference.pushSrc(src)
+        reference.pushSrc(src) // push source into list or sources to keep sync with
+
+        // remove old preview scenes
         for (var i = skip.list.length - 1; i >= 0; i--) {
             if (skip.list[i].preview) {
                 skip.list.splice(i, 1);
             }
         }
+        // add new scene to the list
         skip.list.push({ start: start, end: end, preview: true, src: src });
+        // jump a bit before the start of the scene
         var u_start = sync.to_users_time(start, src)
         wc.send('seek-time', u_start - 2500)
         wc.send('pause', false)
+        skip.is_previewing = true
     },
 
     want_to_see: function() {
@@ -237,10 +260,9 @@ var skip = {
         for (var i = 0; i < skip.list.length; i++) {
             var time_to_end = skip.list[i].end - sync.to_reference_time(c_time, skip.list[i].src, "end")
             var time_to_start = skip.list[i].start - sync.to_reference_time(c_time, skip.list[i].src, "start")
-            // Update times if scene is in the future, and the nearest one
-            if (time_to_end < 0) continue // Scene is in the past
+            if (time_to_end < 0) continue // Ignore scenes that are in the past
             reference.pushSrc(skip.list[i].src) // Make sure this src is updated
-            if (time_to_start > next_end + overlaping_th) continue // We start after another scene ends (ie there is another scene before)
+            if (time_to_start > next_end + overlaping_th) continue // Out of the future scenes, ignore all but the next one
             if (next_start > time_to_end + overlaping_th) { // We are before in time, replace
                 next_end = time_to_end
                 next_start = time_to_start
@@ -249,19 +271,20 @@ var skip = {
                 next_end = Math.max(next_end, time_to_end)
             }
         }
-        skip.next_start = next_start + c_time
-
+        // If scene is close, tell the webview to skip that times
         if (next_start < 200) {
             console.log("Scene almost here, wait ", next_start, "ms and skip: ")
             wc.send('skip-scene', { start: next_start + c_time, end: next_end + c_time })
         }
+        // Keep this for health reports
+        skip.next_start = next_start + c_time
     }
 }
 
 
 
 var debug = {
-    induced_sync_offset: 0, // Induce a fake sync offset (to see if system recovers)
+    induced_sync_offset: 0, // Induce a fake sync offset (to see if system recovers). Keep this at 0!
     startScreenshoting: false,
     // stats
     false_positive: 0,
@@ -295,7 +318,7 @@ var debug = {
 var sync = {
 
     histogram: {},
-    confidence: {}, // Probability [0,1] of current sync offset being right
+    confidence: {}, // Stimated probability [0,1] of current sync offset being right
     last_correct_sync: {},
     last_was_weird: {},
     offset: {}, // Best know time offset
@@ -318,13 +341,21 @@ var sync = {
 
     // Locates the specified time in the reference film.
     to_reference_time: function(c_time, src, extreme = "center") {
-        if (reference.our_src == src) return c_time
+        if (reference.our_src == src) {
+            console.log("[to_users_time] ", c_time, src, extreme, "same")
+            return c_time
+        }
+        console.log("[to_users_time] ", c_time, src, extreme, "offset is", sync.offset[src][extreme])
         return c_time + sync.offset[src][extreme] // r - c = o
     },
 
     // Locates the specified time in the users film.
     to_users_time: function(r_time, src, extreme = "center") {
-        if (reference.our_src == src) return r_time
+        if (reference.our_src == src) {
+            //console.log("[to_users_time] ", r_time, src, extreme, "same")
+            return r_time
+        }
+        //console.log("[to_users_time] ", r_time, src, extreme, "offset is", sync.offset[src][extreme])
         return r_time - sync.offset[src][extreme] // r - c = o
     },
 
@@ -444,15 +475,15 @@ var sync = {
     },
 
     health_report: function(src) {
-        if (src && src == reference.our_src) return 0
+        if (src && src === reference.our_src) return 0
 
         if (!film_loaded) return
 
         if (!wc.webview && !wc.load()) return 1e6
 
         var time = video_time()
-        if (!wc.rect || Math.abs(time - sync.last_rect) > 5000) {
-            wc.send('get-rect', true) // fixme, this true might force update too often
+        if (!wc.rect || Math.abs(time - sync.last_rect) > 60 * 1000) {
+            wc.send('get-rect') // fixme, this true might force update too often
             sync.last_rect = time
         }
 
@@ -480,21 +511,40 @@ var reference = {
         console.log(our_src, tables)
         for (var src in tables) {
             if (!tables[src].src) continue
-            reference.tables[src] = tables[src]
-            sync.offset[src] = { start: 0, center: 0, end: 0 }
-            sync.confidence[src] = 0
-            sync.histogram[src] = {}
-            sync.last_correct_sync[src] = -Infinity
-            sync.last_was_weird[src] = false
+            reference.addTableEntry(src, tables[src])
         }
+        reference.set_our_src(our_src)
+    },
+
+    addTableEntry: function(src, data) {
+        reference.tables[src] = data
+        sync.offset[src] = { start: 0, center: 0, end: 0 }
+        sync.confidence[src] = 0
+        sync.histogram[src] = {}
+        sync.last_correct_sync[src] = -Infinity
+        sync.last_was_weird[src] = false
+    },
+
+    set_our_src: function(our_src) {
+        console.log("got new src ", our_src)
+        // TODO store the hash of the src, intead of the full src
         reference.our_src = our_src
         if (!reference.tables[our_src]) {
             reference.tables[our_src] = { src: our_src }
+            sync.offset[our_src] = { start: 0, center: 0, end: 0 }
+            sync.confidence[our_src] = 0
+            sync.histogram[our_src] = {}
+            sync.last_correct_sync[our_src] = -Infinity
+            sync.last_was_weird[our_src] = false
         }
         reference.original_size = Object.keys(reference.tables[our_src]).length;
     },
 
     pushSrc: function(src) {
+        if (!sync.offset[src]) {
+            reference.addTableEntry(src, { src: src })
+            console.log("[pushSrc] (ERROR) adding table now?!")
+        }
         if (reference.tableList.indexOf(src) != -1) return
         if (reference.our_src == src) return
         reference.tableList.push(src)
