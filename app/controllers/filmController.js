@@ -148,26 +148,110 @@ angular.module('filmCtrl', ['ngMaterial'])
                         /^(.*\.(mp4)$)/
                         /^(.*\.(mp4|avi)$)/
                     */
-                    console.log('Here');
+                    $rootScope.file = file[0].path;
                     if(/^(.*\.(mp4)$)/.test(file[0].path)){
-                        console.log('1');
                         $rootScope.file = "file:///" + file[0].path
                         $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
                         // TODO, instead of pass bytesize and hash of file, instead of filename! We want it to be an ID shared between users!
                         load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
                         $location.path('/stream');
                     }else{
-                        console.log('2');
                         vm.unsupportedFile();
                     }
                 }
 
-                vm.unsupportedFile = function() {
-                    var error = $mdDialog.alert()
+                vm.unsupportedFile = function(ev) {
+                    // Appending dialog to document.body to cover sidenav in docs app
+                    var confirm = $mdDialog.confirm()
                         .title('Unsupported file')
-                        .textContent('Sorry, only .mp4 files are currently supported')
-                        .ok('Ok')
-                    $mdDialog.show(error)
+                        .textContent('Sorry, only .mp4 files are currently supported.')
+                        .ok('Convert')
+                        .cancel('Cancel')
+
+                    $mdDialog.show(confirm).then(function() {
+                        /* Preparing conversion
+                        */
+                        var ffmpegCommand = $rootScope.utils.convertFile($rootScope.file);
+                        vm.conversionDialog(ffmpegCommand);
+                        
+                        console.log('ok');
+                    }, function() {
+                        console.log('Cancel');
+                    });
+                };
+
+                vm.conversionDialog = function showDialog(ffmpegCommand) {
+                   var parentEl = angular.element(document.body);
+                   $mdDialog.show({
+                     parent: parentEl,
+                     template:
+                       '<md-dialog aria-label="Progress">' +
+                       '  <md-dialog-content>'+
+                       '    <md-list style="margin-top: 0.5em">'+
+                       '      <md-list-item>'+
+                       '        <p class="md-title">Conversion: </p>'+
+                       '      </md-list-item>'+
+                       '      <md-list-item>'+
+                       '       <md-progress-circular style="margin-top:0.5em;margin-left:40%" md-mode="indeterminate"></md-progress-circular>'+
+                       '       </md-list-item><md-list-item>'+
+                       '       <p style="text-align:center;margin-top:0.5em;">{{conversionProgress | number : 2}}% </p>' +
+                       '      '+
+                       '    </md-list-item></md-list>'+
+                       '  </md-dialog-content>' +
+                       '  <md-dialog-actions>' +
+                       '    <md-button ng-click="cancelConversion(ffmpegCommand)" class="md-primary">' +
+                       '      Cancel' +
+                       '    </md-button>' +
+                       '  </md-dialog-actions>' +
+                       '</md-dialog>',
+                     locals: {
+                       conversionProgress: $scope.conversionProgress,
+                       ffmpegCommand: $scope.ffmpegCommand
+                     },
+                     controller: DialogController
+                  });
+                  function DialogController($scope, $mdDialog, conversionProgress) {
+                    $scope.conversionProgress = 0.0;
+                    $scope.ffmpegCommand = ffmpegCommand;
+                    $scope.conversionFinished = false;
+                    var update = function(){
+                        setTimeout(function(){
+                            $scope.conversionProgress = $rootScope.electron.remote.getGlobal('gVar').conversionProgress;
+                            $scope.conversionFinished = $rootScope.electron.remote.getGlobal('gVar').conversionFinished;
+                            $scope.$apply()
+                            if($scope.conversionFinished){
+                                $rootScope.file = $scope.ffmpegCommand._currentOutput.target;
+                                vm.startMovieAfterConversion();
+                            }else{
+                                update();
+                            }
+                        },2000);
+                    }
+                    $scope.cancelConversion = function(ffmpegCommand) {
+                      $rootScope.utils.killConversion(ffmpegCommand);
+                      $mdDialog.hide();
+                    }
+
+                    update();
+                  }
+                }
+
+                vm.startMovieAfterConversion = function() {
+                    // Appending dialog to document.body to cover sidenav in docs app
+                    var confirm = $mdDialog.confirm()
+                        .title('Conversion Finished')
+                        .textContent('¿Start watching?')
+                        .ok('Yes!')
+                        .cancel('Later')
+
+                    $mdDialog.show(confirm).then(function() {
+                        $rootScope.file = "file:///" + $rootScope.file;
+                        $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
+                        load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef);
+                        $location.path('/stream');
+                    }, function() {
+                        console.log('Canceled');
+                    });
                 };
 
                 vm.showPrompt = function(ev) {

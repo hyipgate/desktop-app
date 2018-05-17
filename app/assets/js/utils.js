@@ -5,6 +5,10 @@ const openSub = require('opensubtitles')
 const getFilesize = require('file-bytes')
 const httpRequest = require('request');
 const storage = require('node-persist');
+const ffmpeg = require('fluent-ffmpeg');
+const { remote, ipcRenderer } = require('electron');
+const fs = require('fs');
+
 
 storage.init();
 
@@ -372,6 +376,45 @@ function link_file_to_film(file, film_id) {
 }
 
 
+function convertFile(inputFile) {
+    let convertCommand;
+    convertCommand = ffmpeg(inputFile)
+        .format('mp4')
+        .on('error', function(err, stdout, stderr) {
+            console.log('Cannot process video: ' + err.message);
+        })
+        .on('start', function(commandLine) {
+            global.gVar.conversionFinished = false;
+            console.log('Spawned Ffmpeg with command: ' + commandLine);
+        })
+        .on('progress', function(progress){
+            global.gVar.conversionProgress = progress.percent;
+            console.log('Processing: ' + progress.percent + '%done');
+        })
+        .on('end', function() {
+            global.gVar.conversionFinished = true;
+            console.log('Processing finished !');
+        })
+        .save(inputFile+'.mp4');
+
+    return convertCommand;
+}
+
+function killConversion(ffmpegCommand) {
+    var filePath = ffmpegCommand._currentOutput.target;
+    ffmpegCommand.kill();
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            console.log("failed to delete video: " + err);
+            console.log("Path: " + filePath);
+        } else {
+            console.log('successfully deleted video');                                
+        }
+    });
+}
+
+
+
 
 // Basic functions
 exports.search_film = search_film;
@@ -386,6 +429,8 @@ exports.merge_local_tags = merge_local_data
 exports.get_diff_tag = get_diff_tag
 exports.send_feedback = send_feedback
 exports.update_tagged = update_tagged
+exports.convertFile = convertFile;
+exports.killConversion = killConversion;
 
 // Authentication functions
 exports.new_user = new_user;

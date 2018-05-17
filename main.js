@@ -101,6 +101,10 @@ function createWindow() {
             if (response === 0) autoUpdater.quitAndInstall()
         })
     })
+
+    global.gVar = {
+        conversionProgress: 0,
+    }
 }
 
 
