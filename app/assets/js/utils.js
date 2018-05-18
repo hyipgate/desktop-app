@@ -377,27 +377,39 @@ function link_file_to_film(file, film_id) {
 
 
 function convertFile(inputFile) {
-    let convertCommand;
-    convertCommand = ffmpeg(inputFile)
-        .format('mp4')
-        .on('error', function(err, stdout, stderr) {
-            console.log('Cannot process video: ' + err.message);
-        })
-        .on('start', function(commandLine) {
-            global.gVar.conversionFinished = false;
-            console.log('Spawned Ffmpeg with command: ' + commandLine);
-        })
-        .on('progress', function(progress){
-            global.gVar.conversionProgress = progress.percent;
-            console.log('Processing: ' + progress.percent + '%done');
-        })
-        .on('end', function() {
-            global.gVar.conversionFinished = true;
-            console.log('Processing finished !');
-        })
-        .save(inputFile+'.mp4');
-
-    return convertCommand;
+    return new Promise(function(resolve,reject){
+        let convertCommand, cpVideoCodec = 'libx264', cpAudioCodec = 'aac', metadata;
+        ffmpeg.ffprobe(inputFile, function(err, metadata) {
+            metadata.streams.map(function(codec){
+            if(codec.codec_type === 'audio' && (codec.codec_name == 'aac' || codec.codec_name == 'mp3')){
+                cpAudioCodec = 'copy';
+            }else if(codec.codec_type === 'video' && codec.codec_name == 'h264'){
+                cpVideoCodec = 'copy';
+            }
+            });
+            convertCommand = ffmpeg(inputFile)
+                                .format('mp4')
+                                .videoCodec(cpVideoCodec)
+                                .audioCodec(cpAudioCodec)
+                                .on('error', function(err, stdout, stderr) {
+                                    console.log('Cannot process video: ' + err.message);
+                                })
+                                .on('start', function(commandLine) {
+                                    global.gVar.conversionFinished = false;
+                                    console.log('Spawned Ffmpeg with command: ' + commandLine);
+                                })
+                                .on('progress', function(progress){
+                                    global.gVar.conversionProgress = progress.percent;
+                                    console.log('Processing: ' + progress.percent + '%done');
+                                })
+                                .on('end', function() {
+                                    global.gVar.conversionFinished = true;
+                                    console.log('Processing finished !');
+                                })
+                                .save(inputFile+'.mp4');
+            resolve(convertCommand);
+        });
+    });
 }
 
 function killConversion(ffmpegCommand) {

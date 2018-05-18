@@ -171,12 +171,11 @@ angular.module('filmCtrl', ['ngMaterial'])
                     $mdDialog.show(confirm).then(function() {
                         /* Preparing conversion
                         */
-                        var ffmpegCommand = $rootScope.utils.convertFile($rootScope.file);
-                        vm.conversionDialog(ffmpegCommand);
-                        
-                        console.log('ok');
+                        var ffmpegPromise = $rootScope.utils.convertFile($rootScope.file);
+                        ffmpegPromise.then(function(ffmpegCommand){
+                            vm.conversionDialog(ffmpegCommand); 
+                        });                        
                     }, function() {
-                        console.log('Cancel');
                     });
                 };
 
@@ -225,13 +224,12 @@ angular.module('filmCtrl', ['ngMaterial'])
                             }else{
                                 update();
                             }
-                        },2000);
+                        },1400);
                     }
                     $scope.cancelConversion = function(ffmpegCommand) {
                       $rootScope.utils.killConversion(ffmpegCommand);
                       $mdDialog.hide();
                     }
-
                     update();
                   }
                 }
