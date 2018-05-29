@@ -247,8 +247,10 @@ angular.module('filmCtrl', ['ngMaterial'])
                         $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
                         load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef);
                         $location.path('/stream');
+                        $mdDialog.hide();
                     }, function() {
                         console.log('Canceled');
+                        $mdDialog.hide();
                     });
                 };
 
