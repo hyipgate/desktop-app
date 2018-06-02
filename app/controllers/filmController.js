@@ -144,34 +144,33 @@ angular.module('filmCtrl', ['ngMaterial'])
                     var file = event.target.files;
                     console.log("playFile: ", file)
                     $mdBottomSheet.hide(file[0].path);
-                    /* RegEx for checking valid file format
-                        /^(.*\.(mp4)$)/
-                        /^(.*\.(mp4|avi)$)/
-                    */
                     $rootScope.file = file[0].path;
-                    if(/^(.*\.(mp4)$)/.test(file[0].path)){
-                        $rootScope.file = "file:///" + file[0].path
-                        $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
-                        // TODO, instead of pass bytesize and hash of file, instead of filename! We want it to be an ID shared between users!
-                        load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
-                        $location.path('/stream');
-                    }else{
-                        vm.unsupportedFile();
-                    }
+                    var ffmpegPromise = $rootScope.utils.checkConversion($rootScope.file);
+                    ffmpegPromise.then(function(needsConversion){
+                        if(!needsConversion.audio && !needsConversion.video){
+                            $rootScope.file = "file:///" + file[0].path
+                            $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
+                            // TODO, instead of pass bytesize and hash of file, instead of filename! We want it to be an ID shared between users!
+                            load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
+                            $location.path('/stream');
+                        }else{
+                            vm.unsupportedFile(needsConversion);
+                        }       
+                    });
                 }
 
-                vm.unsupportedFile = function(ev) {
+                vm.unsupportedFile = function(needsConversion) {
                     // Appending dialog to document.body to cover sidenav in docs app
                     var confirm = $mdDialog.confirm()
                         .title('Unsupported file')
-                        .textContent('Sorry, only .mp4 files are currently supported.')
-                        .ok('Convert')
+                        .textContent('Sorry, only certain video/audio formats are currently supported.')
+                        .ok('Convert video')
                         .cancel('Cancel')
 
-                    $mdDialog.show(confirm).then(function() {
+                    $mdDialog.show(confirm).then(function(needsConversion) {
                         /* Preparing conversion
                         */
-                        var ffmpegPromise = $rootScope.utils.convertFile($rootScope.file);
+                        var ffmpegPromise = $rootScope.utils.convertFile($rootScope.file,needsConversion);
                         ffmpegPromise.then(function(ffmpegCommand){
                             vm.conversionDialog(ffmpegCommand); 
                         });                        

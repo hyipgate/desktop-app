@@ -375,40 +375,60 @@ function link_file_to_film(file, film_id) {
     });
 }
 
+function checkConversion(inputFile){
+    var needsConversion = {};
 
-function convertFile(inputFile) {
     return new Promise(function(resolve,reject){
-        let convertCommand, cpVideoCodec = 'libx264', cpAudioCodec = 'aac', metadata;
+        
+        needsConversion.audio = true;
+        needsConversion.video = true;
+
         ffmpeg.ffprobe(inputFile, function(err, metadata) {
             metadata.streams.map(function(codec){
             if(codec.codec_type === 'audio' && (codec.codec_name == 'aac' || codec.codec_name == 'mp3')){
-                cpAudioCodec = 'copy';
+                needsConversion.audio = false;
             }else if(codec.codec_type === 'video' && codec.codec_name == 'h264'){
-                cpVideoCodec = 'copy';
+                needsConversion.video = false;
             }
             });
-            convertCommand = ffmpeg(inputFile)
-                                .format('mp4')
-                                .videoCodec(cpVideoCodec)
-                                .audioCodec(cpAudioCodec)
-                                .on('error', function(err, stdout, stderr) {
-                                    console.log('Cannot process video: ' + err.message);
-                                })
-                                .on('start', function(commandLine) {
-                                    global.gVar.conversionFinished = false;
-                                    console.log('Spawned Ffmpeg with command: ' + commandLine);
-                                })
-                                .on('progress', function(progress){
-                                    global.gVar.conversionProgress = progress.percent;
-                                    console.log('Processing: ' + progress.percent + '%done');
-                                })
-                                .on('end', function() {
-                                    global.gVar.conversionFinished = true;
-                                    console.log('Processing finished !');
-                                })
-                                .save(inputFile+'.mp4');
-            resolve(convertCommand);
+            resolve(needsConversion); 
         });
+        
+    });
+}
+
+function convertFile(inputFile,needsConversion) {
+    return new Promise(function(resolve,reject){
+        let convertCommand, cpVideoCodec = 'libx264', cpAudioCodec = 'aac';
+
+        if(needsConversion.audio === false){
+            cpAudioCodec = 'copy';
+        }
+        if(needsConversion.video === false){
+            cpVideoCodec = 'copy';
+        }
+
+        convertCommand = ffmpeg(inputFile)
+                            .format('mp4')
+                            .videoCodec(cpVideoCodec)
+                            .audioCodec(cpAudioCodec)
+                            .on('error', function(err, stdout, stderr) {
+                                console.log('Cannot process video: ' + err.message);
+                            })
+                            .on('start', function(commandLine) {
+                                global.gVar.conversionFinished = false;
+                                console.log('Spawned Ffmpeg with command: ' + commandLine);
+                            })
+                            .on('progress', function(progress){
+                                global.gVar.conversionProgress = progress.percent;
+                                console.log('Processing: ' + progress.percent + '%done');
+                            })
+                            .on('end', function() {
+                                global.gVar.conversionFinished = true;
+                                console.log('Processing finished !');
+                            })
+                            .save(inputFile+'.mp4');
+        resolve(convertCommand);
     });
 }
 
@@ -441,6 +461,7 @@ exports.merge_local_tags = merge_local_data
 exports.get_diff_tag = get_diff_tag
 exports.send_feedback = send_feedback
 exports.update_tagged = update_tagged
+exports.checkConversion = checkConversion;
 exports.convertFile = convertFile;
 exports.killConversion = killConversion;
 
