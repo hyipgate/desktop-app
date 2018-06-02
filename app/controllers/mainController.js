@@ -2,6 +2,7 @@ angular.module('mainCtrl', ['ngMaterial'])
 
     .controller('MainController', function($rootScope, $route, $scope, service, $location, $window, $q, $mdDialog, $mdToast) {
         var vm = this;
+        var timeZoneOffset = new Date('01/01/1970').getTimezoneOffset() * 60 * 1000;
         vm.processing = false;
         vm.searchQuery;
         vm.beforeConfig = "main";
@@ -213,8 +214,8 @@ angular.module('mainCtrl', ['ngMaterial'])
                     function loadEditInputs(data) {
                         $scope.cantedit = (reference.our_src != data.src)
                         $scope.src = data.src
-                        $scope.startTime = new Date(data.start)
-                        $scope.endTime = new Date(data.end)
+                        $scope.startTime = new Date(data.start + timeZoneOffset)
+                        $scope.endTime = new Date(data.end + timeZoneOffset)
                         $scope.selectedTags = angular.copy(data.tags)
                         $scope.comment = angular.copy(data.comment)
                         $scope.id = data.id
@@ -231,8 +232,8 @@ angular.module('mainCtrl', ['ngMaterial'])
                     function getEditInputs() {
                         var scene = {
                             tags: $scope.selectedTags,
-                            start: $scope.startTime.getTime(),
-                            end: $scope.endTime.getTime(),
+                            start: $scope.startTime.getTime() - timeZoneOffset,
+                            end: $scope.endTime.getTime() - timeZoneOffset,
                             comment: $scope.comment,
                             id: $scope.id,
                             src: $scope.src
@@ -346,6 +347,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                             var date = $scope.endTime
                             var lastTime = lastEnd
                         }
+                        console.log(date);
                         var time = [date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds()]
                         console.log(time)
                         var max = [6, 59, 59, 960]
@@ -361,8 +363,10 @@ angular.module('mainCtrl', ['ngMaterial'])
                         }
                         if (time[0] > 5) time[0] = 5
                         var ms = time[3] + 1000 * (time[2] + 60 * (time[1] + 60 * time[0]))
-                        console.log(time)
-                        var new_date = new Date(ms);
+                        console.log(time);
+                        console.log(timeZoneOffset);
+                        var new_date = new Date(ms + timeZoneOffset);
+                        console.log(new_date);
                         if (what == "start") {
                             lastStart = time
                             if (date != new_date) $scope.startTime = new_date

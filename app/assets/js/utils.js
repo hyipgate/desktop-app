@@ -5,6 +5,10 @@ const openSub = require('opensubtitles')
 const getFilesize = require('file-bytes')
 const httpRequest = require('request');
 const storage = require('node-persist');
+const ffmpeg = require('fluent-ffmpeg');
+const { remote, ipcRenderer } = require('electron');
+const fs = require('fs');
+
 
 storage.init();
 
@@ -371,6 +375,77 @@ function link_file_to_film(file, film_id) {
     });
 }
 
+function checkConversion(inputFile){
+    var needsConversion = {};
+
+    return new Promise(function(resolve,reject){
+        
+        needsConversion.audio = true;
+        needsConversion.video = true;
+
+        ffmpeg.ffprobe(inputFile, function(err, metadata) {
+            metadata.streams.map(function(codec){
+            if(codec.codec_type === 'audio' && (codec.codec_name == 'aac' || codec.codec_name == 'mp3')){
+                needsConversion.audio = false;
+            }else if(codec.codec_type === 'video' && codec.codec_name == 'h264'){
+                needsConversion.video = false;
+            }
+            });
+            resolve(needsConversion); 
+        });
+        
+    });
+}
+
+function convertFile(inputFile,needsConversion) {
+    return new Promise(function(resolve,reject){
+        let convertCommand, cpVideoCodec = 'libx264', cpAudioCodec = 'aac';
+
+        if(needsConversion.audio === false){
+            cpAudioCodec = 'copy';
+        }
+        if(needsConversion.video === false){
+            cpVideoCodec = 'copy';
+        }
+
+        convertCommand = ffmpeg(inputFile)
+                            .format('mp4')
+                            .videoCodec(cpVideoCodec)
+                            .audioCodec(cpAudioCodec)
+                            .on('error', function(err, stdout, stderr) {
+                                console.log('Cannot process video: ' + err.message);
+                            })
+                            .on('start', function(commandLine) {
+                                global.gVar.conversionFinished = false;
+                                console.log('Spawned Ffmpeg with command: ' + commandLine);
+                            })
+                            .on('progress', function(progress){
+                                global.gVar.conversionProgress = progress.percent;
+                                console.log('Processing: ' + progress.percent + '%done');
+                            })
+                            .on('end', function() {
+                                global.gVar.conversionFinished = true;
+                                console.log('Processing finished !');
+                            })
+                            .save(inputFile+'.mp4');
+        resolve(convertCommand);
+    });
+}
+
+function killConversion(ffmpegCommand) {
+    var filePath = ffmpegCommand._currentOutput.target;
+    ffmpegCommand.kill();
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            console.log("failed to delete video: " + err);
+            console.log("Path: " + filePath);
+        } else {
+            console.log('successfully deleted video');                                
+        }
+    });
+}
+
+
 
 
 // Basic functions
@@ -386,6 +461,9 @@ exports.merge_local_tags = merge_local_data
 exports.get_diff_tag = get_diff_tag
 exports.send_feedback = send_feedback
 exports.update_tagged = update_tagged
+exports.checkConversion = checkConversion;
+exports.convertFile = convertFile;
+exports.killConversion = killConversion;
 
 // Authentication functions
 exports.new_user = new_user;
