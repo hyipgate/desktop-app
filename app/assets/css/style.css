@@ -77,8 +77,6 @@
     font-family: myFirstFont;
 }
 
-
-
 /*  styles for '...' http://hackingui.com/front-end/a-pure-css-solution-for-multiline-text-truncation/*/ 
 .block-with-text {
   /* hide text if it more than N lines  */
@@ -89,4 +87,16 @@
   line-height: 1.2em;
   /* max-height = line-height (1.2) * lines max number (3) */
   max-height: 3.6em;
+}
+
+.helper {
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+
+.posterList{
+  width: 50px;
+  margin-right: 16px;
+  vertical-align: middle;
 }
