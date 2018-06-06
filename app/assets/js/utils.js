@@ -334,7 +334,6 @@ var default_settings = {
     language: "auto",
     username: "",
     default_providers: "",
-    editors_view: false,
     tags: [
         { 'action': null, 'name': 'Sexual harrasement', 'long': 'Lack of informed approval or freely given agreement; bullying, coercion or unwelcome sexual advances https://en.wikipedia.org/wiki/Sexual_harassment' },
         { 'action': null, 'name': 'Sexual objectification', 'long': 'A person is viewed primarily as an object of sexual desire, with no interest on her/his interest or wellbeing. https://en.wikipedia.org/wiki/Sexual_objectification' },

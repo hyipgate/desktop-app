@@ -32,7 +32,7 @@ angular.module('streamCtrl', ['ngMaterial'])
 
         $scope.show_buttons = function(action) {
             $scope.back_menu = action
-            if ($rootScope.settings.editors_view && !onimdb) $scope.editors_menu = action
+            if (!onimdb) $scope.editors_menu = action
             vm.last_moved = Date.now()
         }
 

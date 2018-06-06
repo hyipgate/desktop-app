@@ -16,13 +16,24 @@ Blocking
 + mytags store it properly
 + hash table, store and work on it properly
 + api, store users email when they log in
-+ stream, editing time does weird things: it starts with hours = 1 (while should be 0) and every time we add/substract seconds/milliseconds/minutes the hours also increase/decrease by one every time (when using up/down)
-
 + fix non-working 
++ make sure hash tables work properly
++ can't share online
++ make sure it works on netflix
 
 
 Can wait
 *********
++ allow more comples search
++ check autodetect country code
++ emply reply on send feedback (logged in)
++ add more info to search list (eg providers, rating...)
++ whare are menus in spanish??
++ fix parents guide when null imdb code (why null imdb code??)
++ make previous times more accurate (pop out after skip)
++ Need to log in again
++ allow dumping files (scene select, sync...)
++ check sync against all/most scenarios
 + film, allow custom blur on marking scenes
 + film, if it fails loading image, load default
 + stream, fix sharing tagged dialog, allow three states (done, missing, unknown)
@@ -48,6 +59,9 @@ At some point
 
 Done
 ****
+//+ remove editors mode
+//+ show cahnge password/new user only when needed
+//+ stream, editing time does weird things: it starts with hours = 1 (while should be 0) and every time we add/substract seconds/milliseconds/minutes the hours also increase/decrease by one every time (when using up/down)
 //+ film, missing providers ??
 //+ show logged in feedback
 //+ api, fixed stupid bug when parsing locales
