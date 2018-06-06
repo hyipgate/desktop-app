@@ -1,3 +1,9 @@
+const ffmpeg = require('@ffmpeg-installer/ffmpeg');
+const ffprobe = require('@ffprobe-installer/ffprobe');
+process.env.FFMPEG_PATH = ffmpeg.path;
+process.env.FFPROBE_PATH = ffprobe.path;
+
+
 //handle setupevents as quickly as possible
 const setupEvents = require('./installers/setupEvents')
 if (setupEvents.handleSquirrelEvent()) {
