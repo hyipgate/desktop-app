@@ -1,7 +1,7 @@
 {
   "name": "fCinema",
   "productName": "fCinema",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Decide what you watch. Unleash your personality",
   "homepage": "https://wwww.fcinema.org",
   "main": "main.js",
@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.0.1",
+    "@ffprobe-installer/ffprobe": "^1.0.1",
     "angular-three-state-checkbox": "^1.1.0",
     "electron-is-dev": "^0.3.0",
     "electron-widevinecdm": "5.0.2",
