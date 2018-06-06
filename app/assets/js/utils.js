@@ -397,6 +397,10 @@ function checkConversion(inputFile){
 }
 
 function convertFile(inputFile,needsConversion) {
+    global.gVar = {
+        conversionFinished: false,
+        conversionProgress: 0.00,
+    };
     return new Promise(function(resolve,reject){
         let convertCommand, cpVideoCodec = 'libx264', cpAudioCodec = 'aac';
 

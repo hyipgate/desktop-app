@@ -1,9 +1,3 @@
-const ffmpeg = require('@ffmpeg-installer/ffmpeg');
-const ffprobe = require('@ffprobe-installer/ffprobe');
-process.env.FFMPEG_PATH = ffmpeg.path;
-process.env.FFPROBE_PATH = ffprobe.path;
-
-
 //handle setupevents as quickly as possible
 const setupEvents = require('./installers/setupEvents')
 if (setupEvents.handleSquirrelEvent()) {
@@ -30,6 +24,17 @@ const isDev = require('electron-is-dev');
 const widevine = require('electron-widevinecdm');
 widevine.load(app);
 
+// Add ffmpeg and ffprobe to PATH in win32
+if (process.platform === 'win32') {
+    let fcinemaPath = app.getAppPath();
+    let ffmpegPath = fcinemaPath + '\\node_modules\\@ffmpeg-installer\\win32-x64\\ffmpeg.exe';
+    let ffprobePath = fcinemaPath + '\\node_modules\\@ffprobe-installer\\win32-x64\\ffprobe.exe';
+    process.env.FFMPEG_PATH = ffmpegPath;
+    process.env.FFPROBE_PATH = ffprobePath;
+    //console.log('fCinemaPath', fcinemaPath);
+    //console.log('ffmpegPath', ffmpegPath);
+    //console.log('ffprobePath', ffprobePath);
+}
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.

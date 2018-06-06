@@ -1,7 +1,7 @@
 {
   "name": "fCinema",
   "productName": "fCinema",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Decide what you watch. Unleash your personality",
   "homepage": "https://wwww.fcinema.org",
   "main": "main.js",
