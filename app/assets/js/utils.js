@@ -39,7 +39,7 @@ function search_film(file, title, url, film_id) {
             }
             // In case of network error... check if we got a local copy
             film = get_local_data(film_id)
-            if (film["type"]) return merge_local_data({ status: 205, data: film })
+            if (film && film["type"]) return merge_local_data({ status: 205, data: film })
             // If we don't have anything
             return { status: 400, data: {} }
         })
@@ -327,6 +327,7 @@ function get_settings() {
     var settings = get_local_data("settings")
     if (!settings) settings = default_settings;
     if (!settings.tags[0].long) settings.tags = default_settings.tags
+    if (!settings.blur_level) settings.blur_level = 40
     return settings;
 }
 
@@ -334,6 +335,7 @@ var default_settings = {
     language: "auto",
     username: "",
     default_providers: "",
+    blur_level: 40,
     tags: [
         { 'action': null, 'name': 'Sexual harrasement', 'long': 'Lack of informed approval or freely given agreement; bullying, coercion or unwelcome sexual advances https://en.wikipedia.org/wiki/Sexual_harassment' },
         { 'action': null, 'name': 'Sexual objectification', 'long': 'A person is viewed primarily as an object of sexual desire, with no interest on her/his interest or wellbeing. https://en.wikipedia.org/wiki/Sexual_objectification' },
@@ -373,63 +375,64 @@ function link_file_to_film(file, film_id) {
     });
 }
 
-function checkConversion(inputFile){
+function checkConversion(inputFile) {
     var needsConversion = {};
 
-    return new Promise(function(resolve,reject){
-        
+    return new Promise(function(resolve, reject) {
+
         needsConversion.audio = true;
         needsConversion.video = true;
 
         ffmpeg.ffprobe(inputFile, function(err, metadata) {
-            metadata.streams.map(function(codec){
-            if(codec.codec_type === 'audio' && (codec.codec_name == 'aac' || codec.codec_name == 'mp3')){
-                needsConversion.audio = false;
-            }else if(codec.codec_type === 'video' && codec.codec_name == 'h264'){
-                needsConversion.video = false;
-            }
+            metadata.streams.map(function(codec) {
+                if (codec.codec_type === 'audio' && (codec.codec_name == 'aac' || codec.codec_name == 'mp3')) {
+                    needsConversion.audio = false;
+                } else if (codec.codec_type === 'video' && codec.codec_name == 'h264') {
+                    needsConversion.video = false;
+                }
             });
-            resolve(needsConversion); 
+            resolve(needsConversion);
         });
-        
+
     });
 }
 
-function convertFile(inputFile,needsConversion) {
+function convertFile(inputFile, needsConversion) {
     global.gVar = {
         conversionFinished: false,
         conversionProgress: 0.00,
     };
-    return new Promise(function(resolve,reject){
-        let convertCommand, cpVideoCodec = 'libx264', cpAudioCodec = 'aac';
+    return new Promise(function(resolve, reject) {
+        let convertCommand, cpVideoCodec = 'libx264',
+            cpAudioCodec = 'aac';
 
-        if(needsConversion.audio === false){
+        if (needsConversion.audio === false) {
             cpAudioCodec = 'copy';
         }
-        if(needsConversion.video === false){
+        if (needsConversion.video === false) {
             cpVideoCodec = 'copy';
         }
 
         convertCommand = ffmpeg(inputFile)
-                            .format('mp4')
-                            .videoCodec(cpVideoCodec)
-                            .audioCodec(cpAudioCodec)
-                            .on('error', function(err, stdout, stderr) {
-                                console.log('Cannot process video: ' + err.message);
-                            })
-                            .on('start', function(commandLine) {
-                                global.gVar.conversionFinished = false;
-                                console.log('Spawned Ffmpeg with command: ' + commandLine);
-                            })
-                            .on('progress', function(progress){
-                                global.gVar.conversionProgress = progress.percent;
-                                console.log('Processing: ' + progress.percent + '%done');
-                            })
-                            .on('end', function() {
-                                global.gVar.conversionFinished = true;
-                                console.log('Processing finished !');
-                            })
-                            .save(inputFile+'.mp4');
+            .format('mp4')
+            .videoCodec(cpVideoCodec)
+            .audioCodec(cpAudioCodec)
+            .on('error', function(err, stdout, stderr) {
+                console.log('Cannot process video: ' + err.message);
+            })
+            .on('start', function(commandLine) {
+                global.gVar.conversionFinished = false;
+                console.log('Spawned Ffmpeg with command: ' + commandLine);
+            })
+            .on('progress', function(progress) {
+                global.gVar.conversionProgress = progress.percent;
+                console.log('Processing: ' + progress.percent + '%done');
+            })
+            .on('end', function() {
+                global.gVar.conversionFinished = true;
+                console.log('Processing finished !');
+            })
+            .save(inputFile + '.mp4');
         resolve(convertCommand);
     });
 }
@@ -442,7 +445,7 @@ function killConversion(ffmpegCommand) {
             console.log("failed to delete video: " + err);
             console.log("Path: " + filePath);
         } else {
-            console.log('successfully deleted video');                                
+            console.log('successfully deleted video');
         }
     });
 }

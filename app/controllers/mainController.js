@@ -56,7 +56,7 @@ angular.module('mainCtrl', ['ngMaterial'])
         previewFinished = function($event, mode, data) {
             if (skip.is_previewing != 0) {
                 console.log("[previewFinished] wait a bit more...")
-                setTimeout(function() { previewFinished($event, mode, data) }, 1000);
+                setTimeout(function() { previewFinished($event, mode, data) }, 200);
             } else {
                 setTimeout(function() { $rootScope.editScene($event, mode, data) }, 3000);
             }
@@ -285,14 +285,14 @@ angular.module('mainCtrl', ['ngMaterial'])
                     $scope.previewScene = function($event, index) {
                         var scene = $rootScope.movieData.scenes[index]
                         skip.preview(scene.start, scene.end, scene.src)
-                        setTimeout(function() { previewFinished($event, "list", null) }, 3000);
+                        setTimeout(function() { previewFinished($event, "list", null) }, 1000);
                         $scope.hideDialog()
                     }
 
                     $scope.previewCurrent = function($event) {
                         var data = getEditInputs()
                         skip.preview(data.start, data.end, data.src)
-                        setTimeout(function() { previewFinished($event, "preview", data) }, 3000);
+                        setTimeout(function() { previewFinished($event, "preview", data) }, 1000);
                         $scope.hideDialog()
                     }
 

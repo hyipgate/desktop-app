@@ -26,15 +26,12 @@ Can wait
 *********
 + allow more comples search
 + check autodetect country code
-+ emply reply on send feedback (logged in)
++ empty reply on send feedback (logged in)
 + add more info to search list (eg providers, rating...)
 + whare are menus in spanish??
 + fix parents guide when null imdb code (why null imdb code??)
-+ make previous times more accurate (pop out after skip)
-+ Need to log in again
 + allow dumping files (scene select, sync...)
 + check sync against all/most scenarios
-+ film, allow custom blur on marking scenes
 + film, if it fails loading image, load default
 + stream, fix sharing tagged dialog, allow three states (done, missing, unknown)
 + stream, sometimes, on netflix, cursor is hidden when edit dialog is shown
@@ -59,6 +56,9 @@ At some point
 
 Done
 ****
+//+ film, allow custom blur on marking scenes
+//+ Need to log in again
+//+ make previous times more accurate (pop out after skip)
 //+ remove editors mode
 //+ show cahnge password/new user only when needed
 //+ stream, editing time does weird things: it starts with hours = 1 (while should be 0) and every time we add/substract seconds/milliseconds/minutes the hours also increase/decrease by one every time (when using up/down)
