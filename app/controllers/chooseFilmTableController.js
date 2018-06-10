@@ -19,7 +19,7 @@ angular.module('chooseFilmCtrl', ['ngMaterial'])
                 if (film.data.type == "list") {
                     vm.movieData = film.data
                 } else {
-                  $location.path('/film');
+                    $location.path('/film');
                 }
                 $rootScope.$apply();
             });

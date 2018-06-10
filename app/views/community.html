@@ -19,14 +19,15 @@
         <div layout="column" flex=10></div>
         <div layout="column" flex=45>
             <h3>Personal space</h3>
-            <md-switch ng-model="settings.editors_view" aria-label="Editor mode">
-                Editor's mode
-            </md-switch>
             <div>
-                <md-button class="md-raised md-primary md-hue-2" ng-show="settings.username == '' " ng-click="community.logIn($event)">Log In</md-button>
-                <md-button class="md-raised md-primary md-hue-2" ng-show="settings.username != '' " ng-click="community.logOut($event)">Log Out</md-button>
-                <md-button class="md-raised md-primary md-hue-2" ng-click="community.newUser($event)">New user</md-button>
-                <md-button class="md-raised md-primary md-hue-2" ng-click="community.newPass($event)">Change password</md-button>
+                <div ng-show="settings.username == '' ">
+                    <md-button class="md-raised md-primary md-hue-2" ng-click="community.logIn($event)">Log In</md-button>
+                    <md-button class="md-raised md-primary md-hue-2" ng-click="community.newUser($event)">New user</md-button>
+                </div>
+                <div ng-show="settings.username != '' ">
+                    <md-button class="md-raised md-primary md-hue-2" ng-click="community.logOut($event)">Log Out</md-button>
+                    <md-button class="md-raised md-primary md-hue-2" ng-click="community.newPass($event)">Change password</md-button>
+                </div>
                 <md-button class="md-raised md-primary md-hue-2" ng-click="community.toggleDevTools()">Toggle Dev Tools</md-button>
             </div>
         </div>

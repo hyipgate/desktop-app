@@ -32,7 +32,7 @@ angular.module('streamCtrl', ['ngMaterial'])
 
         $scope.show_buttons = function(action) {
             $scope.back_menu = action
-            if ($rootScope.settings.editors_view && !onimdb) $scope.editors_menu = action
+            if (!onimdb) $scope.editors_menu = action
             vm.last_moved = Date.now()
         }
 
@@ -51,7 +51,7 @@ angular.module('streamCtrl', ['ngMaterial'])
             }
             // Check last activity and hide controls if needed
             if ($scope.back_menu && vm.last_moved && vm.last_moved + 2000 < Date.now()) {
-                if( $scope.webview_blur == 40 ) return
+                if( $scope.webview_blur !== 0 ) return
                 $scope.show_buttons(false)
                 vm.health_color = "rgba(200, 200, 200, 0.6)"
                 $rootScope.$apply();
@@ -84,7 +84,7 @@ angular.module('streamCtrl', ['ngMaterial'])
                 $rootScope.editScene($event, "preview", scene)
                 $scope.webview_blur = 0;
             } else {
-                $scope.webview_blur = 40;
+                $scope.webview_blur = $rootScope.settings.blur_level;
                 $scope.show_buttons(true)
             }
         }
