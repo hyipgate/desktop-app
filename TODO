@@ -1,10 +1,9 @@
 TODO
 ====
 
-
-Don Javier Lancha
-=================
-+ 
++ texto inconito share
++ offline: que te diga que estas offline
++ when password is updated, show message if password was wrong
 
 
 
@@ -16,9 +15,7 @@ Blocking
 + mytags store it properly
 + hash table, store and work on it properly
 + api, store users email when they log in
-+ fix non-working 
 + make sure hash tables work properly
-+ can't share online
 + make sure it works on netflix
 
 
@@ -28,7 +25,7 @@ Can wait
 + check autodetect country code
 + empty reply on send feedback (logged in)
 + add more info to search list (eg providers, rating...)
-+ whare are menus in spanish??
++ why are there menus in spanish??
 + fix parents guide when null imdb code (why null imdb code??)
 + allow dumping files (scene select, sync...)
 + check sync against all/most scenarios
@@ -36,7 +33,6 @@ Can wait
 + stream, fix sharing tagged dialog, allow three states (done, missing, unknown)
 + stream, sometimes, on netflix, cursor is hidden when edit dialog is shown
 + api, store offset data on non-master versions
-+ community, send log with suggestions
 + stream, To start/end scene creation while watching, the "point" key to do so is not working anymore (might be coz watched element is not focus when pressed??)
 + search, on back pressed, search the last search again
 + film, on back pressed, show last item
@@ -56,6 +52,7 @@ At some point
 
 Done
 ****
+//+ can't share online
 //+ film, allow custom blur on marking scenes
 //+ Need to log in again
 //+ make previous times more accurate (pop out after skip)

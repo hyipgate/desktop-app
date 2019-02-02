@@ -15,8 +15,8 @@
             <div>
                 <div class="md-headline">{{film.movieData.metadata.title}}</div>
                 <br>
-                <div class="md-caption">{{film.movieData.metadata.released}} &bull; {{film.movieData.metadata.runtime}}min &bull; {{film.movieData.metadata.genres}} &bull; {{film.movieData.metadata.imdbRating}}/10 <span class="parentsGuide" ng-click="film.parentsGuide()">IMDB parents guide</span>
-                    <span class="parentsGuide" ng-click="film.kidsInMind()">Kids-In-Mind</span></div>
+                <div class="md-caption">{{film.movieData.metadata.released}} &bull; {{film.movieData.metadata.runtime}}min &bull; {{film.movieData.metadata.genres}} &bull; {{film.movieData.metadata.imdbRating}}/10 <span class="parentsGuide" ng-click="film.openWebsite('imdb')">IMDB parents guide</span>
+                    <span class="parentsGuide" ng-click="film.openWebsite('kidsinmind')">Kids-In-Mind</span></div>
                 <p class="md-body-1 block-with-text">{{film.movieData.metadata.plot}}</p>
             </div>
             <div>

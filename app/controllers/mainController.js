@@ -395,7 +395,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                             var skip_list = []
                             for (var i = 0; i < scenes.length; i++) {
                                 var scene = scenes[i]
-                                if (scene.skip) skip_list.push({ start: scene.start - 800, end: scene.end + 800 })
+                                if (scene.skip) skip_list.push( scene )
                             }
                             var input = $rootScope.file
 

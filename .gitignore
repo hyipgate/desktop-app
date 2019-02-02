@@ -7,5 +7,7 @@ npm-debug.log
 .node-persist/storage/*
 Update.exe
 SquirrelSetup.log
-
+update.sh
+commit.sh
+push.sh
 package-lock.json

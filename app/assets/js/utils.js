@@ -209,13 +209,14 @@ function find_key_by_id(list, id) {
     return -1;
 }
 
-
+// Add local data (eg. extra tagged scenes...) to the globally shared data
 function merge_local_data(film) {
     trace("merge_local_data", arguments)
     if (film.status == 400 || !film.data["id"] || !film.data["id"]["tmdb"]) return film
 
     var film_id = film.data["id"]["tmdb"]
 
+    // Add local edits
     var scenes = get_local_data(film_id + "_myedits") || []
     for (var i = 0; i < scenes.length; i++) {
         var index = find_key_by_id(film.data.scenes, scenes[i].id)
@@ -247,6 +248,7 @@ function merge_local_data(film) {
     }
     film.data.scenes = scenes*/
 
+    // Add local sync data
     var syncRef = get_local_data(film_id + "_mysync")
     if (syncRef) {
         console.log("we got previous sync data")
@@ -270,15 +272,21 @@ function merge_local_data(film) {
     return film;
 }
 
+// Merge sync data 'a' and 'b'
 function merge_sync_data(a, b) {
-    console.log(a, b)
+    // If one of the datasets is missing, return the other (or {})
     if (!a & !b) return {}
     if (!a) return b
-    // TODO, merge things properly        
-    if (!b || Object.keys(a).length > Object.keys(b).length) {
+    if (!b) return a
+
+    // If we have both datasets, return the longest (// TODO, merge things properly)
+    if (Object.keys(a).length > Object.keys(b).length) {
         return a
+    } else{
+        return b
     }
-    return b
+
+
 }
 
 function get_diff_tag(scene, online) {
