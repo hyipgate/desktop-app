@@ -3,31 +3,34 @@
         <md-dialog-content>
             <md-content layout="row" layout-padding style="max-height: 400px">
                 <div style="width: 100%">
+                    <div class="md-headline">{{movieData.metadata.title}}</div>
                     <md-list class="md-dense" flex>
                         <md-list-item class="md-2-line" ng-repeat="scene in scenes">
                             <div class="md-list-item-text" layout="column">
                                 <h3>
-                                <b ng-show="scene.local && !scene.removed" style="color:#393">(Locally edited)</b>
-                                <b ng-show="scene.local && scene.removed" style="color:#933">(Locally removed)</b>
-                                <b ng-show="scene.globallyremoved" style="color:#933">(Globally removed)</b>
-                                <b>{{ scene.tags | tags }}</b>
-                                <i>({{ scene.start | seconds:scene.end }})</i></h3>
+                                    <b ng-show="scene.local && !scene.removed" style="color:#393">(Locally edited)</b>
+                                    <b ng-show="scene.local && scene.removed" style="color:#933">(Locally removed)</b>
+                                    <b ng-show="scene.globallyremoved" style="color:#933">(Globally removed)</b>
+                                    <b>{{ scene.tags | tags }}</b>
+                                    <i>({{ scene.start | seconds:scene.end }})</i>
+                                </h3>
                                 <p>{{ scene.comment }}</p>
                             </div>
-                            <md-icon class="md-secondary" ng-show="scene.edited" ng-click="uploadScene($index)" aria-label="Share" md-svg-icon="./assets/img/upload.svg"></md-icon>
-                            <md-icon ng-hide="nopreview" class="md-secondary" ng-click="previewScene($event,$index)" aria-label="Preview" md-svg-icon="./assets/img/preview.svg"></md-icon>
-                            <md-icon class="md-secondary" ng-click="openEditDialog($index)" aria-label="Edit" md-svg-icon="./assets/img/edit.svg"></md-icon>
+                            <md-checkbox class="md-secondary" ng-model="scene.skip"></md-checkbox>
+                            <md-icon class="md-secondary" ng-show="scene.edited" ng-click="uploadScene(scene.id)" aria-label="Share" md-svg-icon="./assets/img/upload.svg"></md-icon>
+                            <md-icon ng-hide="nopreview" class="md-secondary" ng-click="previewScene(scene.id)" aria-label="Preview" md-svg-icon="./assets/img/preview.svg"></md-icon>
+                            <md-icon class="md-secondary" ng-click="openEditDialog(scene.id)" aria-label="Edit" md-svg-icon="./assets/img/edit.svg"></md-icon>
                         </md-list-item>
                     </md-list>
                 </div>
             </md-content>
+            <md-content>
+                <md-button aria-label="Close" ng-click="hideDialog()">Close</md-button>
+                <span style="flex: 1 1 auto"></span>
+                <md-button aria-label="Tagged" ng-click="openTaggedDialog()">Tagged</md-button>
+                <md-button aria-label="dumpToFile" ng-click="dumpToFile()" ng-show="isDumpable">Dump to file</md-button>
+            </md-content>
         </md-dialog-content>
-        <md-dialog-actions>
-            <md-button aria-label="Close" ng-click="hideDialog()">Close</md-button>
-            <span style="flex: 1 1 auto"></span>
-            <md-button aria-label="Tagged" ng-click="openTaggedDialog()">Tagged</md-button>
-            <md-button aria-label="dumpToFile" ng-click="dumpToFile()" ng-show="isDumpable">Dump to file</md-button>
-        </md-dialog-actions>
     </div>
     <div ng-show="menu==1">
         <md-dialog-content>
@@ -63,7 +66,7 @@
             <span style="flex: 1 1 auto"></span>
             <md-button ng-click="removeScene()">Delete</md-button>
             <!--<md-button ng-click="uploadCurrent()">Share</md-button>-->
-            <md-button ng-show="cantedit" ng-click="enableEdition()">Enable edit</md-button>
+            <!--<md-button ng-show="cantedit" ng-click="enableEdition()">Enable edit</md-button>-->
             <md-button ng-hide="nopreview" ng-click="previewCurrent($event)">Preview</md-button>
             <md-button ng-click="saveEdition()" class="md-primary">Save</md-button>
         </md-dialog-actions>

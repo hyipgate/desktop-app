@@ -1,7 +1,7 @@
 angular.module('streamCtrl', ['ngMaterial'])
 
-    .controller('StreamController', function($rootScope, $scope, service, $location, $mdDialog, $timeout) {
-        
+    .controller('StreamController', function($rootScope, $scope, $location, $mdDialog, $timeout) {
+
         // Just to know how long the user has been watching the film
         var launchedAt = Date.now()
         // Behaviour is different when it is not a film
@@ -22,64 +22,52 @@ angular.module('streamCtrl', ['ngMaterial'])
 
 
 
+
         console.log("Starting StreamController ", $rootScope.file, onimdb)
 
-        $scope.scenes = $rootScope.movieData.scenes
-        $scope.back_menu = false
-        $scope.editors_menu = false
-        $scope.health_color = "rgba(200, 200, 200, 0.6)"
-        $scope.webview_blur = 0;
+        var healthy_color = "rgba(200, 200, 200, 0.6)"
 
-        $scope.show_buttons = function(action) {
-            $scope.back_menu = action
-            if (!onimdb) $scope.editors_menu = action
-            $scope.last_moved = Date.now()
+        $scope.show_buttons = true
+        $scope.health_color = healthy_color
+
+
+        $scope.mouseActive = function() {
+            $scope.show_buttons = true
+            if (last_moved == false) {
+                last_moved = Date.now()
+                hide_buttons_when_inactive()
+            } else {
+                last_moved = Date.now()
+            }
+        }
+
+        var last_moved = false
+
+        function hide_buttons_when_inactive() {
+            console.log("checking inactive")
+            if (Date.now() - last_moved < 3000 || $scope.health_color != healthy_color) {
+                setTimeout(function() { hide_buttons_when_inactive() }, 500);
+            } else {
+                $scope.show_buttons = false
+                $rootScope.$apply();
+                last_moved = false
+            }
         }
 
 
         $scope.markTime = function($event) {
-            function random_id() {
-                var text = ""
-                var possible = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
-                for (var i = 0; i < 10; i++) {
-                    text += possible.charAt(Math.floor(Math.random() * possible.length));
-                };
-                return text;
-            }
-
-            var marked_scene = mark_current_time()
-            if (marked_scene) {
-                var scene = {
-                    tags: [],
-                    comment: "",
-                    start: marked_scene.start,
-                    end: marked_scene.end,
-                    id: random_id(),
-                    src: reference.our_src
-                }
-                $rootScope.editScene($event, "preview", scene)
-                $scope.webview_blur = 0;
-            } else {
-                $scope.webview_blur = $rootScope.settings.blur_level;
-                $scope.show_buttons(true)
-            }
+            var wb = document.querySelector('#webview');
+            if (wb) wb.send('mark-current-time')
+            $scope.show_buttons = true
         }
-
 
 
         $scope.backToMenu = function($event) {
             console.log("Closing stream controller")
             // Stop timers...
-            clearInterval(interval_id);
             window.onkeyup = null
-            var syncRef = end_capture()
-            // If we got new syncRef
-            if (syncRef) {
-                console.log("We got syncRef, length: ", Object.keys(syncRef).length)
-                $rootScope.movieData.syncRef[syncRef.src] = syncRef
-                console.log(syncRef)
-                $rootScope.utils.save_sync_ref($rootScope.movieData.id.tmdb, JSON.stringify(syncRef))
-            }
+
+            $rootScope.electron.ipcRenderer.send('exit-fullscreen')
             // Go back to film view
             $location.path('/film');
             // Ask user for feedback
@@ -116,36 +104,99 @@ angular.module('streamCtrl', ['ngMaterial'])
             }
         }
 
-        // Check periodically to: (1) hide controls if unactive, (2) show controls in red if film is out of sync
-        function check() {
-            // Check we are on sync
-            var illness = sync.health_report()
-            if (illness > 5000) {
-                $scope.show_buttons(true)
-                var red = Math.min(255, Math.floor(illness / 100)) // Red color
-                var oth = Math.min(0, 200 - Math.floor(illness / 200)) // Others (blue and green) color
-                var opa = Math.min(1, Math.floor(illness / 2500) / 10) // Opacity
+
+        function health_update(health) {
+            if (health < 0.8) {
+                $scope.show_buttons = true
+                var red = 255 * (1 - health) // Red color
+                var oth = 0.5 * 255 * (1 - health) // Others (blue and green) color
+                var opa = health // Opacity
                 $scope.health_color = "rgba(" + red + ", " + oth + ", " + oth + "," + opa + ")"
-                $rootScope.$apply();
-                return
-            }
-            // Check last activity and hide controls if needed
-            if ($scope.back_menu && $scope.last_moved && $scope.last_moved + 2000 < Date.now()) {
-                if ($scope.webview_blur !== 0) return
-                $scope.show_buttons(false)
+            } else {
                 $scope.health_color = "rgba(200, 200, 200, 0.6)"
-                $rootScope.$apply();
+                $scope.show_buttons = false
             }
+            $rootScope.$apply();
         }
 
+
         if (!onimdb) {
-            var interval_id = setInterval(check, 1000);
             //---- Listen to keyboard "mark time" events ----//
             window.onkeyup = function(e) {
                 var key = e.keyCode ? e.keyCode : e.which;
                 if (key == 110) $scope.$apply($scope.markTime())
             }
         }
+
+
+
+        // Webview functions
+        var wc = {
+            loaded: false,
+            webview: false,
+
+            // load the webview
+            load: function() {
+                /* Check there is a "webview" tag and that it is not already loaded */
+                if (wc.loaded) return console.log("webview already loaded! ")
+                wc.webview = document.getElementsByTagName('webview')[0]
+                if (!wc.webview) return console.log("webview not ready yet ")
+
+
+                /* Listen to events from player */
+                wc.webview.addEventListener('ipc-message', event => {
+                    if (event.channel == 'updated-reference') {
+                        console.log("updated-reference", event.args[0])
+                        $rootScope.utils.save_sync_ref(event.args[0], $rootScope.movieData.id.tmdb)
+                    } else if (event.channel == 'preview-finished') {
+                        setTimeout(function() { $rootScope.editScene(null, 'preview', event.args[0]) }, 3000);
+                    } else if (event.channel == 'marked-scene') {
+                        $rootScope.editScene(null, 'preview', event.args[0])
+                    } else if (event.channel == 'updated-sync') {
+                        $rootScope.movieData.scenes = event.args[0]
+                    } else if (event.channel == 'updated-metadata') {
+                        var meta = event.args[0]
+                        $rootScope.metadata = meta
+                        //return true // TODO: search properly...
+
+                        if (meta.url == $rootScope.file) {
+                            console.log("[updated-metadata] we are where we are meant to be", meta)
+                            return
+                        }
+                        // TODO: Use the other data eg. internal_id, or provider...
+                        console.log("[updated-metadata] we got new meta! ", meta)
+                        $rootScope.utils.search_film(null, meta.title, null, meta.internal_id).then(function(film) {
+                            film = film["data"];
+                            console.log(film)
+                            if (film.type == "list") {
+                                $rootScope.setFilm(film)
+                                $location.path('/chooseFilmTable');
+                                console.log(film);
+                                //$route.reload();
+                                if (!$rootScope.$$phase) $rootScope.$apply();
+                            } else {
+                                /*if( $rootScope.movieData.id.tmdb == film.id.tmdb ){
+                                    console.log("[updated-metadata] Same movie as before, we are fine!")
+                                    return
+                                }*/
+                                $rootScope.setFilm(film)
+                                console.log(film, film.syncRef);
+                                wc.webview.send('load-new-reference', film.syncRef)
+                                $rootScope.pickScenes()
+                            }
+                        });
+                    } else {
+                        console.log("ipc-message received: ", event.channel)
+                    }
+                })
+
+                wc.loaded = true
+
+                return true;
+            }
+        }
+
+        wc.load()
 
         // Some filters
     }).filter('minutes', function() {

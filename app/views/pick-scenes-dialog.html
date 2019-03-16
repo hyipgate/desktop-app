@@ -1,0 +1,34 @@
+<md-dialog layout="column" md-theme="darkTheme" style="width: 800px">
+    <div>
+        <md-dialog-content>
+            <md-content layout="row" layout-padding style="max-height: 400px">
+                <div>
+                    <div class="md-headline">{{movieData.metadata.title}}</div>
+                    <br>
+                    <div class="md-caption">{{movieData.metadata.released}} &bull; {{movieData.metadata.runtime}}min &bull; {{movieData.metadata.genres}} &bull; {{movieData.metadata.imdbRating}}/10 <span class="parentsGuide" ng-click="film.openWebsite('imdb')">IMDB parents guide</span>
+                        <span class="parentsGuide" ng-click="film.openWebsite('kidsinmind')">Kids-In-Mind</span></div>
+                    <p class="md-caption" ng-show="movieData.scenes.length!=0">What scenes do you want to skip?</p>
+                    <md-list class="md-dense" style="overflow-y: auto; overflow-x: hidden; max-height: 300px">
+                        <md-list-item class="md-2-line" ng-repeat="scene in movieData.scenes | filter: {list: 'true' }">
+                            <md-checkbox ng-model="scene.skip"></md-checkbox>
+                            <div class="md-list-item-text" layout="column">
+                                <h3><b>{{ scene.tags | tags }}</b> <i>({{ scene.start | seconds:scene.end }})</i></h3>
+                                <p>{{ scene.comment }}</p>
+                            </div>
+                            <!-- at minute {{ scene.start | minutes }}<md-chips ng-model="scene.tags" readonly="true"></md-chips>-->
+                        </md-list-item>
+                    </md-list>
+                    <p style="color: #b11;" class="md-caption"><b>{{missingTags}}</b>
+                        <md-tooltip md-delay="1000">{{missingTagsFullList}}</md-tooltip>
+                    </p>
+                </div>
+            </md-content>
+        </md-dialog-content>
+        <!--<md-dialog-actions>
+            <md-button aria-label="Close" ng-click="hideDialog()">Watch Raw</md-button>
+            <span style="flex: 1 1 auto"></span>
+            <md-button aria-label="Tagged" ng-click="openTaggedDialog()">Tagged</md-button>
+            <md-button aria-label="dumpToFile" ng-click="dumpToFile()">Watch Edited</md-button>
+        </md-dialog-actions>-->
+    </div>
+</md-dialog>

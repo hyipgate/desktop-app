@@ -1,6 +1,6 @@
 angular.module('filmCtrl', ['ngMaterial'])
 
-    .controller('FilmController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog) {
+    .controller('FilmController', function($rootScope, $scope, $location, $mdBottomSheet, $mdDialog) {
         var vm = this;
 
 
@@ -18,30 +18,6 @@ angular.module('filmCtrl', ['ngMaterial'])
                 vm.css = {
                     'background': 'linear-gradient( rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(' + $rootScope.movieData.images.backdrops[0] + ') no-repeat center center',
                     'background-size': 'cover',
-                }
-            }
-
-
-            /* Apply user's default filter settings on film tags */
-            var skip_tags = $rootScope.settings.tags.filter(function(tag) { return tag.action === true })
-            var list_tags = $rootScope.settings.tags.filter(function(tag) { return tag.action !== false })
-
-            for (var i = 0; i < vm.scenes.length; i++) {
-                // Decide wheter to skip scene or not
-                vm.scenes[i].skip = false // default: no not skip
-                for (var j = 0; j < skip_tags.length; j++) {
-                    if (vm.scenes[i].tags.indexOf(skip_tags[j].name) != -1) {
-                        vm.scenes[i].skip = true;
-                        break
-                    }
-                }
-                // Decide wheter to show the scene on the list or not
-                vm.scenes[i].list = vm.scenes[i].skip // By default, we always show scenes that will be skipped
-                for (var j = 0; j < list_tags.length; j++) {
-                    if (vm.scenes[i].tags.indexOf(list_tags[j].name) != -1) {
-                        vm.scenes[i].list = true;
-                        break
-                    }
                 }
             }
 
@@ -153,7 +129,6 @@ angular.module('filmCtrl', ['ngMaterial'])
                             $rootScope.file = "file:///" + file[0].path
                             $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
                             // TODO, pass bytesize and hash of file, instead of filename! We want it to be an ID shared between users!
-                            load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
                             $location.path('/stream');
                         } else {
                             vm.unsupportedFile(needsConversion);
@@ -245,7 +220,6 @@ angular.module('filmCtrl', ['ngMaterial'])
                     $mdDialog.show(confirm).then(function() {
                         $rootScope.file = "file:///" + $rootScope.file;
                         $rootScope.utils.link_file_to_film($rootScope.file, $rootScope.movieData.id.tmdb)
-                        load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef);
                         $location.path('/stream');
                         $mdDialog.hide();
                     }, function() {
@@ -268,7 +242,6 @@ angular.module('filmCtrl', ['ngMaterial'])
                         console.log("custom URL: ", custom_url)
                         $mdBottomSheet.hide(custom_url);
                         $rootScope.file = custom_url
-                        load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
                         $location.path('/stream');
                     }, function() {
                         $scope.status = 'You didn\'t name your dog.';
@@ -289,7 +262,6 @@ angular.module('filmCtrl', ['ngMaterial'])
                     }
                     $mdBottomSheet.hide(clickedItem.name);
                     $rootScope.file = vm.forceHttps(clickedItem.url)
-                    load_film(scenes, $rootScope.file, $rootScope.movieData.syncRef)
                     $location.path('/stream');
                 };
             }

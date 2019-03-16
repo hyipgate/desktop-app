@@ -1,4 +1,4 @@
-angular.module('familyCinema', ['ngAnimate', 'ngMessages', 'app.routes', 'MainService', 'mainCtrl','ngMaterial','filmCtrl', 'chooseFilmCtrl', 'streamCtrl','configCtrl','communityCtrl', "threeStateCheckbox"])
+angular.module('familyCinema', ['ngAnimate', 'ngMessages', 'app.routes', 'mainCtrl','ngMaterial','filmCtrl', 'chooseFilmCtrl', 'streamCtrl','configCtrl','communityCtrl', "threeStateCheckbox"])
 
 .config(function($mdThemingProvider) {
   $mdThemingProvider.theme('default')

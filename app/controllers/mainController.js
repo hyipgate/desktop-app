@@ -1,14 +1,14 @@
 angular.module('mainCtrl', ['ngMaterial'])
 
-    .controller('MainController', function($rootScope, $route, $scope, service, $location, $window, $q, $mdDialog, $mdToast) {
+    .controller('MainController', function($rootScope, $route, $scope, $location, $window, $q, $mdDialog, $mdToast) {
         var vm = this;
         var timeZoneOffset = new Date('01/01/1970').getTimezoneOffset() * 60 * 1000;
         vm.processing = false;
-        vm.searchQuery;
         vm.beforeConfig = "main";
+        vm.searchQuery = "";
 
-        vm.searchQuery = service.getSearchQuery();
-
+        $rootScope.movieData = {}
+        $rootScope.metadata = {}
         $rootScope.electron = require('electron');
         $rootScope.utils = $rootScope.electron.remote.require('./app/assets/js/utils');
         $rootScope.appVersion = require('../package.json').version;
@@ -18,6 +18,20 @@ angular.module('mainCtrl', ['ngMaterial'])
         $rootScope.vtrue = true
         $rootScope.vfalse = false
         $rootScope.vnull = null
+
+        $scope.defaultProviders = [
+            { name: 'Netlix', url: "https://www.netflix.com/", icon: "netflix" },
+            { name: 'Prime', url: "https://www.amazon.com/Amazon-Video/b/?&node=2858778011", icon: "amazon-prime-video" },
+            { name: "File/DVD", url: "file", icon: 'file.svg' }
+        ]
+
+        $scope.explore = [
+            { name: 'search', url: "search", icon: "search.svg" },
+            { name: 'justwatch', url: "https://www.justwatch.com/", icon: "justwatch.png" },
+            { name: 'imdb', url: "https://www.imdb.com/", icon: "imdb.png" }
+        ]
+
+        console.log($scope.defaultProviders)
 
         $rootScope.openToast = function(msg) {
             $mdToast.show($mdToast.simple().textContent(msg).hideDelay(2000));
@@ -51,14 +65,27 @@ angular.module('mainCtrl', ['ngMaterial'])
         $rootScope.setFilm = function(film) {
             console.log("[setFilm] ", film)
             $rootScope.movieData = film
-        }
+            /* Apply user's default filter settings on film tags */
+            var skip_tags = $rootScope.settings.tags.filter(function(tag) { return tag.action === true })
+            var list_tags = $rootScope.settings.tags.filter(function(tag) { return tag.action !== false })
 
-        previewFinished = function($event, mode, data) {
-            if (skip.is_previewing != 0) {
-                console.log("[previewFinished] wait a bit more...")
-                setTimeout(function() { previewFinished($event, mode, data) }, 200);
-            } else {
-                setTimeout(function() { $rootScope.editScene($event, mode, data) }, 3000);
+            for (var i = 0; i < film.scenes.length; i++) {
+                // Decide wheter to skip scene or not
+                film.scenes[i].skip = false // default: no not skip
+                for (var j = 0; j < skip_tags.length; j++) {
+                    if (film.scenes[i].tags.indexOf(skip_tags[j].name) != -1) {
+                        film.scenes[i].skip = true;
+                        break
+                    }
+                }
+                // Decide wheter to show the scene on the list or not
+                film.scenes[i].list = film.scenes[i].skip // By default, we always show scenes that will be skipped
+                for (var j = 0; j < list_tags.length; j++) {
+                    if (film.scenes[i].tags.indexOf(list_tags[j].name) != -1) {
+                        film.scenes[i].list = true;
+                        break
+                    }
+                }
             }
         }
 
@@ -66,12 +93,11 @@ angular.module('mainCtrl', ['ngMaterial'])
             vm.processing = true;
             var file = event.target.files;
             if (file) {
-                vm.search_film(file[0].path, null).then(function(film) {
+                vm.search_film(file[0].path).then(function(film) {
                     vm.processing = false;
                     film = film["data"];
                     if (film.type == "list") {
                         $rootScope.setFilm(film)
-                        service.saveSearchQuery(vm.searchQuery);
                         $location.path('/chooseFilmTable');
                         if (!$rootScope.$$phase) $rootScope.$apply();
                     } else {
@@ -86,6 +112,22 @@ angular.module('mainCtrl', ['ngMaterial'])
             }
         };
 
+        vm.loadProvider = function(provider) {
+            console.log("loadProvider", provider, provider)
+            if (provider == "search") {
+                $location.path('/chooseFilmTable');
+                if (!$rootScope.$$phase) $rootScope.$apply();
+                return
+            } else if (provider == "file") {
+                var input = document.getElementById('fileInput')
+                //input.onchange = $scope.playFile
+                input.click()
+                return;
+            }
+            $rootScope.file = provider
+            $location.path('/stream')
+        };
+
         vm.searchTitle = function() {
             if (!vm.searchQuery) return console.log("[searchTitle] error, got undefined searchQuery");
             vm.processing = true;
@@ -95,7 +137,6 @@ angular.module('mainCtrl', ['ngMaterial'])
                 film = film["data"];
                 if (film.type == "list") {
                     $rootScope.setFilm(film)
-                    service.saveSearchQuery(vm.searchQuery);
                     $location.path('/chooseFilmTable');
                     console.log(film);
                     //$route.reload();
@@ -110,7 +151,7 @@ angular.module('mainCtrl', ['ngMaterial'])
         };
 
         vm.selected = function(film_id) {
-            $rootScope.utils.search_film(null, null, null, film_id).then(function(film) {
+            $rootScope.utils.search_film(null, null, film_id).then(function(film) {
                 $rootScope.setFilm(film.data);
                 $location.path('/film');
                 if (!$rootScope.$$phase) $rootScope.$apply();
@@ -118,7 +159,7 @@ angular.module('mainCtrl', ['ngMaterial'])
         }
 
         vm.search_film = function(filepath, title) {
-            return $rootScope.utils.search_film(filepath, title, null, null);
+            return $rootScope.utils.search_film(filepath, title, null);
         }
 
         $rootScope.logIn = function(ev) {
@@ -168,20 +209,58 @@ angular.module('mainCtrl', ['ngMaterial'])
             }
         }
 
+        function webview(action, data) {
+            var wb = document.querySelector('#webview');
+            if (!wb) {
+                console.log("(ERROR) Trying to '", action, "' but we don't have a webview!");
+                return
+            }
+            console.log("[wc.send] Doing '", action, "' with ", data)
+            wb.send(action, data)
+        }
+
+        $rootScope.pickScenes = function($event) {
+            webview('dialog-visible', true)
+            $mdDialog.show({
+                targetEvent: $event,
+                templateUrl: 'views/pick-scenes-dialog.html',
+                onRemoving: function(event) {
+                    webview('dialog-visible', false)
+                    var wb = document.querySelector('#webview');
+                    if (wb) wb.focus()
+                },
+                controller: ['$scope', function($scope) {
+                    console.log($rootScope.movieData.scenes)
+                    $scope.scenes = $rootScope.movieData.scenes
+
+                    $scope.movieData = $rootScope.movieData
+                }]
+            })
+        }
+
+        /*******************************************************************/
+        /*                      EDIT SCENE DIALOG                          */
+        /*******************************************************************/
+
         $rootScope.editScene = function($event, open, previewed_scene) {
-            pause(true)
-            isDialogVisible = true
+            webview('dialog-visible', true)
+            webview('get-scenes')
             $mdDialog.show({
                 targetEvent: $event,
                 templateUrl: 'views/scene-edit-share-dialog.html',
                 onRemoving: function(event) {
-                    pause(false)
-                    isDialogVisible = false
-                    if (wc.webview) wc.webview.focus()
+                    webview('dialog-visible', false)
+                    var wb = document.querySelector('#webview');
+                    if (wb) wb.focus()
                 },
                 locals: { previewed_scene: previewed_scene, open: open },
                 controller: ['$scope', 'open', 'previewed_scene', function($scope, open, previewed_scene) {
 
+                    console.log(open)
+
+
+                    $scope.movieData = $rootScope.movieData
+                    $scope.tags = $rootScope.settings.tags
 
                     $scope.openListDialog = function(argument) {
                         $scope.scenes = $rootScope.movieData.scenes
@@ -194,31 +273,25 @@ angular.module('mainCtrl', ['ngMaterial'])
                         $scope.menu = 0
                     }
 
-                    $scope.openEditDialog = function(index) {
+                    $scope.openEditDialog = function(id) {
+                        var index = find_key_by_id($rootScope.movieData.scenes, id)
                         var scene = $rootScope.movieData.scenes[index]
                         loadEditInputs(scene)
                     }
 
-                    $scope.enableEdition = function() {
-                        var data = getEditInputs()
-                        if (sync.health_report(data.src) < 1e4) {
-                            data.start = sync.to_users_time(data.start, data.src)
-                            data.end = sync.to_users_time(data.end, data.src)
-                            data.src = reference.our_src
-                            loadEditInputs(data)
-                        } else {
-                            $rootScope.openToast("Out of sync, can't convert times. Try previewing")
-                        }
-                    }
-
                     function loadEditInputs(data) {
-                        $scope.cantedit = (reference.our_src != data.src)
-                        $scope.src = data.src
-                        $scope.startTime = new Date(data.start + timeZoneOffset)
-                        $scope.endTime = new Date(data.end + timeZoneOffset)
+                        console.log(data)
+                        var times = data.times[$rootScope.metadata.src]
+                        var start = times ? times[0] : data.start
+                        var end = times ? times[1] : data.end
+                        data.end = null
+                        data.start = null
+                        $scope.startTime = new Date(start + timeZoneOffset)
+                        $scope.endTime = new Date(end + timeZoneOffset)
                         $scope.selectedTags = angular.copy(data.tags)
                         $scope.comment = angular.copy(data.comment)
                         $scope.id = data.id
+                        $scope.scene = data
                         $scope.menu = 1
                     }
 
@@ -230,14 +303,12 @@ angular.module('mainCtrl', ['ngMaterial'])
                     }
 
                     function getEditInputs() {
-                        var scene = {
-                            tags: $scope.selectedTags,
-                            start: $scope.startTime.getTime() - timeZoneOffset,
-                            end: $scope.endTime.getTime() - timeZoneOffset,
-                            comment: $scope.comment,
-                            id: $scope.id,
-                            src: $scope.src
-                        }
+                        var scene = $scope.scene
+                        var start = $scope.startTime.getTime() - timeZoneOffset
+                        var end = $scope.endTime.getTime() - timeZoneOffset
+                        scene.times[$rootScope.metadata.src] = [start, end, 1]
+                        scene.comment = $scope.comment
+                        scene.tags = $scope.selectedTags
                         return scene
                     }
 
@@ -250,18 +321,6 @@ angular.module('mainCtrl', ['ngMaterial'])
                         $rootScope.utils.update_tagged($scope.tagStatus, $rootScope.movieData.id.tmdb)
                         $scope.hideDialog()
                     }
-
-                    console.log(open)
-
-                    if (open == "preview") {
-                        loadEditInputs(previewed_scene)
-                    } else if (open == "tagged") {
-                        $scope.openTaggedDialog()
-                    } else {
-                        $scope.openListDialog()
-                    }
-
-                    $scope.tags = $rootScope.settings.tags
 
                     $scope.saveEdition = function() {
                         //if ($scope.selectedTags.length == 0) return $rootScope.openToast("Need at least one tag")
@@ -282,23 +341,23 @@ angular.module('mainCtrl', ['ngMaterial'])
                         $scope.openListDialog()
                     }
 
-                    $scope.previewScene = function($event, index) {
+                    $scope.previewScene = function(id) {
+                        var index = find_key_by_id($rootScope.movieData.scenes, id)
                         var scene = $rootScope.movieData.scenes[index]
-                        skip.preview(scene.start, scene.end, scene.src)
-                        setTimeout(function() { previewFinished($event, "list", null) }, 1000);
+                        console.log("previewing ", scene)
+                        webview('preview', scene)
                         $scope.hideDialog()
                     }
 
                     $scope.previewCurrent = function($event) {
-                        var data = getEditInputs()
-                        skip.preview(data.start, data.end, data.src)
-                        setTimeout(function() { previewFinished($event, "preview", data) }, 1000);
+                        var scene = getEditInputs()
+                        console.log("previewing ", scene)
+                        webview('preview', scene)
                         $scope.hideDialog()
                     }
 
                     $scope.hideDialog = function(action) {
                         $mdDialog.hide()
-                        //pause(!!action)
                     }
 
                     $scope.uploadCurrent = function() {
@@ -306,11 +365,15 @@ angular.module('mainCtrl', ['ngMaterial'])
                         $scope.uploadScene(index)
                     }
 
-                    $scope.uploadScene = function(index) {
+                    $scope.uploadScene = function(id) {
+                        var index = find_key_by_id($rootScope.movieData.scenes, id)
+
+
                         var film_id = $rootScope.movieData.id.tmdb
                         var scene = $rootScope.movieData.scenes[index]
 
                         if (scene.tags.length == 0) return $rootScope.openToast("Need at least one tag")
+                        if (scene.comment.length < 5) return $rootScope.openToast("Need a brief comment")
 
                         $rootScope.utils.share_scene(scene, film_id).then(function(answer) {
                             $rootScope.openToast(answer.data.message || answer.data)
@@ -325,17 +388,15 @@ angular.module('mainCtrl', ['ngMaterial'])
                     $scope.removeScene = function() {
                         console.log("[remove] deleting scene")
                         var index = find_key_by_id($rootScope.movieData.scenes, $scope.id)
-                        if (index == -1) {
-                            return $scope.openListDialog()
+                        if (index != -1) {
+                            var scenes = angular.copy($rootScope.movieData.scenes);
+                            scenes[index].removed = true
+                            scenes[index].local = true
+                            scenes[index].edited = true
+                            $rootScope.movieData.scenes = scenes
+                            var film_id = $rootScope.movieData.id.tmdb
+                            $rootScope.utils.save_edition(film_id, scenes[index])
                         }
-                        var scenes = angular.copy($rootScope.movieData.scenes);
-                        scenes[index].removed = true
-                        scenes[index].local = true
-                        scenes[index].edited = true
-                        $rootScope.movieData.scenes = scenes
-
-                        var film_id = $rootScope.movieData.id.tmdb
-                        $rootScope.utils.save_edition(film_id, scenes[index])
                         $scope.openListDialog()
                     }
 
@@ -374,7 +435,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                             lastEnd = time
                             if (date != new_date) $scope.endTime = new_date
                         }
-                        go_to_frame(ms)
+                        webview('go-to-frame', ms)
                     }
 
                     function pad(n, width, z) {
@@ -395,7 +456,7 @@ angular.module('mainCtrl', ['ngMaterial'])
                             var skip_list = []
                             for (var i = 0; i < scenes.length; i++) {
                                 var scene = scenes[i]
-                                if (scene.skip) skip_list.push( scene )
+                                if (scene.skip) skip_list.push(scene)
                             }
                             var input = $rootScope.file
 
@@ -408,8 +469,16 @@ angular.module('mainCtrl', ['ngMaterial'])
 
                     }
 
+                    if (open == "preview") {
+                        loadEditInputs(previewed_scene)
+                    } else if (open == "tagged") {
+                        $scope.openTaggedDialog()
+                    } else {
+                        $scope.openListDialog()
+                    }
+
                 }]
             })
         }
 
-    });
+    })

@@ -1,6 +1,6 @@
 angular.module('communityCtrl', ['ngMaterial'])
 
-    .controller('CommunityController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog) {
+    .controller('CommunityController', function($rootScope, $scope, $location, $mdBottomSheet, $mdDialog) {
         var vm = this;
 
         vm.toggleDevTools = function() {

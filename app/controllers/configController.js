@@ -1,6 +1,6 @@
 angular.module('configCtrl', ['ngMaterial'])
 
-    .controller('ConfigController', function($rootScope, $scope, service, $location, $mdBottomSheet, $mdDialog) {
+    .controller('ConfigController', function($rootScope, $scope, $location, $mdBottomSheet, $mdDialog) {
         var vm = this;
 
         vm.newUser = function(ev) {

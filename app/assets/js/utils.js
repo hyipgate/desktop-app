@@ -22,12 +22,11 @@ storage.init();
 /**
  * Search film in database
  * @param {string} file Path to file eg. "/home/miguel/films/Homeland.S03E02.mp4"
- * @param {string} url full url where the media is located
  * @param {string} title Film title eg. "The Lord Of The Rings"
  * @param {string} film_id ID on IMDB eg. tt1234567
  * @returns {json} metadata and scene content of matched film OR list of ids if multiple films match searching criteria
  */
-function search_film(file, title, url, film_id) {
+function search_film(file, title, film_id, netflix) {
     trace("search_film", arguments)
     // We got an id
     if (film_id) {
@@ -52,9 +51,9 @@ function search_film(file, title, url, film_id) {
             // Check if we have identified this file before
             var film_id = get_local_data(stats.hash + "|" + stats.filesize)
             console.log(film_id)
-            if (film_id) return search_film(null, null, null, film_id)
+            if (film_id) return search_film(null, null, film_id)
             // If we haven't identified this file before, ask the network
-            return call_online_api({ action: "search", filename: stats.estimated_title, hash: stats.hash, bytesize: stats.filesize, url: url }).then(function(film) {
+            return call_online_api({ action: "search", filename: stats.estimated_title, hash: stats.hash, bytesize: stats.filesize }).then(function(film) {
                 if (film["status"] == 200 && film["data"]["type"] != "list") {
                     var film_id = film["data"]["id"]["tmdb"]
                     set_local_data(stats.hash + "|" + stats.filesize, film_id)
@@ -65,8 +64,18 @@ function search_film(file, title, url, film_id) {
         })
     }
 
+    if (netflix) {
+        return call_online_api({ action: "search", netflix: netflix, title: title }).then(function(film) {
+            if (film["status"] == 200 && film["data"]["type"] != "list") {
+                var film_id = film["data"]["id"]["tmdb"]
+                set_local_data(film_id, film["data"])
+            }
+            return merge_local_data(film);
+        })
+    }
+
     // We just got a title/url
-    return call_online_api({ action: "search", filename: title, url: url }).then(function(film) {
+    return call_online_api({ action: "search", title: title }).then(function(film) {
         return merge_local_data(film);
     })
 }
@@ -282,7 +291,7 @@ function merge_sync_data(a, b) {
     // If we have both datasets, return the longest (// TODO, merge things properly)
     if (Object.keys(a).length > Object.keys(b).length) {
         return a
-    } else{
+    } else {
         return b
     }
 
